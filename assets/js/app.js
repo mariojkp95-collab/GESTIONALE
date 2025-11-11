@@ -334,8 +334,16 @@ async function deleteFromFirebase(collectionName, id) {
 
 // Carica dati da localStorage
 function loadFromStorage(key) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
+    try {
+        const data = localStorage.getItem(key);
+        if (!data) return [];
+        const parsed = JSON.parse(data);
+        // Assicurati che sia sempre un array
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error('Errore caricamento localStorage:', key, error);
+        return [];
+    }
 }
 
 // Salva dati in localStorage
