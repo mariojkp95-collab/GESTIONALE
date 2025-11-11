@@ -401,8 +401,21 @@ function loadData() {
 function renderMachinesTable() {
     const tbody = document.getElementById('machines-table');
     
+    // Popola i dropdown filtri
+    populateFilterDropdowns();
+    
     if (machines.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun macchinario presente</td></tr>';
+        return;
+    }
+    
+    // Usa filterMachines() se ci sono filtri attivi, altrimenti mostra tutto
+    const searchText = document.getElementById('searchMachine')?.value || '';
+    const filterType = document.getElementById('filterMachineType')?.value || '';
+    const filterLocation = document.getElementById('filterMachineLocation')?.value || '';
+    
+    if (searchText || filterType || filterLocation) {
+        filterMachines();
         return;
     }
     
@@ -434,8 +447,22 @@ function renderMachinesTable() {
 function renderInterventionsTable() {
     const tbody = document.getElementById('interventions-table');
     
+    // Popola dropdown macchinari nel filtro
+    populateFilterDropdowns();
+    
     if (interventions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun intervento registrato</td></tr>';
+        return;
+    }
+    
+    // Usa filterInterventions() se ci sono filtri attivi
+    const filterMachine = document.getElementById('filterIntervMachine')?.value || '';
+    const filterType = document.getElementById('filterIntervType')?.value || '';
+    const filterDateFrom = document.getElementById('filterIntervDateFrom')?.value || '';
+    const filterDateTo = document.getElementById('filterIntervDateTo')?.value || '';
+    
+    if (filterMachine || filterType || filterDateFrom || filterDateTo) {
+        filterInterventions();
         return;
     }
     
@@ -482,6 +509,14 @@ function renderDeadlinesTable() {
     
     if (deadlines.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nessuna scadenza programmata</td></tr>';
+        return;
+    }
+    
+    // Usa filterDeadlines() se c'è un filtro attivo
+    const activeFilter = document.querySelector('input[name="filterDeadline"]:checked')?.value || 'all';
+    
+    if (activeFilter !== 'all') {
+        filterDeadlines();
         return;
     }
     
@@ -1241,6 +1276,231 @@ function exportData() {
     
     URL.revokeObjectURL(url);
     showAlert('Dati esportati con successo!', 'success');
+}
+
+// ==================== FILTRI E RICERCA ====================
+
+// Filtra macchinari
+function filterMachines() {
+    const searchText = document.getElementById('searchMachine')?.value.toLowerCase() || '';
+    const filterType = document.getElementById('filterMachineType')?.value || '';
+    const filterLocation = document.getElementById('filterMachineLocation')?.value || '';
+    
+    const tbody = document.getElementById('machines-table');
+    
+    const filtered = machines.filter(machine => {
+        const matchSearch = !searchText || 
+            machine.name.toLowerCase().includes(searchText) ||
+            machine.type.toLowerCase().includes(searchText) ||
+            machine.location.toLowerCase().includes(searchText);
+        
+        const matchType = !filterType || machine.type === filterType;
+        const matchLocation = !filterLocation || machine.location === filterLocation;
+        
+        return matchSearch && matchType && matchLocation;
+    });
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun macchinario trovato</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(machine => {
+        const lastIntervention = getLastIntervention(machine.id);
+        const lastDate = lastIntervention ? new Date(lastIntervention.date).toLocaleDateString('it-IT') : 'Mai';
+        const machineComponents = components.filter(c => c.machine_id === machine.id);
+        const photosCount = machinePhotos.filter(p => p.machine_id === machine.id).length;
+        
+        return `
+            <tr style="cursor: pointer;" onclick="openMachineDetails('${machine.id}')">
+                <td>
+                    <strong>${machine.name}</strong>
+                    ${photosCount > 0 ? `<span class="badge bg-info ms-2">📷 ${photosCount}</span>` : ''}
+                    ${machineComponents.length > 0 ? `<span class="badge bg-success ms-1">🔧 ${machineComponents.length}</span>` : ''}
+                </td>
+                <td>${machine.type || '-'}</td>
+                <td>${machine.location || '-'}</td>
+                <td>${lastDate}</td>
+                <td onclick="event.stopPropagation()">
+                    <button class="btn btn-sm btn-danger" onclick="deleteMachine('${machine.id}')">Elimina</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Filtra interventi
+function filterInterventions() {
+    const filterMachine = document.getElementById('filterIntervMachine')?.value || '';
+    const filterType = document.getElementById('filterIntervType')?.value || '';
+    const filterDateFrom = document.getElementById('filterIntervDateFrom')?.value || '';
+    const filterDateTo = document.getElementById('filterIntervDateTo')?.value || '';
+    
+    const tbody = document.getElementById('interventions-table');
+    
+    const filtered = interventions.filter(intervention => {
+        const matchMachine = !filterMachine || intervention.machine_id === filterMachine;
+        const matchType = !filterType || intervention.type === filterType;
+        
+        const intervDate = new Date(intervention.date);
+        const matchDateFrom = !filterDateFrom || intervDate >= new Date(filterDateFrom);
+        const matchDateTo = !filterDateTo || intervDate <= new Date(filterDateTo);
+        
+        return matchMachine && matchType && matchDateFrom && matchDateTo;
+    });
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun intervento trovato</td></tr>';
+        return;
+    }
+    
+    const sortedInterventions = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    tbody.innerHTML = sortedInterventions.map(intervention => {
+        const machine = machines.find(m => m.id === intervention.machine_id);
+        const machineName = machine ? machine.name : 'Sconosciuto';
+        const date = new Date(intervention.date).toLocaleDateString('it-IT');
+        
+        let durationText = '-';
+        if (intervention.hours || intervention.minutes) {
+            const h = intervention.hours || 0;
+            const m = intervention.minutes || 0;
+            if (h > 0 && m > 0) {
+                durationText = `${h}h ${m}m`;
+            } else if (h > 0) {
+                durationText = `${h}h`;
+            } else if (m > 0) {
+                durationText = `${m}m`;
+            }
+        }
+        
+        return `
+            <tr>
+                <td>${date}</td>
+                <td>${machineName}</td>
+                <td><span class="badge bg-primary">${intervention.type}</span></td>
+                <td>${intervention.description}</td>
+                <td>⏱️ ${durationText}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Filtra componenti (solo scorta bassa)
+function filterComponents() {
+    const showLowStock = document.getElementById('filterLowStock')?.checked || false;
+    
+    if (!currentMachineId) return;
+    
+    const tbody = document.getElementById('machine-components-table');
+    const machineComponents = components.filter(c => c.machineId === currentMachineId);
+    
+    const filtered = showLowStock 
+        ? machineComponents.filter(c => c.quantity <= c.minStock)
+        : machineComponents;
+    
+    if (filtered.length === 0) {
+        const msg = showLowStock 
+            ? 'Nessun componente con scorta bassa' 
+            : 'Nessun componente registrato';
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">${msg}</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(component => {
+        const isLowStock = component.quantity <= component.minStock;
+        const stockClass = isLowStock ? 'text-danger fw-bold' : '';
+        
+        return `
+            <tr>
+                <td>${component.name}</td>
+                <td class="${stockClass}">${component.quantity}</td>
+                <td>${component.minStock}</td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="adjustComponentStock('${component.id}', 1)" title="Aggiungi">+1</button>
+                    <button class="btn btn-sm btn-warning" onclick="adjustComponentStock('${component.id}', -1)" title="Rimuovi">-1</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteComponent('${component.id}')">Elimina</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Filtra scadenze per stato
+function filterDeadlines() {
+    const filterType = document.querySelector('input[name="filterDeadline"]:checked')?.value || 'all';
+    
+    const tbody = document.getElementById('deadlines-table');
+    const allDeadlines = calculateDeadlines();
+    
+    let filtered = allDeadlines;
+    
+    if (filterType === 'overdue') {
+        filtered = allDeadlines.filter(d => d.daysRemaining < 0);
+    } else if (filterType === 'upcoming') {
+        filtered = allDeadlines.filter(d => d.daysRemaining >= 0 && d.daysRemaining <= 30);
+    } else if (filterType === 'ok') {
+        filtered = allDeadlines.filter(d => d.daysRemaining > 30);
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nessuna scadenza trovata</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(deadline => {
+        let statusClass = 'status-ok';
+        let statusText = 'OK';
+        
+        if (deadline.daysRemaining < 0) {
+            statusClass = 'status-danger';
+            statusText = 'SCADUTO';
+        } else if (deadline.daysRemaining <= 7) {
+            statusClass = 'status-danger';
+            statusText = 'URGENTE';
+        } else if (deadline.daysRemaining <= 30) {
+            statusClass = 'status-warning';
+            statusText = 'IN SCADENZA';
+        }
+        
+        return `
+            <tr>
+                <td>${deadline.machineName}</td>
+                <td>${deadline.nextDate}</td>
+                <td>${deadline.daysRemaining}</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Popola dropdown filtri dinamicamente
+function populateFilterDropdowns() {
+    // Tipi macchinari
+    const types = [...new Set(machines.map(m => m.type))].sort();
+    const typeSelect = document.getElementById('filterMachineType');
+    if (typeSelect) {
+        typeSelect.innerHTML = '<option value="">Tutti i tipi</option>' + 
+            types.map(type => `<option value="${type}">${type}</option>`).join('');
+    }
+    
+    // Ubicazioni macchinari
+    const locations = [...new Set(machines.map(m => m.location))].sort();
+    const locationSelect = document.getElementById('filterMachineLocation');
+    if (locationSelect) {
+        locationSelect.innerHTML = '<option value="">Tutte le ubicazioni</option>' + 
+            locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+    }
+    
+    // Macchinari per filtro interventi
+    const machineSelect = document.getElementById('filterIntervMachine');
+    if (machineSelect) {
+        machineSelect.innerHTML = '<option value="">Tutti i macchinari</option>' + 
+            machines.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    }
 }
 
 // ==================== ALERT ====================

@@ -201,6 +201,28 @@
                             + Aggiungi Macchinario
                         </button>
                     </div>
+                    <!-- Search and Filter Bar -->
+                    <div class="card mb-3">
+                        <div class="card-body py-2">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="searchMachine" 
+                                           placeholder="🔍 Cerca per nome, tipo o ubicazione..." 
+                                           onkeyup="filterMachines()">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="filterMachineType" onchange="filterMachines()">
+                                        <option value="">Tutti i tipi</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="filterMachineLocation" onchange="filterMachines()">
+                                        <option value="">Tutte le ubicazioni</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card">
                         <div class="card-body">
                             <table class="table table-striped">
@@ -231,6 +253,35 @@
                             + Registra Intervento
                         </button>
                     </div>
+                    <!-- Intervention Filters -->
+                    <div class="card mb-3">
+                        <div class="card-body py-2">
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <select class="form-select" id="filterIntervMachine" onchange="filterInterventions()">
+                                        <option value="">Tutti i macchinari</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="filterIntervType" onchange="filterInterventions()">
+                                        <option value="">Tutti i tipi</option>
+                                        <option value="Ordinaria">Ordinaria</option>
+                                        <option value="Straordinaria">Straordinaria</option>
+                                        <option value="Riparazione">Riparazione</option>
+                                        <option value="Ispezione">Ispezione</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" class="form-control" id="filterIntervDateFrom" 
+                                           placeholder="Data da" onchange="filterInterventions()">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" class="form-control" id="filterIntervDateTo" 
+                                           placeholder="Data a" onchange="filterInterventions()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card">
                         <div class="card-body">
                             <table class="table table-striped">
@@ -257,6 +308,24 @@
                 <!-- Calendario Section -->
                 <div id="calendario-section" class="content-section" style="display: none;">
                     <h2>Scadenze Manutenzioni</h2>
+                    <!-- Deadline Filters -->
+                    <div class="card mb-3">
+                        <div class="card-body py-2">
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="filterDeadline" id="filterAll" value="all" checked onchange="filterDeadlines()">
+                                <label class="btn btn-outline-primary" for="filterAll">Tutte</label>
+                                
+                                <input type="radio" class="btn-check" name="filterDeadline" id="filterOverdue" value="overdue" onchange="filterDeadlines()">
+                                <label class="btn btn-outline-danger" for="filterOverdue">In ritardo</label>
+                                
+                                <input type="radio" class="btn-check" name="filterDeadline" id="filterUpcoming" value="upcoming" onchange="filterDeadlines()">
+                                <label class="btn btn-outline-warning" for="filterUpcoming">Prossimi 30 giorni</label>
+                                
+                                <input type="radio" class="btn-check" name="filterDeadline" id="filterOk" value="ok" onchange="filterDeadlines()">
+                                <label class="btn btn-outline-success" for="filterOk">OK</label>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card">
                         <div class="card-body">
                             <table class="table table-striped">
@@ -402,7 +471,15 @@
                         <div class="tab-pane fade show active" id="components" role="tabpanel">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="mb-0">Inventario Componenti</h6>
-                                <button class="btn btn-sm btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
+                                <div>
+                                    <div class="form-check form-switch d-inline-block me-3">
+                                        <input class="form-check-input" type="checkbox" id="filterLowStock" onchange="filterComponents()">
+                                        <label class="form-check-label" for="filterLowStock">
+                                            Solo scorta bassa
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-sm btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
+                                </div>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-striped">
