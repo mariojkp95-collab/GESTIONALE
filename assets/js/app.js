@@ -1006,11 +1006,19 @@ async function savePhoto() {
     }
     
     const file = input.files[0];
-    showAlert('⏳ Caricamento foto in corso...', 'info', 0);
+    
+    // Verifica che ci sia un macchinario selezionato
+    if (!currentMachineId) {
+        showAlert('Errore: nessun macchinario selezionato', 'danger');
+        return;
+    }
+    
+    showAlert('⏳ Caricamento foto in corso...', 'info', 3000);
     
     try {
         // Comprimi immagine
         const compressedBlob = await compressImage(file);
+        console.log('Immagine compressa, dimensione:', compressedBlob.size);
         
         if (window.firebaseStorage && firebaseInitialized) {
             // Upload su Firebase Storage
@@ -1020,8 +1028,10 @@ async function savePhoto() {
             const photoId = generateId();
             const storageRef = ref(storage, `machine-photos/${currentMachineId}/${photoId}.jpg`);
             
+            console.log('Upload su Firebase Storage...');
             await uploadBytes(storageRef, compressedBlob);
             const downloadURL = await getDownloadURL(storageRef);
+            console.log('URL foto:', downloadURL);
             
             const newPhoto = {
                 id: photoId,
@@ -1032,11 +1042,17 @@ async function savePhoto() {
             };
             
             await saveToFirebase('machinePhotos', newPhoto);
+            console.log('Foto salvata su Firestore');
+            
+            addPhotoModal.hide();
+            input.value = '';
+            document.getElementById('photo-preview').innerHTML = '';
             showAlert('✓ Foto caricata con successo!', 'success');
         } else {
             // Fallback base64 localStorage
+            console.log('Uso fallback localStorage per foto');
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const newPhoto = {
                     id: generateId(),
                     machine_id: currentMachineId,
@@ -1044,19 +1060,23 @@ async function savePhoto() {
                     created_at: new Date().toISOString()
                 };
                 
-                machinePhotos.push(newPhoto);
-                saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
-                renderMachinePhotos(currentMachineId);
-                renderMachinesTable();
-                showAlert('Foto aggiunta (storage locale)', 'success');
+                await saveToFirebase('machinePhotos', newPhoto);
+                
+                if (!firebaseInitialized) {
+                    renderMachinePhotos(currentMachineId);
+                    renderMachinesTable();
+                }
+                
+                addPhotoModal.hide();
+                input.value = '';
+                document.getElementById('photo-preview').innerHTML = '';
+                showAlert('✓ Foto aggiunta (storage locale)', 'success');
             };
             reader.readAsDataURL(compressedBlob);
         }
-        
-        addPhotoModal.hide();
     } catch (error) {
         console.error('Errore upload foto:', error);
-        showAlert('Errore durante il caricamento della foto', 'danger');
+        showAlert('Errore durante il caricamento della foto: ' + error.message, 'danger');
     }
 }
 
