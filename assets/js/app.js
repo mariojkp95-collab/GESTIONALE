@@ -245,8 +245,20 @@ function setupFirebaseListeners() {
 }
 
 async function saveToFirebase(collectionName, data) {
-    if (!firebaseInitialized) {
-        saveToStorage(STORAGE_KEYS[collectionName], data);
+    if (!firebaseInitialized || !window.firebaseDb) {
+        console.warn('Firebase non disponibile, salvo in localStorage');
+        // Fallback localStorage - aggiungi all'array esistente
+        const storageKey = STORAGE_KEYS[collectionName];
+        const existingData = loadFromStorage(storageKey);
+        const index = existingData.findIndex(item => item.id === data.id);
+        
+        if (index >= 0) {
+            existingData[index] = data; // Aggiorna esistente
+        } else {
+            existingData.push(data); // Aggiungi nuovo
+        }
+        
+        saveToStorage(storageKey, existingData);
         return;
     }
     
@@ -254,9 +266,21 @@ async function saveToFirebase(collectionName, data) {
         const { setDoc, doc } = window.firebaseModules;
         const db = window.firebaseDb;
         await setDoc(doc(db, FIREBASE_COLLECTIONS[collectionName], data.id), data);
+        console.log(`✓ Salvato su Firebase: ${collectionName}/${data.id}`);
     } catch (error) {
         console.error('Errore salvataggio Firebase:', error);
-        saveToStorage(STORAGE_KEYS[collectionName], data);
+        // Fallback localStorage in caso di errore
+        const storageKey = STORAGE_KEYS[collectionName];
+        const existingData = loadFromStorage(storageKey);
+        const index = existingData.findIndex(item => item.id === data.id);
+        
+        if (index >= 0) {
+            existingData[index] = data;
+        } else {
+            existingData.push(data);
+        }
+        
+        saveToStorage(storageKey, existingData);
     }
 }
 
@@ -608,7 +632,7 @@ function showAddMachineModal() {
     addMachineModal.show();
 }
 
-function saveMachine() {
+async function saveMachine() {
     const name = document.getElementById('machine-name').value.trim();
     const type = document.getElementById('machine-type').value.trim();
     const location = document.getElementById('machine-location').value.trim();
@@ -629,9 +653,9 @@ function saveMachine() {
     };
     
     // Salva su Firebase
-    saveToFirebase('machines', newMachine);
+    await saveToFirebase('machines', newMachine);
     
-    // Fallback localStorage
+    // Fallback localStorage (solo se Firebase non attivo)
     if (!firebaseInitialized) {
         machines.push(newMachine);
         saveToStorage(STORAGE_KEYS.machines, machines);
@@ -641,6 +665,7 @@ function saveMachine() {
     }
     
     addMachineModal.hide();
+    document.getElementById('add-machine-form').reset();
     showAlert('Macchinario aggiunto con successo!', 'success');
 }
 
@@ -722,7 +747,7 @@ function showAddInterventionModal() {
     addInterventionModal.show();
 }
 
-function saveIntervention() {
+async function saveIntervention() {
     const machineId = document.getElementById('intervention-machine').value;
     const date = document.getElementById('intervention-date').value;
     const type = document.getElementById('intervention-type').value;
@@ -749,7 +774,7 @@ function saveIntervention() {
     };
     
     // Salva su Firebase
-    saveToFirebase('interventions', newIntervention);
+    await saveToFirebase('interventions', newIntervention);
     
     // Fallback localStorage
     if (!firebaseInitialized) {
@@ -1089,7 +1114,7 @@ function showAddComponentModal() {
     addComponentModal.show();
 }
 
-function saveComponent() {
+async function saveComponent() {
     const name = document.getElementById('component-name').value.trim();
     const quantity = parseInt(document.getElementById('component-quantity').value);
     const minStock = parseInt(document.getElementById('component-min-stock').value) || 0;
@@ -1111,7 +1136,7 @@ function saveComponent() {
     };
     
     // Salva su Firebase
-    saveToFirebase('components', newComponent);
+    await saveToFirebase('components', newComponent);
     
     // Fallback localStorage
     if (!firebaseInitialized) {
@@ -1123,10 +1148,11 @@ function saveComponent() {
     }
     
     addComponentModal.hide();
+    document.getElementById('add-component-form').reset();
     showAlert('Componente aggiunto con successo!', 'success');
 }
 
-function adjustComponentStock(componentId, adjustment) {
+async function adjustComponentStock(componentId, adjustment) {
     const component = components.find(c => c.id === componentId);
     if (!component) return;
     
@@ -1139,7 +1165,7 @@ function adjustComponentStock(componentId, adjustment) {
     component.quantity = newQuantity;
     
     // Aggiorna su Firebase
-    saveToFirebase('components', component);
+    await saveToFirebase('components', component);
     
     // Fallback localStorage
     if (!firebaseInitialized) {
