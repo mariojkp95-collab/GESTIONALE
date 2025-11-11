@@ -264,6 +264,128 @@
         </div>
     </div>
 
+    <!-- Modal Dettagli Macchinario -->
+    <div class="modal fade" id="machineDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="machine-details-title">Dettagli Macchinario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" id="machineDetailsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button">
+                                📷 Foto
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="components-tab" data-bs-toggle="tab" data-bs-target="#components" type="button">
+                                🔧 Componenti & Ricambi
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="machineDetailsTabContent">
+                        <!-- Tab Foto -->
+                        <div class="tab-pane fade show active" id="photos" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Galleria Foto</h6>
+                                <button class="btn btn-sm btn-primary" onclick="showAddPhotoModal()">📷 Aggiungi Foto</button>
+                            </div>
+                            <div class="row" id="machine-photos-container">
+                                <p class="text-muted text-center">Nessuna foto caricata</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Componenti -->
+                        <div class="tab-pane fade" id="components" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Inventario Componenti</h6>
+                                <button class="btn btn-sm btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Componente</th>
+                                            <th>Quantità</th>
+                                            <th>Scorta Min.</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="machine-components-table">
+                                        <tr><td colspan="4" class="text-center text-muted">Nessun componente registrato</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aggiungi Foto -->
+    <div class="modal fade" id="addPhotoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Aggiungi Foto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Seleziona Foto *</label>
+                        <input type="file" class="form-control" id="photo-upload-input" accept="image/*" onchange="previewPhoto(this)">
+                    </div>
+                    <div id="photo-preview" class="text-center mb-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-primary" onclick="savePhoto()">Salva Foto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aggiungi Componente -->
+    <div class="modal fade" id="addComponentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Aggiungi Componente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-component-form">
+                        <div class="mb-3">
+                            <label class="form-label">Nome Componente/Ricambio *</label>
+                            <input type="text" class="form-control" id="component-name" placeholder="es. Filtro olio, Cinghia, Cuscinetto" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantità in Magazzino *</label>
+                            <input type="number" class="form-control" id="component-quantity" min="0" value="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Scorta Minima</label>
+                            <input type="number" class="form-control" id="component-min-stock" min="0" value="1" placeholder="Alert quando si scende sotto questa quantità">
+                            <small class="text-muted">Riceverai un alert quando la quantità è sotto questa soglia</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea class="form-control" id="component-notes" rows="2" placeholder="Codice articolo, fornitore, ecc."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-success" onclick="saveComponent()">Salva</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/app.js"></script>

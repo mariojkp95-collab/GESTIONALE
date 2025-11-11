@@ -3,14 +3,21 @@
 // Chiavi localStorage
 const STORAGE_KEYS = {
     machines: 'gestionale_machines',
-    interventions: 'gestionale_interventions'
+    interventions: 'gestionale_interventions',
+    components: 'gestionale_components',
+    machinePhotos: 'gestionale_machine_photos'
 };
 
 // Variabili globali
 let machines = [];
 let interventions = [];
+let components = [];
+let machinePhotos = [];
 let addMachineModal;
 let addInterventionModal;
+let machineDetailsModal;
+let addComponentModal;
+let addPhotoModal;
 
 // ==================== GESTIONE LOCALSTORAGE ====================
 
@@ -36,6 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inizializza i modal di Bootstrap
     addMachineModal = new bootstrap.Modal(document.getElementById('addMachineModal'));
     addInterventionModal = new bootstrap.Modal(document.getElementById('addInterventionModal'));
+    machineDetailsModal = new bootstrap.Modal(document.getElementById('machineDetailsModal'));
+    addComponentModal = new bootstrap.Modal(document.getElementById('addComponentModal'));
+    addPhotoModal = new bootstrap.Modal(document.getElementById('addPhotoModal'));
     
     // Imposta la data di oggi come default
     document.getElementById('intervention-date').valueAsDate = new Date();
@@ -48,6 +58,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadData() {
     machines = loadFromStorage(STORAGE_KEYS.machines);
     interventions = loadFromStorage(STORAGE_KEYS.interventions);
+    components = loadFromStorage(STORAGE_KEYS.components);
+    machinePhotos = loadFromStorage(STORAGE_KEYS.machinePhotos);
     
     renderMachinesTable();
     renderInterventionsTable();
@@ -70,15 +82,20 @@ function renderMachinesTable() {
     tbody.innerHTML = machines.map(machine => {
         const lastIntervention = getLastIntervention(machine.id);
         const lastDate = lastIntervention ? new Date(lastIntervention.date).toLocaleDateString('it-IT') : 'Mai';
+        const machineComponents = components.filter(c => c.machine_id === machine.id);
+        const photosCount = machinePhotos.filter(p => p.machine_id === machine.id).length;
         
         return `
-            <tr>
-                <td><strong>${machine.name}</strong></td>
+            <tr style="cursor: pointer;" onclick="openMachineDetails('${machine.id}')">
+                <td>
+                    <strong>${machine.name}</strong>
+                    ${photosCount > 0 ? `<span class="badge bg-info ms-2">📷 ${photosCount}</span>` : ''}
+                    ${machineComponents.length > 0 ? `<span class="badge bg-success ms-1">🔧 ${machineComponents.length}</span>` : ''}
+                </td>
                 <td>${machine.type || '-'}</td>
                 <td>${machine.location || '-'}</td>
                 <td>${lastDate}</td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="viewMachine('${machine.id}')">Dettagli</button>
+                <td onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-danger" onclick="deleteMachine('${machine.id}')">Elimina</button>
                 </td>
             </tr>
@@ -277,13 +294,17 @@ function saveMachine() {
 }
 
 function deleteMachine(id) {
-    if (!confirm('Sei sicuro di voler eliminare questo macchinario? Verranno eliminati anche tutti gli interventi associati.')) return;
+    if (!confirm('Sei sicuro di voler eliminare questo macchinario? Verranno eliminati anche tutti gli interventi, foto e componenti associati.')) return;
     
     machines = machines.filter(m => m.id !== id);
     interventions = interventions.filter(i => i.machine_id !== id);
+    components = components.filter(c => c.machine_id !== id);
+    machinePhotos = machinePhotos.filter(p => p.machine_id !== id);
     
     saveToStorage(STORAGE_KEYS.machines, machines);
     saveToStorage(STORAGE_KEYS.interventions, interventions);
+    saveToStorage(STORAGE_KEYS.components, components);
+    saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
     
     renderMachinesTable();
     renderInterventionsTable();
@@ -385,12 +406,219 @@ function deleteIntervention(id) {
     showAlert('Intervento eliminato', 'success');
 }
 
+// ==================== GESTIONE DETTAGLI MACCHINARIO ====================
+
+let currentMachineId = null;
+
+function openMachineDetails(machineId) {
+    currentMachineId = machineId;
+    const machine = machines.find(m => m.id === machineId);
+    if (!machine) return;
+    
+    // Aggiorna titolo modal
+    document.getElementById('machine-details-title').textContent = machine.name;
+    
+    // Renderizza foto
+    renderMachinePhotos(machineId);
+    
+    // Renderizza componenti
+    renderMachineComponents(machineId);
+    
+    // Mostra modal
+    machineDetailsModal.show();
+}
+
+function renderMachinePhotos(machineId) {
+    const photos = machinePhotos.filter(p => p.machine_id === machineId);
+    const container = document.getElementById('machine-photos-container');
+    
+    if (photos.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center">Nessuna foto caricata</p>';
+        return;
+    }
+    
+    container.innerHTML = photos.map(photo => `
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <img src="${photo.dataUrl}" class="card-img-top" alt="Foto macchinario" style="height: 200px; object-fit: cover;">
+                <div class="card-body p-2">
+                    <button class="btn btn-sm btn-danger w-100" onclick="deletePhoto('${photo.id}')">Elimina</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderMachineComponents(machineId) {
+    const machineComponents = components.filter(c => c.machine_id === machineId);
+    const tbody = document.getElementById('machine-components-table');
+    
+    if (machineComponents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nessun componente registrato</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = machineComponents.map(comp => {
+        let stockClass = '';
+        if (comp.quantity <= comp.minStock) stockClass = 'text-danger fw-bold';
+        else if (comp.quantity <= comp.minStock * 2) stockClass = 'text-warning fw-bold';
+        
+        return `
+            <tr>
+                <td><strong>${comp.name}</strong></td>
+                <td class="${stockClass}">${comp.quantity}</td>
+                <td>${comp.minStock || '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="adjustComponentStock('${comp.id}', 1)">+1</button>
+                    <button class="btn btn-sm btn-warning" onclick="adjustComponentStock('${comp.id}', -1)">-1</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteComponent('${comp.id}')">🗑️</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ==================== GESTIONE FOTO ====================
+
+function showAddPhotoModal() {
+    if (!currentMachineId) return;
+    document.getElementById('photo-upload-input').value = '';
+    document.getElementById('photo-preview').innerHTML = '';
+    addPhotoModal.show();
+}
+
+function previewPhoto(input) {
+    const preview = document.getElementById('photo-preview');
+    preview.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" class="img-fluid" style="max-height: 300px; border-radius: 8px;">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function savePhoto() {
+    const input = document.getElementById('photo-upload-input');
+    
+    if (!input.files || !input.files[0]) {
+        showAlert('Seleziona una foto', 'warning');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const newPhoto = {
+            id: generateId(),
+            machine_id: currentMachineId,
+            dataUrl: e.target.result,
+            created_at: new Date().toISOString()
+        };
+        
+        machinePhotos.push(newPhoto);
+        saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+        
+        renderMachinePhotos(currentMachineId);
+        renderMachinesTable();
+        addPhotoModal.hide();
+        showAlert('Foto aggiunta con successo!', 'success');
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+function deletePhoto(photoId) {
+    if (!confirm('Eliminare questa foto?')) return;
+    
+    machinePhotos = machinePhotos.filter(p => p.id !== photoId);
+    saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+    
+    renderMachinePhotos(currentMachineId);
+    renderMachinesTable();
+    showAlert('Foto eliminata', 'success');
+}
+
+// ==================== GESTIONE COMPONENTI ====================
+
+function showAddComponentModal() {
+    if (!currentMachineId) return;
+    document.getElementById('add-component-form').reset();
+    addComponentModal.show();
+}
+
+function saveComponent() {
+    const name = document.getElementById('component-name').value.trim();
+    const quantity = parseInt(document.getElementById('component-quantity').value);
+    const minStock = parseInt(document.getElementById('component-min-stock').value) || 0;
+    const notes = document.getElementById('component-notes').value.trim();
+    
+    if (!name || isNaN(quantity)) {
+        showAlert('Compila i campi obbligatori', 'warning');
+        return;
+    }
+    
+    const newComponent = {
+        id: generateId(),
+        machine_id: currentMachineId,
+        name,
+        quantity,
+        minStock,
+        notes,
+        created_at: new Date().toISOString()
+    };
+    
+    components.push(newComponent);
+    saveToStorage(STORAGE_KEYS.components, components);
+    
+    renderMachineComponents(currentMachineId);
+    renderMachinesTable();
+    addComponentModal.hide();
+    showAlert('Componente aggiunto con successo!', 'success');
+}
+
+function adjustComponentStock(componentId, adjustment) {
+    const component = components.find(c => c.id === componentId);
+    if (!component) return;
+    
+    const newQuantity = component.quantity + adjustment;
+    if (newQuantity < 0) {
+        showAlert('Quantità non può essere negativa', 'warning');
+        return;
+    }
+    
+    component.quantity = newQuantity;
+    saveToStorage(STORAGE_KEYS.components, components);
+    
+    renderMachineComponents(currentMachineId);
+    renderMachinesTable();
+    
+    if (adjustment < 0) {
+        showAlert(`Prelevato 1 ${component.name}. Rimanenti: ${newQuantity}`, 'info', 2000);
+    } else {
+        showAlert(`Aggiunto 1 ${component.name}. Totale: ${newQuantity}`, 'success', 2000);
+    }
+}
+
+function deleteComponent(componentId) {
+    if (!confirm('Eliminare questo componente?')) return;
+    
+    components = components.filter(c => c.id !== componentId);
+    saveToStorage(STORAGE_KEYS.components, components);
+    
+    renderMachineComponents(currentMachineId);
+    renderMachinesTable();
+    showAlert('Componente eliminato', 'success');
+}
+
 // ==================== EXPORT DATI ====================
 
 function exportData() {
     const data = {
         machines,
         interventions,
+        components,
+        machinePhotos,
         exportDate: new Date().toISOString()
     };
     

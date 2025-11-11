@@ -59,8 +59,8 @@ body {
 }
 
 .navbar-logo {
-    height: 40px;
-    width: 40px;
+    height: 32px;
+    width: 32px;
     object-fit: contain;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
@@ -548,6 +548,57 @@ strong {
 .container-fluid {
     max-width: 1600px;
     margin: 0 auto;
+}
+
+/* Tabs styling */
+.nav-tabs {
+    border-bottom: 2px solid var(--border-color);
+}
+
+.nav-tabs .nav-link {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+    background-color: transparent;
+}
+
+.tab-content {
+    padding: 1.5rem 0;
+}
+
+/* Machine row hover */
+tbody tr[style*="cursor: pointer"]:hover {
+    background-color: var(--bg-tertiary) !important;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Modal XL */
+.modal-xl {
+    max-width: 1200px;
+}
+
+/* Photo gallery */
+#machine-photos-container .card {
+    transition: transform 0.2s ease;
+}
+
+#machine-photos-container .card:hover {
+    transform: translateY(-4px);
 }
 
 /* Smooth transitions */
