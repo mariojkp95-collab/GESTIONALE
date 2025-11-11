@@ -205,6 +205,7 @@ function setupFirebaseListeners() {
         renderMachinesTable();
         updateMachineSelect();
         updateDashboard();
+        populateFilterDropdowns(); // Aggiunto
     });
     
     // Listener per interventi
@@ -216,6 +217,7 @@ function setupFirebaseListeners() {
         renderInterventionsTable();
         renderDeadlinesTable();
         updateDashboard();
+        populateFilterDropdowns(); // Aggiunto
     });
     
     // Listener per componenti
@@ -401,9 +403,6 @@ function loadData() {
 function renderMachinesTable() {
     const tbody = document.getElementById('machines-table');
     
-    // Popola i dropdown filtri
-    populateFilterDropdowns();
-    
     if (machines.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun macchinario presente</td></tr>';
         return;
@@ -446,9 +445,6 @@ function renderMachinesTable() {
 // Rendering tabella interventi
 function renderInterventionsTable() {
     const tbody = document.getElementById('interventions-table');
-    
-    // Popola dropdown macchinari nel filtro
-    populateFilterDropdowns();
     
     if (interventions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun intervento registrato</td></tr>';
@@ -1468,9 +1464,9 @@ function filterDeadlines() {
         
         return `
             <tr>
-                <td>${deadline.machineName}</td>
+                <td><strong>${deadline.machineName}</strong></td>
                 <td>${deadline.nextDate}</td>
-                <td>${deadline.daysRemaining}</td>
+                <td>${deadline.daysRemaining} giorni</td>
                 <td><span class="badge ${statusClass}">${statusText}</span></td>
             </tr>
         `;
