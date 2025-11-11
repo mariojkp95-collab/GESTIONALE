@@ -370,7 +370,7 @@ function renderInterventionsTable() {
     const tbody = document.getElementById('interventions-table');
     
     if (interventions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun intervento registrato</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun intervento registrato</td></tr>';
         return;
     }
     
@@ -381,12 +381,27 @@ function renderInterventionsTable() {
         const machineName = machine ? machine.name : 'Sconosciuto';
         const date = new Date(intervention.date).toLocaleDateString('it-IT');
         
+        // Formatta durata
+        let durationText = '-';
+        if (intervention.hours || intervention.minutes) {
+            const h = intervention.hours || 0;
+            const m = intervention.minutes || 0;
+            if (h > 0 && m > 0) {
+                durationText = `${h}h ${m}m`;
+            } else if (h > 0) {
+                durationText = `${h}h`;
+            } else if (m > 0) {
+                durationText = `${m}m`;
+            }
+        }
+        
         return `
             <tr>
                 <td>${date}</td>
                 <td>${machineName}</td>
                 <td><span class="badge bg-primary">${intervention.type}</span></td>
                 <td>${intervention.description}</td>
+                <td>⏱️ ${durationText}</td>
                 <td>
                     <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
@@ -468,14 +483,76 @@ function getLastIntervention(machineId) {
 
 // Aggiorna dashboard
 function updateDashboard() {
-    document.getElementById('total-machines').textContent = machines.length;
-    document.getElementById('total-interventions').textContent = interventions.length;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
+    // 1. Scadenze in Ritardo
     const deadlines = calculateDeadlines();
-    const upcomingDeadlines = deadlines.filter(d => d.daysRemaining >= 0 && d.daysRemaining <= 30);
-    document.getElementById('upcoming-deadlines').textContent = upcomingDeadlines.length;
+    const overdueDeadlines = deadlines.filter(d => d.daysRemaining < 0);
+    document.getElementById('overdue-deadlines').textContent = overdueDeadlines.length;
     
-    // Ultimi interventi
+    // 2. Componenti Sotto Scorta (quantità <= 2)
+    const lowStockComponents = components.filter(c => c.quantity <= 2);
+    document.getElementById('low-stock-components').textContent = lowStockComponents.length;
+    
+    // 3. Interventi Questo Mese
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const monthInterventions = interventions.filter(i => {
+        const iDate = new Date(i.date);
+        return iDate.getMonth() === currentMonth && iDate.getFullYear() === currentYear;
+    });
+    document.getElementById('month-interventions').textContent = monthInterventions.length;
+    document.getElementById('month-interventions-detail').textContent = 
+        monthInterventions.length > 0 ? `${monthInterventions.length} completati` : 'Nessuno';
+    
+    // 4. Macchinario Più Attivo (con più interventi)
+    if (machines.length > 0 && interventions.length > 0) {
+        const machineInterventionCount = {};
+        interventions.forEach(i => {
+            machineInterventionCount[i.machine_id] = (machineInterventionCount[i.machine_id] || 0) + 1;
+        });
+        
+        const mostActiveMachineId = Object.keys(machineInterventionCount).reduce((a, b) => 
+            machineInterventionCount[a] > machineInterventionCount[b] ? a : b
+        );
+        
+        const mostActiveMachine = machines.find(m => m.id === mostActiveMachineId);
+        const count = machineInterventionCount[mostActiveMachineId];
+        
+        document.getElementById('most-active-machine').textContent = mostActiveMachine ? mostActiveMachine.name : '-';
+        document.getElementById('most-active-count').textContent = `${count} interventi`;
+    } else {
+        document.getElementById('most-active-machine').textContent = '-';
+        document.getElementById('most-active-count').textContent = 'Nessun intervento';
+    }
+    
+    // 5. Prossima Scadenza
+    const upcomingDeadlines = deadlines.filter(d => d.daysRemaining >= 0).sort((a, b) => a.daysRemaining - b.daysRemaining);
+    if (upcomingDeadlines.length > 0) {
+        const nextDeadline = upcomingDeadlines[0];
+        const machine = machines.find(m => m.id === nextDeadline.machine_id);
+        document.getElementById('next-deadline-machine').textContent = machine ? machine.name : '-';
+        document.getElementById('next-deadline-date').textContent = 
+            `Tra ${nextDeadline.daysRemaining} giorni (${new Date(nextDeadline.deadline).toLocaleDateString('it-IT')})`;
+    } else {
+        document.getElementById('next-deadline-machine').textContent = '-';
+        document.getElementById('next-deadline-date').textContent = 'Nessuna scadenza';
+    }
+    
+    // 6. Ultima Attività
+    if (interventions.length > 0) {
+        const lastIntervention = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        const machine = machines.find(m => m.id === lastIntervention.machine_id);
+        document.getElementById('last-activity-machine').textContent = machine ? machine.name : '-';
+        document.getElementById('last-activity-date').textContent = 
+            new Date(lastIntervention.date).toLocaleDateString('it-IT');
+    } else {
+        document.getElementById('last-activity-machine').textContent = '-';
+        document.getElementById('last-activity-date').textContent = 'Nessuna attività';
+    }
+    
+    // Ultimi interventi (lista in basso)
     const recentDiv = document.getElementById('recent-interventions');
     const recent = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
     
@@ -486,9 +563,15 @@ function updateDashboard() {
             const machine = machines.find(m => m.id === intervention.machine_id);
             const machineName = machine ? machine.name : 'Sconosciuto';
             const date = new Date(intervention.date).toLocaleDateString('it-IT');
+            let durationText = '';
+            if (intervention.hours || intervention.minutes) {
+                const h = intervention.hours || 0;
+                const m = intervention.minutes || 0;
+                durationText = ` - ⏱️ ${h}h ${m}m`;
+            }
             return `
                 <li class="list-group-item">
-                    <strong>${machineName}</strong> - ${date}<br>
+                    <strong>${machineName}</strong> - ${date}${durationText}<br>
                     <small>${intervention.type}: ${intervention.description}</small>
                 </li>
             `;
@@ -643,6 +726,8 @@ function saveIntervention() {
     const date = document.getElementById('intervention-date').value;
     const type = document.getElementById('intervention-type').value;
     const description = document.getElementById('intervention-description').value.trim();
+    const hours = document.getElementById('intervention-hours').value;
+    const minutes = document.getElementById('intervention-minutes').value;
     const nextDays = document.getElementById('intervention-next-days').value;
     
     if (!machineId || !date || !type || !description) {
@@ -656,6 +741,8 @@ function saveIntervention() {
         date,
         type,
         description,
+        hours: hours ? parseInt(hours) : 0,
+        minutes: minutes ? parseInt(minutes) : 0,
         next_maintenance_days: nextDays ? parseInt(nextDays) : null,
         created_at: new Date().toISOString()
     };
@@ -673,6 +760,7 @@ function saveIntervention() {
     }
     
     addInterventionModal.hide();
+    document.getElementById('add-intervention-form').reset();
     showAlert('Intervento registrato con successo!', 'success');
 }
 

@@ -9,7 +9,7 @@
     <title>Gestionale Manutenzioni</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css?v=3.0">
+    <link rel="stylesheet" href="assets/css/style.css?v=4.0">
 </head>
 <body>
     <!-- Navbar -->
@@ -123,27 +123,60 @@
                 <div id="dashboard-section" class="content-section">
                     <h2>Dashboard</h2>
                     <div class="row">
+                        <!-- Riga 1 -->
                         <div class="col-md-4">
-                            <div class="card text-white bg-info mb-3">
+                            <div class="card text-white bg-danger mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title">Totale Macchinari</h5>
-                                    <h2 id="total-machines">0</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card text-white bg-success mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Interventi Totali</h5>
-                                    <h2 id="total-interventions">0</h2>
+                                    <h5 class="card-title">🚨 Scadenze in Ritardo</h5>
+                                    <h2 id="overdue-deadlines">0</h2>
+                                    <small>Interventi non completati</small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card text-white bg-warning mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title">Scadenze Prossime</h5>
-                                    <h2 id="upcoming-deadlines">0</h2>
+                                    <h5 class="card-title">⚠️ Componenti Sotto Scorta</h5>
+                                    <h2 id="low-stock-components">0</h2>
+                                    <small>Quantità ≤ 2 unità</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-info mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">🔧 Interventi Questo Mese</h5>
+                                    <h2 id="month-interventions">0</h2>
+                                    <small id="month-interventions-detail">Nessuno</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Riga 2 -->
+                        <div class="col-md-4">
+                            <div class="card text-white bg-primary mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">📊 Macchina Più Attiva</h5>
+                                    <h3 id="most-active-machine" style="font-size: 1.2rem;">-</h3>
+                                    <small id="most-active-count">Nessun intervento</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">📅 Prossima Scadenza</h5>
+                                    <h3 id="next-deadline-machine" style="font-size: 1.2rem;">-</h3>
+                                    <small id="next-deadline-date">Nessuna scadenza</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-secondary mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">🔄 Ultima Attività</h5>
+                                    <h3 id="last-activity-machine" style="font-size: 1.2rem;">-</h3>
+                                    <small id="last-activity-date">Nessuna attività</small>
                                 </div>
                             </div>
                         </div>
@@ -207,12 +240,13 @@
                                         <th>Macchinario</th>
                                         <th>Tipo</th>
                                         <th>Descrizione</th>
+                                        <th>Durata</th>
                                         <th>Azioni</th>
                                     </tr>
                                 </thead>
                                 <tbody id="interventions-table">
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">Nessun intervento registrato</td>
+                                        <td colspan="6" class="text-center text-muted">Nessun intervento registrato</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -317,6 +351,16 @@
                             <label class="form-label">Descrizione *</label>
                             <textarea class="form-control" id="intervention-description" rows="3" required></textarea>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">⏱️ Ore Lavoro</label>
+                                <input type="number" class="form-control" id="intervention-hours" min="0" placeholder="es. 2">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Minuti</label>
+                                <input type="number" class="form-control" id="intervention-minutes" min="0" max="59" placeholder="es. 30">
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Prossima Scadenza (giorni)</label>
                             <input type="number" class="form-control" id="intervention-next-days" placeholder="es. 90">
@@ -342,31 +386,20 @@
                 <div class="modal-body">
                     <ul class="nav nav-tabs mb-3" id="machineDetailsTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button">
-                                📷 Foto
+                            <button class="nav-link active" id="components-tab" data-bs-toggle="tab" data-bs-target="#components" type="button">
+                                � Componenti & Ricambi
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="components-tab" data-bs-toggle="tab" data-bs-target="#components" type="button">
-                                🔧 Componenti & Ricambi
+                            <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button">
+                                � Foto
                             </button>
                         </li>
                     </ul>
                     
                     <div class="tab-content" id="machineDetailsTabContent">
-                        <!-- Tab Foto -->
-                        <div class="tab-pane fade show active" id="photos" role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Galleria Foto</h6>
-                                <button class="btn btn-sm btn-primary" onclick="showAddPhotoModal()">📷 Aggiungi Foto</button>
-                            </div>
-                            <div class="row" id="machine-photos-container">
-                                <p class="text-muted text-center">Nessuna foto caricata</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Tab Componenti -->
-                        <div class="tab-pane fade" id="components" role="tabpanel">
+                        <!-- Tab Componenti (PRIMO) -->
+                        <div class="tab-pane fade show active" id="components" role="tabpanel">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="mb-0">Inventario Componenti</h6>
                                 <button class="btn btn-sm btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
@@ -385,6 +418,17 @@
                                         <tr><td colspan="4" class="text-center text-muted">Nessun componente registrato</td></tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Foto (SECONDO) -->
+                        <div class="tab-pane fade" id="photos" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Galleria Foto</h6>
+                                <button class="btn btn-sm btn-primary" onclick="showAddPhotoModal()">📷 Aggiungi Foto</button>
+                            </div>
+                            <div class="row" id="machine-photos-container">
+                                <p class="text-muted text-center">Nessuna foto caricata</p>
                             </div>
                         </div>
                     </div>
@@ -485,6 +529,6 @@
         window.authModules = { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
     </script>
     
-    <script src="assets/js/app.js?v=3.0"></script>
+    <script src="assets/js/app.js?v=4.0"></script>
 </body>
 </html>
