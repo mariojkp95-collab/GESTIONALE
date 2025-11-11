@@ -9,7 +9,7 @@
     <title>Gestionale Manutenzioni</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css?v=2.0">
+    <link rel="stylesheet" href="assets/css/style.css?v=3.0">
 </head>
 <body>
     <!-- Navbar -->
@@ -18,6 +18,7 @@
             <div class="navbar-brand mb-0 h1 d-flex align-items-center">
                 <img src="assets/images/logo.png" alt="RJ Logo" class="navbar-logo me-2">
                 <span>Gestionale Manutenzioni</span>
+                <span id="sync-status" class="badge bg-secondary ms-2" style="font-size: 0.7rem;">⚡ Sync</span>
             </div>
             <button class="btn btn-sm btn-outline-light" onclick="exportData()">📥 Export Dati</button>
         </div>
@@ -391,6 +392,32 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/app.js?v=2.0"></script>
+    
+    <!-- Firebase -->
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAK9qdjGwz6xs86_H2-d6VLe4FKeHZxJeA",
+            authDomain: "gestionale-manutenzioni.firebaseapp.com",
+            projectId: "gestionale-manutenzioni",
+            storageBucket: "gestionale-manutenzioni.firebasestorage.app",
+            messagingSenderId: "857041989069",
+            appId: "1:857041989069:web:44d0d540b8411bf2632884"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Rendi Firebase disponibile globalmente
+        window.firebaseDb = db;
+        window.firebaseModules = { collection, getDocs, setDoc, doc, onSnapshot, deleteDoc };
+    </script>
+    
+    <script src="assets/js/app.js?v=3.0"></script>
 </body>
 </html>

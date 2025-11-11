@@ -1,11 +1,19 @@
-// Gestionale Manutenzioni - LocalStorage Version (GitHub Pages Compatible)
+// Gestionale Manutenzioni - Firebase Cloud Sync Version
 
-// Chiavi localStorage
+// Chiavi localStorage (fallback)
 const STORAGE_KEYS = {
     machines: 'gestionale_machines',
     interventions: 'gestionale_interventions',
     components: 'gestionale_components',
     machinePhotos: 'gestionale_machine_photos'
+};
+
+// Firebase collections
+const FIREBASE_COLLECTIONS = {
+    machines: 'machines',
+    interventions: 'interventions',
+    components: 'components',
+    machinePhotos: 'machinePhotos'
 };
 
 // Variabili globali
@@ -18,6 +26,126 @@ let addInterventionModal;
 let machineDetailsModal;
 let addComponentModal;
 let addPhotoModal;
+let firebaseInitialized = false;
+
+// ==================== FIREBASE FUNCTIONS ====================
+
+async function initFirebase() {
+    if (!window.firebaseDb) {
+        console.warn('Firebase non disponibile, uso localStorage');
+        updateSyncStatus(false);
+        return false;
+    }
+    
+    try {
+        // Setup listeners per sincronizzazione real-time
+        setupFirebaseListeners();
+        firebaseInitialized = true;
+        updateSyncStatus(true);
+        console.log('✓ Firebase connesso e sincronizzato');
+        return true;
+    } catch (error) {
+        console.error('Errore Firebase:', error);
+        updateSyncStatus(false);
+        return false;
+    }
+}
+
+function updateSyncStatus(connected) {
+    const statusBadge = document.getElementById('sync-status');
+    if (connected) {
+        statusBadge.className = 'badge bg-success ms-2';
+        statusBadge.style.fontSize = '0.7rem';
+        statusBadge.textContent = '🌐 Cloud';
+        statusBadge.title = 'Sincronizzazione cloud attiva';
+    } else {
+        statusBadge.className = 'badge bg-warning ms-2';
+        statusBadge.style.fontSize = '0.7rem';
+        statusBadge.textContent = '💾 Local';
+        statusBadge.title = 'Solo storage locale';
+    }
+}
+
+function setupFirebaseListeners() {
+    const { onSnapshot, collection } = window.firebaseModules;
+    const db = window.firebaseDb;
+    
+    // Listener per macchinari
+    onSnapshot(collection(db, FIREBASE_COLLECTIONS.machines), (snapshot) => {
+        machines = [];
+        snapshot.forEach((doc) => {
+            machines.push({ id: doc.id, ...doc.data() });
+        });
+        renderMachinesTable();
+        updateMachineSelect();
+        updateDashboard();
+    });
+    
+    // Listener per interventi
+    onSnapshot(collection(db, FIREBASE_COLLECTIONS.interventions), (snapshot) => {
+        interventions = [];
+        snapshot.forEach((doc) => {
+            interventions.push({ id: doc.id, ...doc.data() });
+        });
+        renderInterventionsTable();
+        renderDeadlinesTable();
+        updateDashboard();
+    });
+    
+    // Listener per componenti
+    onSnapshot(collection(db, FIREBASE_COLLECTIONS.components), (snapshot) => {
+        components = [];
+        snapshot.forEach((doc) => {
+            components.push({ id: doc.id, ...doc.data() });
+        });
+        if (currentMachineId) {
+            renderMachineComponents(currentMachineId);
+        }
+        renderMachinesTable();
+    });
+    
+    // Listener per foto
+    onSnapshot(collection(db, FIREBASE_COLLECTIONS.machinePhotos), (snapshot) => {
+        machinePhotos = [];
+        snapshot.forEach((doc) => {
+            machinePhotos.push({ id: doc.id, ...doc.data() });
+        });
+        if (currentMachineId) {
+            renderMachinePhotos(currentMachineId);
+        }
+        renderMachinesTable();
+    });
+}
+
+async function saveToFirebase(collectionName, data) {
+    if (!firebaseInitialized) {
+        saveToStorage(STORAGE_KEYS[collectionName], data);
+        return;
+    }
+    
+    try {
+        const { setDoc, doc } = window.firebaseModules;
+        const db = window.firebaseDb;
+        await setDoc(doc(db, FIREBASE_COLLECTIONS[collectionName], data.id), data);
+    } catch (error) {
+        console.error('Errore salvataggio Firebase:', error);
+        saveToStorage(STORAGE_KEYS[collectionName], data);
+    }
+}
+
+async function deleteFromFirebase(collectionName, id) {
+    if (!firebaseInitialized) {
+        return;
+    }
+    
+    try {
+        const { deleteDoc, doc } = window.firebaseModules;
+        const db = window.firebaseDb;
+        await deleteDoc(doc(db, FIREBASE_COLLECTIONS[collectionName], id));
+    } catch (error) {
+        console.error('Errore eliminazione Firebase:', error);
+    }
+}
 
 // ==================== GESTIONE LOCALSTORAGE ====================
 
@@ -39,7 +167,7 @@ function generateId() {
 
 // ==================== INIZIALIZZAZIONE ====================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Inizializza i modal di Bootstrap
     addMachineModal = new bootstrap.Modal(document.getElementById('addMachineModal'));
     addInterventionModal = new bootstrap.Modal(document.getElementById('addInterventionModal'));
@@ -50,11 +178,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Imposta la data di oggi come default
     document.getElementById('intervention-date').valueAsDate = new Date();
     
-    // Carica i dati iniziali
-    loadData();
+    // Inizializza Firebase
+    await initFirebase();
+    
+    // Carica i dati iniziali (se Firebase non disponibile)
+    if (!firebaseInitialized) {
+        loadData();
+    }
 });
 
-// Caricamento dati
+// Caricamento dati (fallback se Firebase non disponibile)
 function loadData() {
     machines = loadFromStorage(STORAGE_KEYS.machines);
     interventions = loadFromStorage(STORAGE_KEYS.interventions);
@@ -282,12 +415,17 @@ function saveMachine() {
         created_at: new Date().toISOString()
     };
     
-    machines.push(newMachine);
-    saveToStorage(STORAGE_KEYS.machines, machines);
+    // Salva su Firebase
+    saveToFirebase('machines', newMachine);
     
-    renderMachinesTable();
-    updateMachineSelect();
-    updateDashboard();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        machines.push(newMachine);
+        saveToStorage(STORAGE_KEYS.machines, machines);
+        renderMachinesTable();
+        updateMachineSelect();
+        updateDashboard();
+    }
     
     addMachineModal.hide();
     showAlert('Macchinario aggiunto con successo!', 'success');
@@ -296,21 +434,32 @@ function saveMachine() {
 function deleteMachine(id) {
     if (!confirm('Sei sicuro di voler eliminare questo macchinario? Verranno eliminati anche tutti gli interventi, foto e componenti associati.')) return;
     
-    machines = machines.filter(m => m.id !== id);
-    interventions = interventions.filter(i => i.machine_id !== id);
-    components = components.filter(c => c.machine_id !== id);
-    machinePhotos = machinePhotos.filter(p => p.machine_id !== id);
+    // Elimina da Firebase
+    deleteFromFirebase('machines', id);
     
-    saveToStorage(STORAGE_KEYS.machines, machines);
-    saveToStorage(STORAGE_KEYS.interventions, interventions);
-    saveToStorage(STORAGE_KEYS.components, components);
-    saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+    // Elimina interventi, componenti e foto associati
+    interventions.filter(i => i.machine_id === id).forEach(i => deleteFromFirebase('interventions', i.id));
+    components.filter(c => c.machine_id === id).forEach(c => deleteFromFirebase('components', c.id));
+    machinePhotos.filter(p => p.machine_id === id).forEach(p => deleteFromFirebase('machinePhotos', p.id));
     
-    renderMachinesTable();
-    renderInterventionsTable();
-    renderDeadlinesTable();
-    updateMachineSelect();
-    updateDashboard();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        machines = machines.filter(m => m.id !== id);
+        interventions = interventions.filter(i => i.machine_id !== id);
+        components = components.filter(c => c.machine_id !== id);
+        machinePhotos = machinePhotos.filter(p => p.machine_id !== id);
+        
+        saveToStorage(STORAGE_KEYS.machines, machines);
+        saveToStorage(STORAGE_KEYS.interventions, interventions);
+        saveToStorage(STORAGE_KEYS.components, components);
+        saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+        
+        renderMachinesTable();
+        renderInterventionsTable();
+        renderDeadlinesTable();
+        updateMachineSelect();
+        updateDashboard();
+    }
     
     showAlert('Macchinario eliminato', 'success');
 }
@@ -382,12 +531,17 @@ function saveIntervention() {
         created_at: new Date().toISOString()
     };
     
-    interventions.push(newIntervention);
-    saveToStorage(STORAGE_KEYS.interventions, interventions);
+    // Salva su Firebase
+    saveToFirebase('interventions', newIntervention);
     
-    renderInterventionsTable();
-    renderDeadlinesTable();
-    updateDashboard();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        interventions.push(newIntervention);
+        saveToStorage(STORAGE_KEYS.interventions, interventions);
+        renderInterventionsTable();
+        renderDeadlinesTable();
+        updateDashboard();
+    }
     
     addInterventionModal.hide();
     showAlert('Intervento registrato con successo!', 'success');
@@ -396,12 +550,17 @@ function saveIntervention() {
 function deleteIntervention(id) {
     if (!confirm('Sei sicuro di voler eliminare questo intervento?')) return;
     
-    interventions = interventions.filter(i => i.id !== id);
-    saveToStorage(STORAGE_KEYS.interventions, interventions);
+    // Elimina da Firebase
+    deleteFromFirebase('interventions', id);
     
-    renderInterventionsTable();
-    renderDeadlinesTable();
-    updateDashboard();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        interventions = interventions.filter(i => i.id !== id);
+        saveToStorage(STORAGE_KEYS.interventions, interventions);
+        renderInterventionsTable();
+        renderDeadlinesTable();
+        updateDashboard();
+    }
     
     showAlert('Intervento eliminato', 'success');
 }
@@ -517,11 +676,17 @@ function savePhoto() {
             created_at: new Date().toISOString()
         };
         
-        machinePhotos.push(newPhoto);
-        saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+        // Salva su Firebase
+        saveToFirebase('machinePhotos', newPhoto);
         
-        renderMachinePhotos(currentMachineId);
-        renderMachinesTable();
+        // Fallback localStorage
+        if (!firebaseInitialized) {
+            machinePhotos.push(newPhoto);
+            saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+            renderMachinePhotos(currentMachineId);
+            renderMachinesTable();
+        }
+        
         addPhotoModal.hide();
         showAlert('Foto aggiunta con successo!', 'success');
     };
@@ -531,11 +696,17 @@ function savePhoto() {
 function deletePhoto(photoId) {
     if (!confirm('Eliminare questa foto?')) return;
     
-    machinePhotos = machinePhotos.filter(p => p.id !== photoId);
-    saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+    // Elimina da Firebase
+    deleteFromFirebase('machinePhotos', photoId);
     
-    renderMachinePhotos(currentMachineId);
-    renderMachinesTable();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        machinePhotos = machinePhotos.filter(p => p.id !== photoId);
+        saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+        renderMachinePhotos(currentMachineId);
+        renderMachinesTable();
+    }
+    
     showAlert('Foto eliminata', 'success');
 }
 
@@ -568,11 +739,17 @@ function saveComponent() {
         created_at: new Date().toISOString()
     };
     
-    components.push(newComponent);
-    saveToStorage(STORAGE_KEYS.components, components);
+    // Salva su Firebase
+    saveToFirebase('components', newComponent);
     
-    renderMachineComponents(currentMachineId);
-    renderMachinesTable();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        components.push(newComponent);
+        saveToStorage(STORAGE_KEYS.components, components);
+        renderMachineComponents(currentMachineId);
+        renderMachinesTable();
+    }
+    
     addComponentModal.hide();
     showAlert('Componente aggiunto con successo!', 'success');
 }
@@ -588,10 +765,16 @@ function adjustComponentStock(componentId, adjustment) {
     }
     
     component.quantity = newQuantity;
-    saveToStorage(STORAGE_KEYS.components, components);
     
-    renderMachineComponents(currentMachineId);
-    renderMachinesTable();
+    // Aggiorna su Firebase
+    saveToFirebase('components', component);
+    
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        saveToStorage(STORAGE_KEYS.components, components);
+        renderMachineComponents(currentMachineId);
+        renderMachinesTable();
+    }
     
     if (adjustment < 0) {
         showAlert(`Prelevato 1 ${component.name}. Rimanenti: ${newQuantity}`, 'info', 2000);
@@ -603,11 +786,17 @@ function adjustComponentStock(componentId, adjustment) {
 function deleteComponent(componentId) {
     if (!confirm('Eliminare questo componente?')) return;
     
-    components = components.filter(c => c.id !== componentId);
-    saveToStorage(STORAGE_KEYS.components, components);
+    // Elimina da Firebase
+    deleteFromFirebase('components', componentId);
     
-    renderMachineComponents(currentMachineId);
-    renderMachinesTable();
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        components = components.filter(c => c.id !== componentId);
+        saveToStorage(STORAGE_KEYS.components, components);
+        renderMachineComponents(currentMachineId);
+        renderMachinesTable();
+    }
+    
     showAlert('Componente eliminato', 'success');
 }
 
