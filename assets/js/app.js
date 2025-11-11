@@ -1013,67 +1013,38 @@ async function savePhoto() {
         return;
     }
     
-    showAlert('⏳ Caricamento foto in corso...', 'info', 3000);
+    showAlert('⏳ Compressione e caricamento foto...', 'info', 3000);
     
     try {
         // Comprimi immagine
         const compressedBlob = await compressImage(file);
         console.log('Immagine compressa, dimensione:', compressedBlob.size);
         
-        if (window.firebaseStorage && firebaseInitialized) {
-            // Upload su Firebase Storage
-            const { ref, uploadBytes, getDownloadURL } = window.storageModules;
-            const storage = window.firebaseStorage;
-            
-            const photoId = generateId();
-            const storageRef = ref(storage, `machine-photos/${currentMachineId}/${photoId}.jpg`);
-            
-            console.log('Upload su Firebase Storage...');
-            await uploadBytes(storageRef, compressedBlob);
-            const downloadURL = await getDownloadURL(storageRef);
-            console.log('URL foto:', downloadURL);
-            
+        // Converti blob compresso in base64
+        const reader = new FileReader();
+        reader.onload = async function(e) {
             const newPhoto = {
-                id: photoId,
+                id: generateId(),
                 machine_id: currentMachineId,
-                url: downloadURL,
-                storagePath: `machine-photos/${currentMachineId}/${photoId}.jpg`,
+                dataUrl: e.target.result, // base64 compresso
                 created_at: new Date().toISOString()
             };
             
+            console.log('Salvo foto su Firestore...');
             await saveToFirebase('machinePhotos', newPhoto);
-            console.log('Foto salvata su Firestore');
+            
+            if (!firebaseInitialized) {
+                renderMachinePhotos(currentMachineId);
+                renderMachinesTable();
+            }
             
             addPhotoModal.hide();
             input.value = '';
             document.getElementById('photo-preview').innerHTML = '';
             showAlert('✓ Foto caricata con successo!', 'success');
-        } else {
-            // Fallback base64 localStorage
-            console.log('Uso fallback localStorage per foto');
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const newPhoto = {
-                    id: generateId(),
-                    machine_id: currentMachineId,
-                    dataUrl: e.target.result,
-                    created_at: new Date().toISOString()
-                };
-                
-                await saveToFirebase('machinePhotos', newPhoto);
-                
-                if (!firebaseInitialized) {
-                    renderMachinePhotos(currentMachineId);
-                    renderMachinesTable();
-                }
-                
-                addPhotoModal.hide();
-                input.value = '';
-                document.getElementById('photo-preview').innerHTML = '';
-                showAlert('✓ Foto aggiunta (storage locale)', 'success');
-            };
-            reader.readAsDataURL(compressedBlob);
-        }
+            console.log('Foto salvata correttamente');
+        };
+        reader.readAsDataURL(compressedBlob);
     } catch (error) {
         console.error('Errore upload foto:', error);
         showAlert('Errore durante il caricamento della foto: ' + error.message, 'danger');
@@ -1083,24 +1054,9 @@ async function savePhoto() {
 async function deletePhoto(photoId) {
     if (!confirm('Eliminare questa foto?')) return;
     
-    const photo = machinePhotos.find(p => p.id === photoId);
-    
     try {
-        // Elimina da Firebase Storage se presente
-        if (photo && photo.storagePath && window.firebaseStorage) {
-            const { ref, deleteObject } = window.storageModules;
-            const storage = window.firebaseStorage;
-            const storageRef = ref(storage, photo.storagePath);
-            
-            try {
-                await deleteObject(storageRef);
-            } catch (err) {
-                console.warn('File già eliminato da Storage:', err);
-            }
-        }
-        
-        // Elimina da Firebase
-        deleteFromFirebase('machinePhotos', photoId);
+        // Elimina da Firestore
+        await deleteFromFirebase('machinePhotos', photoId);
         
         // Fallback localStorage
         if (!firebaseInitialized) {

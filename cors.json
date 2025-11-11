@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://mariojkp95-collab.github.io"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "maxAgeSeconds": 3600
+  }
+]
