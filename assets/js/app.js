@@ -817,9 +817,13 @@ function renderMachinePhotos(machineId) {
     container.innerHTML = photos.map(photo => `
         <div class="col-md-4 mb-3">
             <div class="card h-100">
-                <img src="${photo.dataUrl}" class="card-img-top" alt="Foto macchinario" style="height: 200px; object-fit: cover;">
-                <div class="card-body p-2">
-                    <button class="btn btn-sm btn-danger w-100" onclick="deletePhoto('${photo.id}')">Elimina</button>
+                <img src="${photo.url || photo.dataUrl}" 
+                     class="card-img-top" 
+                     alt="Foto macchinario" 
+                     style="height: 200px; object-fit: cover; cursor: pointer;"
+                     onclick="openPhotoGallery('${photo.id}')">
+                <div class="card-body p-2 text-center">
+                    <small class="text-muted">${new Date(photo.created_at).toLocaleDateString('it-IT')}</small>
                 </div>
             </div>
         </div>
@@ -864,6 +868,19 @@ function showAddPhotoModal() {
     addPhotoModal.show();
 }
 
+// ==================== GESTIONE FOTO ====================
+
+let photoGalleryModal;
+let currentGalleryPhotos = [];
+let currentGalleryIndex = 0;
+
+function showAddPhotoModal() {
+    if (!currentMachineId) return;
+    document.getElementById('photo-upload-input').value = '';
+    document.getElementById('photo-preview').innerHTML = '';
+    addPhotoModal.show();
+}
+
 function previewPhoto(input) {
     const preview = document.getElementById('photo-preview');
     preview.innerHTML = '';
@@ -877,7 +894,42 @@ function previewPhoto(input) {
     }
 }
 
-function savePhoto() {
+// Funzione per comprimere immagine
+async function compressImage(file, maxWidth = 1920, maxHeight = 1080, quality = 0.8) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Calcola nuove dimensioni mantenendo aspect ratio
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width = width * ratio;
+                    height = height * ratio;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Converti in blob
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function savePhoto() {
     const input = document.getElementById('photo-upload-input');
     
     if (!input.files || !input.files[0]) {
@@ -885,47 +937,148 @@ function savePhoto() {
         return;
     }
     
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const newPhoto = {
-            id: generateId(),
-            machine_id: currentMachineId,
-            dataUrl: e.target.result,
-            created_at: new Date().toISOString()
-        };
+    const file = input.files[0];
+    showAlert('⏳ Caricamento foto in corso...', 'info', 0);
+    
+    try {
+        // Comprimi immagine
+        const compressedBlob = await compressImage(file);
         
-        // Salva su Firebase
-        saveToFirebase('machinePhotos', newPhoto);
+        if (window.firebaseStorage && firebaseInitialized) {
+            // Upload su Firebase Storage
+            const { ref, uploadBytes, getDownloadURL } = window.storageModules;
+            const storage = window.firebaseStorage;
+            
+            const photoId = generateId();
+            const storageRef = ref(storage, `machine-photos/${currentMachineId}/${photoId}.jpg`);
+            
+            await uploadBytes(storageRef, compressedBlob);
+            const downloadURL = await getDownloadURL(storageRef);
+            
+            const newPhoto = {
+                id: photoId,
+                machine_id: currentMachineId,
+                url: downloadURL,
+                storagePath: `machine-photos/${currentMachineId}/${photoId}.jpg`,
+                created_at: new Date().toISOString()
+            };
+            
+            await saveToFirebase('machinePhotos', newPhoto);
+            showAlert('✓ Foto caricata con successo!', 'success');
+        } else {
+            // Fallback base64 localStorage
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newPhoto = {
+                    id: generateId(),
+                    machine_id: currentMachineId,
+                    dataUrl: e.target.result,
+                    created_at: new Date().toISOString()
+                };
+                
+                machinePhotos.push(newPhoto);
+                saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
+                renderMachinePhotos(currentMachineId);
+                renderMachinesTable();
+                showAlert('Foto aggiunta (storage locale)', 'success');
+            };
+            reader.readAsDataURL(compressedBlob);
+        }
+        
+        addPhotoModal.hide();
+    } catch (error) {
+        console.error('Errore upload foto:', error);
+        showAlert('Errore durante il caricamento della foto', 'danger');
+    }
+}
+
+async function deletePhoto(photoId) {
+    if (!confirm('Eliminare questa foto?')) return;
+    
+    const photo = machinePhotos.find(p => p.id === photoId);
+    
+    try {
+        // Elimina da Firebase Storage se presente
+        if (photo && photo.storagePath && window.firebaseStorage) {
+            const { ref, deleteObject } = window.storageModules;
+            const storage = window.firebaseStorage;
+            const storageRef = ref(storage, photo.storagePath);
+            
+            try {
+                await deleteObject(storageRef);
+            } catch (err) {
+                console.warn('File già eliminato da Storage:', err);
+            }
+        }
+        
+        // Elimina da Firebase
+        deleteFromFirebase('machinePhotos', photoId);
         
         // Fallback localStorage
         if (!firebaseInitialized) {
-            machinePhotos.push(newPhoto);
+            machinePhotos = machinePhotos.filter(p => p.id !== photoId);
             saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
             renderMachinePhotos(currentMachineId);
             renderMachinesTable();
         }
         
-        addPhotoModal.hide();
-        showAlert('Foto aggiunta con successo!', 'success');
-    };
-    reader.readAsDataURL(input.files[0]);
+        showAlert('Foto eliminata', 'success');
+    } catch (error) {
+        console.error('Errore eliminazione foto:', error);
+        showAlert('Errore durante l\'eliminazione', 'danger');
+    }
 }
 
-function deletePhoto(photoId) {
-    if (!confirm('Eliminare questa foto?')) return;
+// Galleria foto con zoom
+function openPhotoGallery(photoId) {
+    currentGalleryPhotos = machinePhotos.filter(p => p.machine_id === currentMachineId);
+    currentGalleryIndex = currentGalleryPhotos.findIndex(p => p.id === photoId);
     
-    // Elimina da Firebase
-    deleteFromFirebase('machinePhotos', photoId);
-    
-    // Fallback localStorage
-    if (!firebaseInitialized) {
-        machinePhotos = machinePhotos.filter(p => p.id !== photoId);
-        saveToStorage(STORAGE_KEYS.machinePhotos, machinePhotos);
-        renderMachinePhotos(currentMachineId);
-        renderMachinesTable();
+    if (!photoGalleryModal) {
+        photoGalleryModal = new bootstrap.Modal(document.getElementById('photoGalleryModal'));
     }
     
-    showAlert('Foto eliminata', 'success');
+    updateGalleryImage();
+    photoGalleryModal.show();
+}
+
+function updateGalleryImage() {
+    if (currentGalleryPhotos.length === 0) return;
+    
+    const photo = currentGalleryPhotos[currentGalleryIndex];
+    const img = document.getElementById('gallery-main-image');
+    img.src = photo.url || photo.dataUrl;
+    
+    document.getElementById('gallery-counter').textContent = 
+        `${currentGalleryIndex + 1} / ${currentGalleryPhotos.length}`;
+    
+    // Disabilita pulsanti se necessario
+    document.getElementById('gallery-prev').disabled = currentGalleryIndex === 0;
+    document.getElementById('gallery-next').disabled = currentGalleryIndex === currentGalleryPhotos.length - 1;
+}
+
+function galleryNavigate(direction) {
+    currentGalleryIndex += direction;
+    if (currentGalleryIndex < 0) currentGalleryIndex = 0;
+    if (currentGalleryIndex >= currentGalleryPhotos.length) currentGalleryIndex = currentGalleryPhotos.length - 1;
+    updateGalleryImage();
+}
+
+function deleteCurrentPhoto() {
+    if (currentGalleryPhotos.length === 0) return;
+    
+    const photo = currentGalleryPhotos[currentGalleryIndex];
+    deletePhoto(photo.id);
+    
+    // Chiudi galleria se era l'ultima foto
+    if (currentGalleryPhotos.length === 1) {
+        photoGalleryModal.hide();
+    } else {
+        // Aggiorna indice dopo eliminazione
+        if (currentGalleryIndex >= currentGalleryPhotos.length - 1) {
+            currentGalleryIndex = currentGalleryPhotos.length - 2;
+        }
+    }
 }
 
 // ==================== GESTIONE COMPONENTI ====================
