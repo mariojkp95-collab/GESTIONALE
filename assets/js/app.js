@@ -245,20 +245,33 @@ function setupFirebaseListeners() {
 }
 
 async function saveToFirebase(collectionName, data) {
+    console.log('saveToFirebase chiamato:', { collectionName, dataId: data.id, firebaseInitialized });
+    
     if (!firebaseInitialized || !window.firebaseDb) {
         console.warn('Firebase non disponibile, salvo in localStorage');
         // Fallback localStorage - aggiungi all'array esistente
         const storageKey = STORAGE_KEYS[collectionName];
+        
+        if (!storageKey) {
+            console.error('Storage key non trovata per:', collectionName);
+            return;
+        }
+        
         const existingData = loadFromStorage(storageKey);
         const index = existingData.findIndex(item => item.id === data.id);
         
         if (index >= 0) {
             existingData[index] = data; // Aggiorna esistente
+            console.log('Aggiornato in localStorage:', data.id);
         } else {
             existingData.push(data); // Aggiungi nuovo
+            console.log('Aggiunto in localStorage:', data.id);
         }
         
         saveToStorage(storageKey, existingData);
+        
+        // Aggiorna anche l'array globale
+        updateGlobalArray(collectionName, existingData);
         return;
     }
     
@@ -281,6 +294,25 @@ async function saveToFirebase(collectionName, data) {
         }
         
         saveToStorage(storageKey, existingData);
+        updateGlobalArray(collectionName, existingData);
+    }
+}
+
+// Aggiorna array globali dopo salvataggio localStorage
+function updateGlobalArray(collectionName, data) {
+    switch(collectionName) {
+        case 'machines':
+            machines = data;
+            break;
+        case 'interventions':
+            interventions = data;
+            break;
+        case 'components':
+            components = data;
+            break;
+        case 'machinePhotos':
+            machinePhotos = data;
+            break;
     }
 }
 
@@ -652,13 +684,14 @@ async function saveMachine() {
         created_at: new Date().toISOString()
     };
     
+    console.log('Tentativo salvataggio macchinario:', newMachine);
+    
     // Salva su Firebase
     await saveToFirebase('machines', newMachine);
     
-    // Fallback localStorage (solo se Firebase non attivo)
+    // Se usa localStorage (fallback), renderizza manualmente
     if (!firebaseInitialized) {
-        machines.push(newMachine);
-        saveToStorage(STORAGE_KEYS.machines, machines);
+        console.log('Rendering manuale dopo salvataggio localStorage');
         renderMachinesTable();
         updateMachineSelect();
         updateDashboard();
@@ -667,6 +700,8 @@ async function saveMachine() {
     addMachineModal.hide();
     document.getElementById('add-machine-form').reset();
     showAlert('Macchinario aggiunto con successo!', 'success');
+    
+    console.log('Macchinari totali:', machines.length);
 }
 
 function deleteMachine(id) {
