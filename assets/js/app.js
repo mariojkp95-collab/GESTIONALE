@@ -228,6 +228,7 @@ function setupFirebaseListeners() {
             renderMachineComponents(currentMachineId);
         }
         renderMachinesTable();
+        updateDashboard();
     });
     
     // Listener per foto
@@ -965,6 +966,7 @@ function saveComponent() {
         saveToStorage(STORAGE_KEYS.components, components);
         renderMachineComponents(currentMachineId);
         renderMachinesTable();
+        updateDashboard();
     }
     
     addComponentModal.hide();
@@ -991,6 +993,7 @@ function adjustComponentStock(componentId, adjustment) {
         saveToStorage(STORAGE_KEYS.components, components);
         renderMachineComponents(currentMachineId);
         renderMachinesTable();
+        updateDashboard();
     }
     
     if (adjustment < 0) {
@@ -1012,6 +1015,7 @@ function deleteComponent(componentId) {
         saveToStorage(STORAGE_KEYS.components, components);
         renderMachineComponents(currentMachineId);
         renderMachinesTable();
+        updateDashboard();
     }
     
     showAlert('Componente eliminato', 'success');
