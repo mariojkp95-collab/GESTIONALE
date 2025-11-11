@@ -10,16 +10,16 @@
     --text-secondary: #a0a0a0;
     --border-color: #333333;
     
-    /* Oro champagne elegante come accento principale */
-    --accent-primary: #c9a961;
-    --accent-hover: #d4b76f;
-    --accent-dark: #b39550;
+    /* Rosso sangue scuro come accento principale */
+    --accent-primary: #8b0000;
+    --accent-hover: #a01010;
+    --accent-dark: #6b0000;
     
     /* Colori di stato - tonalità eleganti */
     --success: #66bb6a;
-    --warning: #c9a961;
-    --danger: #ef5350;
-    --info: #c9a961;
+    --warning: #ffa726;
+    --danger: #c62828;
+    --info: #8b0000;
 }
 
 * {
@@ -119,7 +119,7 @@ body {
 .dashboard-card-neutral:hover {
     border-color: var(--accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(201, 169, 97, 0.15);
+    box-shadow: 0 4px 16px rgba(139, 0, 0, 0.3);
 }
 
 .dashboard-card-danger .card-title,
@@ -280,7 +280,7 @@ body {
 .btn-primary:hover {
     background-color: var(--accent-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.3);
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
     color: #ffffff;
 }
 
@@ -417,7 +417,7 @@ body {
 .form-control:focus, .form-select:focus {
     background-color: var(--bg-primary);
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.15);
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
     color: var(--text-primary);
 }
 
