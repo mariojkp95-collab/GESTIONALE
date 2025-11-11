@@ -26,13 +26,131 @@ let addInterventionModal;
 let machineDetailsModal;
 let addComponentModal;
 let addPhotoModal;
+let loginModal;
 let firebaseInitialized = false;
+let currentUser = null;
+
+// ==================== AUTHENTICATION FUNCTIONS ====================
+
+function initAuth() {
+    const { onAuthStateChanged } = window.authModules;
+    
+    onAuthStateChanged(window.firebaseAuth, (user) => {
+        currentUser = user;
+        
+        if (user) {
+            // Utente loggato
+            console.log('✓ Utente autenticato:', user.email);
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('logout-btn').style.display = 'inline-block';
+            hideLoginModal();
+            initFirebase();
+        } else {
+            // Utente non loggato
+            console.log('⚠ Utente non autenticato');
+            document.getElementById('user-email').textContent = '';
+            document.getElementById('logout-btn').style.display = 'none';
+            showLoginModal();
+            updateSyncStatus(false);
+        }
+    });
+}
+
+function showLoginModal() {
+    if (!loginModal) {
+        loginModal = new bootstrap.Modal(document.getElementById('login-modal'));
+    }
+    loginModal.show();
+}
+
+function hideLoginModal() {
+    if (loginModal) {
+        loginModal.hide();
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorDiv = document.getElementById('login-error');
+    
+    try {
+        const { signInWithEmailAndPassword } = window.authModules;
+        await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+        errorDiv.classList.add('d-none');
+        document.getElementById('login-form').reset();
+    } catch (error) {
+        console.error('Errore login:', error);
+        errorDiv.textContent = getAuthErrorMessage(error.code);
+        errorDiv.classList.remove('d-none');
+    }
+}
+
+async function handleRegister(event) {
+    event.preventDefault();
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const passwordConfirm = document.getElementById('register-password-confirm').value;
+    const errorDiv = document.getElementById('register-error');
+    const successDiv = document.getElementById('register-success');
+    
+    if (password !== passwordConfirm) {
+        errorDiv.textContent = 'Le password non corrispondono';
+        errorDiv.classList.remove('d-none');
+        successDiv.classList.add('d-none');
+        return;
+    }
+    
+    try {
+        const { createUserWithEmailAndPassword } = window.authModules;
+        await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+        errorDiv.classList.add('d-none');
+        successDiv.textContent = '✓ Account creato! Accedi per continuare.';
+        successDiv.classList.remove('d-none');
+        document.getElementById('register-form').reset();
+        
+        // Passa al tab login dopo 2 secondi
+        setTimeout(() => {
+            document.getElementById('login-tab').click();
+            successDiv.classList.add('d-none');
+        }, 2000);
+    } catch (error) {
+        console.error('Errore registrazione:', error);
+        errorDiv.textContent = getAuthErrorMessage(error.code);
+        errorDiv.classList.remove('d-none');
+        successDiv.classList.add('d-none');
+    }
+}
+
+async function logout() {
+    try {
+        const { signOut } = window.authModules;
+        await signOut(window.firebaseAuth);
+    } catch (error) {
+        console.error('Errore logout:', error);
+    }
+}
+
+function getAuthErrorMessage(code) {
+    const errors = {
+        'auth/email-already-in-use': 'Email già registrata',
+        'auth/invalid-email': 'Email non valida',
+        'auth/operation-not-allowed': 'Operazione non permessa',
+        'auth/weak-password': 'Password troppo debole',
+        'auth/user-disabled': 'Account disabilitato',
+        'auth/user-not-found': 'Utente non trovato',
+        'auth/wrong-password': 'Password errata',
+        'auth/invalid-credential': 'Credenziali non valide'
+    };
+    return errors[code] || 'Errore di autenticazione';
+}
 
 // ==================== FIREBASE FUNCTIONS ====================
 
 async function initFirebase() {
-    if (!window.firebaseDb) {
-        console.warn('Firebase non disponibile, uso localStorage');
+    if (!window.firebaseDb || !currentUser) {
+        console.warn('Firebase non disponibile o utente non autenticato');
         updateSyncStatus(false);
         return false;
     }
@@ -43,6 +161,9 @@ async function initFirebase() {
         firebaseInitialized = true;
         updateSyncStatus(true);
         console.log('✓ Firebase connesso e sincronizzato');
+        
+        // Carica dati iniziali
+        loadData();
         return true;
     } catch (error) {
         console.error('Errore Firebase:', error);
@@ -178,21 +299,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Imposta la data di oggi come default
     document.getElementById('intervention-date').valueAsDate = new Date();
     
-    // Inizializza Firebase
-    await initFirebase();
-    
-    // Carica i dati iniziali (se Firebase non disponibile)
-    if (!firebaseInitialized) {
-        loadData();
-    }
+    // Inizializza autenticazione
+    initAuth();
 });
 
-// Caricamento dati (fallback se Firebase non disponibile)
+// Caricamento dati
 function loadData() {
-    machines = loadFromStorage(STORAGE_KEYS.machines);
-    interventions = loadFromStorage(STORAGE_KEYS.interventions);
-    components = loadFromStorage(STORAGE_KEYS.components);
-    machinePhotos = loadFromStorage(STORAGE_KEYS.machinePhotos);
+    if (firebaseInitialized) {
+        // I dati arrivano già dai listener Firebase
+        console.log('Dati caricati da Firebase');
+    } else {
+        // Fallback localStorage
+        machines = loadFromStorage(STORAGE_KEYS.machines);
+        interventions = loadFromStorage(STORAGE_KEYS.interventions);
+        components = loadFromStorage(STORAGE_KEYS.components);
+        machinePhotos = loadFromStorage(STORAGE_KEYS.machinePhotos);
+        console.log('Dati caricati da localStorage');
+    }
     
     renderMachinesTable();
     renderInterventionsTable();

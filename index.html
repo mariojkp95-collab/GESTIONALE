@@ -20,9 +20,72 @@
                 <span>Gestionale Manutenzioni</span>
                 <span id="sync-status" class="badge bg-secondary ms-2" style="font-size: 0.7rem;">⚡ Sync</span>
             </div>
-            <button class="btn btn-sm btn-outline-light" onclick="exportData()">📥 Export Dati</button>
+            <div>
+                <span id="user-email" class="text-light me-3" style="font-size: 0.9rem;"></span>
+                <button id="logout-btn" class="btn btn-sm btn-outline-danger me-2" onclick="logout()" style="display: none;">Logout</button>
+                <button class="btn btn-sm btn-outline-light" onclick="exportData()">📥 Export Dati</button>
+            </div>
         </div>
     </nav>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🔐 Login</h5>
+                </div>
+                <div class="modal-body">
+                    <div id="login-tabs">
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-panel" type="button">Login</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-panel" type="button">Registrati</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="login-panel">
+                                <form id="login-form" onsubmit="handleLogin(event)">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="login-email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="login-password" required>
+                                    </div>
+                                    <div id="login-error" class="alert alert-danger d-none"></div>
+                                    <button type="submit" class="btn btn-primary w-100">Accedi</button>
+                                </form>
+                            </div>
+                            <div class="tab-pane fade" id="register-panel">
+                                <form id="register-form" onsubmit="handleRegister(event)">
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="register-email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="register-password" required minlength="6">
+                                        <small class="text-muted">Minimo 6 caratteri</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Conferma Password</label>
+                                        <input type="password" class="form-control" id="register-password-confirm" required minlength="6">
+                                    </div>
+                                    <div id="register-error" class="alert alert-danger d-none"></div>
+                                    <div id="register-success" class="alert alert-success d-none"></div>
+                                    <button type="submit" class="btn btn-success w-100">Registrati</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="container-fluid mt-4">
         <div class="row">
@@ -398,6 +461,7 @@
         // Import Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         
         // Firebase configuration
         const firebaseConfig = {
@@ -412,10 +476,13 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         
         // Rendi Firebase disponibile globalmente
         window.firebaseDb = db;
+        window.firebaseAuth = auth;
         window.firebaseModules = { collection, getDocs, setDoc, doc, onSnapshot, deleteDoc };
+        window.authModules = { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
     </script>
     
     <script src="assets/js/app.js?v=3.0"></script>
