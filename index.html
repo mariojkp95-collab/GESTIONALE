@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionale Manutenzioni</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🔧 Gestionale Manutenzioni</span>
+            <button class="btn btn-sm btn-outline-light" onclick="exportData()">📥 Export Dati</button>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Menu</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action active" onclick="showSection('dashboard')">
+                            Dashboard
+                        </button>
+                        <button class="list-group-item list-group-item-action" onclick="showSection('macchinari')">
+                            Macchinari
+                        </button>
+                        <button class="list-group-item list-group-item-action" onclick="showSection('interventi')">
+                            Interventi
+                        </button>
+                        <button class="list-group-item list-group-item-action" onclick="showSection('calendario')">
+                            Scadenze
+                        </button>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <small class="text-muted">💾 Dati salvati nel browser</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="content-section">
+                    <h2>Dashboard</h2>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card text-white bg-info mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Totale Macchinari</h5>
+                                    <h2 id="total-machines">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Interventi Totali</h5>
+                                    <h2 id="total-interventions">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-white bg-warning mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Scadenze Prossime</h5>
+                                    <h2 id="upcoming-deadlines">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            Ultimi Interventi
+                        </div>
+                        <div class="card-body">
+                            <div id="recent-interventions">
+                                <p class="text-muted">Nessun intervento registrato</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Macchinari Section -->
+                <div id="macchinari-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2>Gestione Macchinari</h2>
+                        <button class="btn btn-primary" onclick="showAddMachineModal()">
+                            + Aggiungi Macchinario
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Tipo</th>
+                                        <th>Ubicazione</th>
+                                        <th>Ultimo Intervento</th>
+                                        <th>Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="machines-table">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Nessun macchinario presente</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interventi Section -->
+                <div id="interventi-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2>Registro Interventi</h2>
+                        <button class="btn btn-success" onclick="showAddInterventionModal()">
+                            + Registra Intervento
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Macchinario</th>
+                                        <th>Tipo</th>
+                                        <th>Descrizione</th>
+                                        <th>Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="interventions-table">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Nessun intervento registrato</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendario Section -->
+                <div id="calendario-section" class="content-section" style="display: none;">
+                    <h2>Scadenze Manutenzioni</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Macchinario</th>
+                                        <th>Prossima Scadenza</th>
+                                        <th>Giorni Rimanenti</th>
+                                        <th>Stato</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deadlines-table">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Nessuna scadenza programmata</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aggiungi Macchinario -->
+    <div class="modal fade" id="addMachineModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Aggiungi Macchinario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-machine-form">
+                        <div class="mb-3">
+                            <label class="form-label">Nome Macchinario *</label>
+                            <input type="text" class="form-control" id="machine-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <input type="text" class="form-control" id="machine-type" placeholder="es. Tornio, Fresa, Compressore">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ubicazione</label>
+                            <input type="text" class="form-control" id="machine-location" placeholder="es. Reparto A">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea class="form-control" id="machine-notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMachine()">Salva</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aggiungi Intervento -->
+    <div class="modal fade" id="addInterventionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registra Intervento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-intervention-form">
+                        <div class="mb-3">
+                            <label class="form-label">Macchinario *</label>
+                            <select class="form-select" id="intervention-machine" required>
+                                <option value="">Seleziona macchinario</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Data Intervento *</label>
+                            <input type="date" class="form-control" id="intervention-date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo Manutenzione *</label>
+                            <select class="form-select" id="intervention-type" required>
+                                <option value="">Seleziona tipo</option>
+                                <option value="Ordinaria">Ordinaria</option>
+                                <option value="Straordinaria">Straordinaria</option>
+                                <option value="Riparazione">Riparazione</option>
+                                <option value="Controllo">Controllo</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrizione *</label>
+                            <textarea class="form-control" id="intervention-description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Prossima Scadenza (giorni)</label>
+                            <input type="number" class="form-control" id="intervention-next-days" placeholder="es. 90">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-success" onclick="saveIntervention()">Salva</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
