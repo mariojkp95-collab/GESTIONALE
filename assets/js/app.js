@@ -33,6 +33,12 @@ let currentUser = null;
 // ==================== AUTHENTICATION FUNCTIONS ====================
 
 function initAuth() {
+    if (!window.firebaseAuth || !window.authModules) {
+        console.error('Firebase Auth non disponibile!');
+        alert('Errore: Firebase Authentication non è caricato. Ricarica la pagina.');
+        return;
+    }
+    
     const { onAuthStateChanged } = window.authModules;
     
     onAuthStateChanged(window.firebaseAuth, (user) => {
@@ -47,7 +53,7 @@ function initAuth() {
             initFirebase();
         } else {
             // Utente non loggato
-            console.log('⚠ Utente non autenticato');
+            console.log('⚠ Utente non autenticato - richiedo login');
             document.getElementById('user-email').textContent = '';
             document.getElementById('logout-btn').style.display = 'none';
             showLoginModal();
@@ -57,10 +63,9 @@ function initAuth() {
 }
 
 function showLoginModal() {
-    if (!loginModal) {
-        loginModal = new bootstrap.Modal(document.getElementById('login-modal'));
+    if (loginModal) {
+        loginModal.show();
     }
-    loginModal.show();
 }
 
 function hideLoginModal() {
@@ -295,6 +300,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     machineDetailsModal = new bootstrap.Modal(document.getElementById('machineDetailsModal'));
     addComponentModal = new bootstrap.Modal(document.getElementById('addComponentModal'));
     addPhotoModal = new bootstrap.Modal(document.getElementById('addPhotoModal'));
+    loginModal = new bootstrap.Modal(document.getElementById('login-modal'));
     
     // Imposta la data di oggi come default
     document.getElementById('intervention-date').valueAsDate = new Date();
