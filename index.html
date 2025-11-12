@@ -307,43 +307,50 @@
 
                 <!-- Calendario Section -->
                 <div id="calendario-section" class="content-section" style="display: none;">
-                    <h2>Scadenze Manutenzioni</h2>
-                    <!-- Deadline Filters -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2>Calendario Manutenzioni</h2>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button class="btn btn-sm btn-secondary" onclick="previousMonth()">← Mese Prec.</button>
+                            <span id="current-month" style="font-weight: 600; min-width: 150px; text-align: center;">-</span>
+                            <button class="btn btn-sm btn-secondary" onclick="nextMonth()">Mese Succ. →</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Legenda -->
                     <div class="card mb-3">
                         <div class="card-body py-2">
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="filterDeadline" id="filterAll" value="all" checked onchange="filterDeadlines()">
-                                <label class="btn btn-outline-primary" for="filterAll">Tutte</label>
-                                
-                                <input type="radio" class="btn-check" name="filterDeadline" id="filterOverdue" value="overdue" onchange="filterDeadlines()">
-                                <label class="btn btn-outline-danger" for="filterOverdue">In ritardo</label>
-                                
-                                <input type="radio" class="btn-check" name="filterDeadline" id="filterUpcoming" value="upcoming" onchange="filterDeadlines()">
-                                <label class="btn btn-outline-warning" for="filterUpcoming">Prossimi 30 giorni</label>
-                                
-                                <input type="radio" class="btn-check" name="filterDeadline" id="filterOk" value="ok" onchange="filterDeadlines()">
-                                <label class="btn btn-outline-success" for="filterOk">OK</label>
+                            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                                <small><span class="calendar-legend calendar-overdue"></span> Scaduto</small>
+                                <small><span class="calendar-legend calendar-urgent"></span> Urgente (≤7 giorni)</small>
+                                <small><span class="calendar-legend calendar-upcoming"></span> In scadenza (≤30 giorni)</small>
+                                <small><span class="calendar-legend calendar-ok"></span> OK (>30 giorni)</small>
+                                <small><span class="calendar-legend calendar-intervention"></span> Intervento effettuato</small>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Calendario -->
                     <div class="card">
-                        <div class="card-body">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Macchinario</th>
-                                        <th>Prossima Scadenza</th>
-                                        <th>Giorni Rimanenti</th>
-                                        <th>Stato</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="deadlines-table">
-                                    <tr>
-                                        <td colspan="4" class="text-center text-muted">Nessuna scadenza programmata</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="card-body p-0">
+                            <div id="calendar-grid"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dettagli Giornata -->
+    <div class="modal fade" id="dayDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dayDetailsTitle">Dettagli Giornata</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="day-details-content">
+                        <p class="text-muted">Nessuna attività per questo giorno</p>
                     </div>
                 </div>
             </div>

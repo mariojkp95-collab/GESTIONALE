@@ -27,8 +27,12 @@ let machineDetailsModal;
 let addComponentModal;
 let addPhotoModal;
 let loginModal;
+let dayDetailsModal;
 let firebaseInitialized = false;
 let currentUser = null;
+let currentMachineId = null;
+let currentCalendarDate = new Date();
+
 
 // ==================== AUTHENTICATION FUNCTIONS ====================
 
@@ -694,6 +698,11 @@ function showSection(section) {
     // Aggiorna menu attivo
     document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active'));
     event.target.classList.add('active');
+    
+    // Renderizza calendario se è la sezione calendario
+    if (section === 'calendario') {
+        renderCalendar();
+    }
 }
 
 // ==================== GESTIONE MACCHINARI ====================
@@ -883,8 +892,6 @@ function deleteIntervention(id) {
 }
 
 // ==================== GESTIONE DETTAGLI MACCHINARIO ====================
-
-let currentMachineId = null;
 
 function openMachineDetails(machineId) {
     currentMachineId = machineId;
@@ -1517,3 +1524,170 @@ function showAlert(message, type = 'info', duration = 3000) {
         alertDiv.remove();
     }, duration);
 }
+
+// ==================== CALENDARIO ====================
+
+function renderCalendar() {
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    // Aggiorna titolo mese
+    const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                       'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
+    
+    // Calcola giorni del mese
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Lunedì = 0
+    
+    // Giorni del mese precedente
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    
+    const calendarGrid = document.getElementById('calendar-grid');
+    let html = '';
+    
+    // Header giorni settimana
+    const dayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    dayNames.forEach(day => {
+        html += `<div class="calendar-header">${day}</div>`;
+    });
+    
+    // Giorni del mese precedente
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+        const day = prevMonthLastDay - i;
+        html += `<div class="calendar-day other-month">
+            <div class="calendar-day-number">${day}</div>
+        </div>`;
+    }
+    
+    // Giorni del mese corrente
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const events = getEventsForDay(new Date(year, month, day));
+        
+        html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="showDayDetails('${dateStr}')">
+            <div class="calendar-day-number">${day}</div>
+            <div class="calendar-events">
+                ${events.map(e => `<div class="calendar-event-dot ${e.type}"></div>`).join('')}
+            </div>
+        </div>`;
+    }
+    
+    // Giorni del mese successivo
+    const totalCells = Math.ceil((startingDayOfWeek + daysInMonth) / 7) * 7;
+    const remainingCells = totalCells - (startingDayOfWeek + daysInMonth);
+    for (let day = 1; day <= remainingCells; day++) {
+        html += `<div class="calendar-day other-month">
+            <div class="calendar-day-number">${day}</div>
+        </div>`;
+    }
+    
+    calendarGrid.innerHTML = html;
+}
+
+function getEventsForDay(date) {
+    const events = [];
+    const dateStr = date.toISOString().split('T')[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Controlla interventi effettuati in quel giorno
+    interventions.forEach(intervention => {
+        const intervDate = intervention.date.split('T')[0];
+        if (intervDate === dateStr) {
+            events.push({ type: 'intervention', data: intervention });
+        }
+    });
+    
+    // Controlla scadenze per quel giorno
+    const deadlines = calculateDeadlines();
+    deadlines.forEach(deadline => {
+        const deadlineDate = deadline.nextDate.split('/').reverse().join('-');
+        const deadlineDateParts = deadline.nextDate.split('/');
+        const formattedDeadline = `${deadlineDateParts[2]}-${deadlineDateParts[1]}-${deadlineDateParts[0]}`;
+        
+        if (formattedDeadline === dateStr) {
+            let type = 'ok';
+            if (deadline.daysRemaining < 0) type = 'overdue';
+            else if (deadline.daysRemaining <= 7) type = 'urgent';
+            else if (deadline.daysRemaining <= 30) type = 'upcoming';
+            
+            events.push({ type, data: deadline });
+        }
+    });
+    
+    return events;
+}
+
+function showDayDetails(dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    const dateParts = dateStr.split('-');
+    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+    
+    document.getElementById('dayDetailsTitle').textContent = `Dettagli ${formattedDate}`;
+    
+    const events = getEventsForDay(date);
+    
+    if (events.length === 0) {
+        document.getElementById('day-details-content').innerHTML = '<p class="text-muted">Nessuna attività per questo giorno</p>';
+    } else {
+        let html = '';
+        
+        // Interventi
+        const interventionEvents = events.filter(e => e.type === 'intervention');
+        if (interventionEvents.length > 0) {
+            html += '<div class="day-details-section"><h6>🔧 Interventi Effettuati</h6>';
+            interventionEvents.forEach(e => {
+                const machine = machines.find(m => m.id === e.data.machine_id);
+                const machineName = machine ? machine.name : 'Sconosciuto';
+                html += `<div class="day-details-item">
+                    <strong>${machineName}</strong> - ${e.data.type}<br>
+                    <small>${e.data.description || 'Nessuna descrizione'}</small>
+                </div>`;
+            });
+            html += '</div>';
+        }
+        
+        // Scadenze
+        const deadlineEvents = events.filter(e => e.type !== 'intervention');
+        if (deadlineEvents.length > 0) {
+            html += '<div class="day-details-section"><h6>📅 Scadenze Manutenzione</h6>';
+            deadlineEvents.forEach(e => {
+                let statusText = 'OK';
+                if (e.type === 'overdue') statusText = 'SCADUTO';
+                else if (e.type === 'urgent') statusText = 'URGENTE';
+                else if (e.type === 'upcoming') statusText = 'IN SCADENZA';
+                
+                html += `<div class="day-details-item">
+                    <strong>${e.data.machineName}</strong><br>
+                    <small>Stato: <span class="badge status-${e.type}">${statusText}</span></small>
+                </div>`;
+            });
+            html += '</div>';
+        }
+        
+        document.getElementById('day-details-content').innerHTML = html;
+    }
+    
+    if (!dayDetailsModal) {
+        dayDetailsModal = new bootstrap.Modal(document.getElementById('dayDetailsModal'));
+    }
+    dayDetailsModal.show();
+}
+
+function previousMonth() {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    renderCalendar();
+}
+
+function nextMonth() {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    renderCalendar();
+}
+
