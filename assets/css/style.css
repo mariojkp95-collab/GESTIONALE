@@ -735,8 +735,9 @@ strong {
 /* Machine row hover */
 tbody tr[style*="cursor: pointer"]:hover {
     background-color: var(--bg-tertiary) !important;
-    transform: scale(1.01);
     transition: all 0.2s ease;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
 }
 
 /* Modal XL */
@@ -1496,11 +1497,12 @@ button, a, input, select, textarea {
 /* Animazioni per tabelle */
 tbody tr {
     transition: all 0.2s ease;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
 }
 
 tbody tr:hover {
     background-color: rgba(139, 0, 0, 0.1) !important;
-    transform: scale(1.01);
 }
 
 /* Animazioni per sidebar menu */

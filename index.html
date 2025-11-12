@@ -107,7 +107,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Testo Nota</label>
-                        <textarea class="form-control" id="shift-note-text" rows="3" placeholder="Descrivi problema, situazione o informazione per il prossimo turno..."></textarea>
+                        <textarea class="form-control" id="shift-note-text" rows="3" placeholder="Descrivi problema, situazione o informazione per il prossimo turno..." style="color: var(--text-primary); background-color: var(--bg-primary);"></textarea>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="shift-note-important">
@@ -118,7 +118,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="btn btn-primary" onclick="saveShiftNote()">Salva Nota</button>
+                    <button type="button" class="btn btn-danger" onclick="saveShiftNote()">Salva Nota</button>
                 </div>
             </div>
         </div>
@@ -169,12 +169,35 @@
                     </div>
 
                     <!-- PRIORITÀ OGGI -->
-                    <div class="card mb-3 border-danger" id="today-priorities-card">
+                    <!-- PRIORITÀ E ATTENZIONI -->
+                    <div class="card mb-3 border-danger" id="priorities-attentions-card">
                         <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0">PRIORITÀ OGGI</h5>
+                            <h5 class="mb-0">PRIORITÀ E ATTENZIONI</h5>
                         </div>
-                        <div class="card-body" id="today-priorities">
-                            <p class="text-muted mb-0">Nessuna priorità critica oggi</p>
+                        <div class="card-body">
+                            <!-- Interventi Scaduti -->
+                            <div class="mb-3">
+                                <h6 class="text-danger">Interventi Scaduti: <span id="overdue-count">0</span></h6>
+                                <div id="overdue-list" style="max-height: 150px; overflow-y: auto;">
+                                    <small class="text-muted">Nessun intervento in ritardo</small>
+                                </div>
+                            </div>
+
+                            <!-- Interventi Oggi/Domani -->
+                            <div class="mb-3" id="today-tomorrow-section">
+                                <h6 class="text-warning">Interventi Oggi/Domani: <span id="today-tomorrow-count">0</span></h6>
+                                <div id="today-tomorrow-list" style="max-height: 150px; overflow-y: auto;">
+                                    <small class="text-muted">Nessun intervento imminente</small>
+                                </div>
+                            </div>
+
+                            <!-- Componenti Sotto Scorta -->
+                            <div>
+                                <h6 class="text-warning">Componenti Sotto Scorta: <span id="low-stock-count">0</span></h6>
+                                <div id="low-stock-list" style="max-height: 120px; overflow-y: auto;">
+                                    <small class="text-muted">Scorte sufficienti</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -193,38 +216,14 @@
                         </div>
                     </div>
 
-                    <div class="row mb-3">
-                        <!-- ATTENZIONI -->
-                        <div class="col-md-6">
-                            <div class="card h-100">
-                                <div class="card-header bg-warning">
-                                    <h5 class="mb-0">Attenzioni</h5>
-                                </div>
-                                <div class="card-body">
-                                    <h6 class="text-danger">Interventi in Ritardo: <span id="overdue-count">0</span></h6>
-                                    <div id="overdue-list" class="mb-3" style="max-height: 120px; overflow-y: auto;">
-                                        <small class="text-muted">Nessun intervento in ritardo</small>
-                                    </div>
-                                    
-                                    <h6 class="text-warning">Componenti Sotto Scorta: <span id="low-stock-count">0</span></h6>
-                                    <div id="low-stock-list" style="max-height: 120px; overflow-y: auto;">
-                                        <small class="text-muted">Scorte sufficienti</small>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- PROGRAMMAZIONE SETTIMANA -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info">
+                            <h5 class="mb-0">Prossimi 7 Giorni</h5>
                         </div>
-
-                        <!-- PROGRAMMAZIONE SETTIMANA -->
-                        <div class="col-md-6">
-                            <div class="card h-100">
-                                <div class="card-header bg-info">
-                                    <h5 class="mb-0">Prossimi 7 Giorni</h5>
-                                </div>
-                                <div class="card-body" style="max-height: 320px; overflow-y: auto;">
-                                    <div id="week-schedule">
-                                        <p class="text-muted">Nessun intervento programmato</p>
-                                    </div>
-                                </div>
+                        <div class="card-body" style="max-height: 320px; overflow-y: auto;">
+                            <div id="week-schedule">
+                                <p class="text-muted">Nessun intervento programmato</p>
                             </div>
                         </div>
                     </div>

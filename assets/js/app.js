@@ -539,10 +539,10 @@ function renderInterventionsTable() {
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
-                <td>
+                <td class="text-end">
                     ${statusButton}
-                    <button class="btn btn-sm btn-secondary me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
+                    <button class="btn btn-sm btn-secondary me-1" onclick="editIntervention('${intervention.id}')">Modifica</button>
+                    <button class="btn btn-sm btn-secondary" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
         `;
@@ -639,9 +639,8 @@ let shiftNotes = JSON.parse(localStorage.getItem('shiftNotes') || '[]');
 
 function updateDashboard() {
     updateCurrentDateTime();
-    updateTodayPriorities();
+    updatePrioritiesAndAttentions();
     updateShiftNotes();
-    updateAttentions();
     updateWeekSchedule();
 }
 
@@ -653,11 +652,10 @@ function updateCurrentDateTime() {
     if (el) el.textContent = `${dateStr} - ${timeStr}`;
 }
 
-function updateTodayPriorities() {
+// Funzione unificata per priorità e attenzioni
+function updatePrioritiesAndAttentions() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
     
     const deadlines = calculateDeadlines();
     
@@ -667,46 +665,64 @@ function updateTodayPriorities() {
     // Interventi oggi/domani
     const todayTomorrow = deadlines.filter(d => d.daysRemaining >= 0 && d.daysRemaining <= 1);
     
-    const prioritiesDiv = document.getElementById('today-priorities');
-    const card = document.getElementById('today-priorities-card');
+    // Componenti sotto scorta
+    const lowStock = components.filter(c => c.quantity <= 2);
     
-    if (overdue.length === 0 && todayTomorrow.length === 0) {
-        prioritiesDiv.innerHTML = '<p class="text-muted mb-0">Nessuna priorità critica oggi</p>';
-        card.classList.remove('border-danger');
-        card.classList.add('border-success');
-        card.querySelector('.card-header').classList.remove('bg-danger');
-        card.querySelector('.card-header').classList.add('bg-success');
+    // Aggiorna contatori
+    document.getElementById('overdue-count').textContent = overdue.length;
+    document.getElementById('today-tomorrow-count').textContent = todayTomorrow.length;
+    document.getElementById('low-stock-count').textContent = lowStock.length;
+    
+    // Aggiorna lista interventi scaduti
+    const overdueList = document.getElementById('overdue-list');
+    if (overdue.length === 0) {
+        overdueList.innerHTML = '<small class="text-muted">Nessun intervento in ritardo</small>';
     } else {
-        card.classList.remove('border-success');
-        card.classList.add('border-danger');
-        card.querySelector('.card-header').classList.remove('bg-success');
-        card.querySelector('.card-header').classList.add('bg-danger');
-        
-        let html = '<div class="list-group list-group-flush">';
-        
-        if (overdue.length > 0) {
-            html += '<div class="list-group-item list-group-item-danger"><strong>SCADUTI (' + overdue.length + '):</strong></div>';
-            overdue.slice(0, 5).forEach(d => {
-                html += `<div class="list-group-item">
-                    <strong>${d.machineName}</strong> - Scaduto da ${Math.abs(d.daysRemaining)} giorni
-                    <small class="d-block text-muted">Previsto: ${d.nextDate}</small>
-                </div>`;
-            });
+        let html = '<ul class="list-unstyled mb-0">';
+        overdue.slice(0, 5).forEach(d => {
+            html += `<li class="mb-1"><small>• <strong>${d.machineName}</strong> - Scaduto da ${Math.abs(d.daysRemaining)} giorni</small></li>`;
+        });
+        if (overdue.length > 5) {
+            html += `<li><small class="text-muted">...e altri ${overdue.length - 5}</small></li>`;
         }
-        
-        if (todayTomorrow.length > 0) {
-            html += '<div class="list-group-item list-group-item-warning"><strong>OGGI/DOMANI (' + todayTomorrow.length + '):</strong></div>';
-            todayTomorrow.forEach(d => {
-                const when = d.daysRemaining === 0 ? 'OGGI' : 'DOMANI';
-                html += `<div class="list-group-item">
-                    <span class="badge bg-warning">${when}</span> <strong>${d.machineName}</strong>
-                    <small class="d-block text-muted">${d.nextDate} - ogni ${d.frequencyDays} giorni</small>
-                </div>`;
-            });
+        html += '</ul>';
+        overdueList.innerHTML = html;
+    }
+    
+    // Aggiorna lista interventi oggi/domani
+    const todayTomorrowList = document.getElementById('today-tomorrow-list');
+    const todayTomorrowSection = document.getElementById('today-tomorrow-section');
+    
+    if (todayTomorrow.length === 0) {
+        todayTomorrowSection.style.display = 'none';
+    } else {
+        todayTomorrowSection.style.display = 'block';
+        let html = '<ul class="list-unstyled mb-0">';
+        todayTomorrow.forEach(d => {
+            const when = d.daysRemaining === 0 ? 'OGGI' : 'DOMANI';
+            const badgeClass = d.daysRemaining === 0 ? 'bg-danger' : 'bg-warning';
+            html += `<li class="mb-1"><small><span class="badge ${badgeClass}">${when}</span> <strong>${d.machineName}</strong></small></li>`;
+        });
+        html += '</ul>';
+        todayTomorrowList.innerHTML = html;
+    }
+    
+    // Aggiorna lista componenti sotto scorta
+    const lowStockList = document.getElementById('low-stock-list');
+    if (lowStock.length === 0) {
+        lowStockList.innerHTML = '<small class="text-muted">Scorte sufficienti</small>';
+    } else {
+        let html = '<ul class="list-unstyled mb-0" style="color: var(--text-primary);">';
+        lowStock.slice(0, 5).forEach(c => {
+            const status = c.quantity === 0 ? 'ESAURITO' : `${c.quantity} pz`;
+            const statusClass = c.quantity === 0 ? 'text-danger' : 'text-warning';
+            html += `<li class="mb-1"><small>• <strong>${c.name}</strong> <span class="${statusClass}">(${status})</span></small></li>`;
+        });
+        if (lowStock.length > 5) {
+            html += `<li><small class="text-muted">...e altri ${lowStock.length - 5}</small></li>`;
         }
-        
-        html += '</div>';
-        prioritiesDiv.innerHTML = html;
+        html += '</ul>';
+        lowStockList.innerHTML = html;
     }
 }
 
@@ -781,50 +797,6 @@ function deleteShiftNote(index) {
     }
 }
 
-function updateAttentions() {
-    // Interventi in ritardo
-    const deadlines = calculateDeadlines();
-    const overdue = deadlines.filter(d => d.daysRemaining < 0);
-    
-    document.getElementById('overdue-count').textContent = overdue.length;
-    const overdueList = document.getElementById('overdue-list');
-    
-    if (overdue.length === 0) {
-        overdueList.innerHTML = '<small class="text-muted">Nessun intervento in ritardo</small>';
-    } else {
-        let html = '<ul class="list-unstyled mb-0">';
-        overdue.slice(0, 5).forEach(d => {
-            html += `<li class="mb-1"><small>• <strong>${d.machineName}</strong> (${Math.abs(d.daysRemaining)}gg fa)</small></li>`;
-        });
-        if (overdue.length > 5) {
-            html += `<li><small class="text-muted">...e altri ${overdue.length - 5}</small></li>`;
-        }
-        html += '</ul>';
-        overdueList.innerHTML = html;
-    }
-    
-    // Componenti sotto scorta
-    const lowStock = components.filter(c => c.quantity <= 2);
-    document.getElementById('low-stock-count').textContent = lowStock.length;
-    const lowStockList = document.getElementById('low-stock-list');
-    
-    if (lowStock.length === 0) {
-        lowStockList.innerHTML = '<small class="text-muted">Scorte sufficienti</small>';
-    } else {
-        let html = '<ul class="list-unstyled mb-0" style="color: var(--text-primary);">';
-        lowStock.slice(0, 5).forEach(c => {
-            const status = c.quantity === 0 ? 'ESAURITO' : `${c.quantity} pz`;
-            const statusClass = c.quantity === 0 ? 'text-danger' : 'text-warning';
-            html += `<li class="mb-1"><small>• <strong>${c.name}</strong> <span class="${statusClass}">(${status})</span></small></li>`;
-        });
-        if (lowStock.length > 5) {
-            html += `<li><small class="text-muted">...e altri ${lowStock.length - 5}</small></li>`;
-        }
-        html += '</ul>';
-        lowStockList.innerHTML = html;
-    }
-}
-
 function updateWeekSchedule() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -883,7 +855,7 @@ function updateWeekSchedule() {
             
             items.forEach(item => {
                 const badge = item.type === 'scadenza' ? '<span class="badge bg-info">Scadenza</span>' : '<span class="badge bg-primary">Programmato</span>';
-                html += `<li><small>${badge} ${item.text}</small></li>`;
+                html += `<li style="color: var(--text-primary);"><small>${badge} ${item.text}</small></li>`;
             });
             
             html += `</ul></div>`;
@@ -2251,10 +2223,10 @@ function filterInterventions() {
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
-                <td>
+                <td class="text-end">
                     ${statusButton}
-                    <button class="btn btn-sm btn-secondary me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
+                    <button class="btn btn-sm btn-secondary me-1" onclick="editIntervention('${intervention.id}')">Modifica</button>
+                    <button class="btn btn-sm btn-secondary" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
         `;
