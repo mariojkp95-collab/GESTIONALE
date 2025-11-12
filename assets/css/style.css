@@ -199,6 +199,15 @@ body {
     box-shadow: 0 4px 16px rgba(139, 0, 0, 0.3);
 }
 
+.dashboard-card-danger .card-body,
+.dashboard-card-warning .card-body,
+.dashboard-card-info .card-body,
+.dashboard-card-primary .card-body,
+.dashboard-card-success .card-body,
+.dashboard-card-neutral .card-body {
+    color: var(--text-primary);
+}
+
 .dashboard-card-danger .card-title,
 .dashboard-card-warning .card-title,
 .dashboard-card-info .card-title,
