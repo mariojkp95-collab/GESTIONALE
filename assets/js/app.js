@@ -27,7 +27,7 @@ let machineDetailsModal;
 let addComponentModal;
 let addPhotoModal;
 let loginModal;
-let dayDetailsModal;
+let dayModal;
 let firebaseInitialized = false;
 let currentUser = null;
 let currentMachineId = null;
@@ -222,7 +222,6 @@ function setupFirebaseListeners() {
         renderDeadlinesTable();
         updateDashboard();
         populateFilterDropdowns(); // Aggiunto
-        renderCalendar(); // Aggiunto per aggiornare calendario
     });
     
     // Listener per componenti
@@ -400,7 +399,6 @@ function loadData() {
     renderDeadlinesTable();
     updateMachineSelect();
     updateDashboard();
-    renderCalendar(); // Aggiungo rendering calendario
 }
 
 // ==================== RENDERING TABELLE ====================
@@ -701,7 +699,7 @@ function showSection(section) {
     document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active'));
     event.target.classList.add('active');
     
-    // Renderizza calendario se è la sezione calendario
+    // Renderizza calendario quando si apre quella sezione
     if (section === 'calendario') {
         renderCalendar();
     }
@@ -1533,154 +1531,186 @@ function renderCalendar() {
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
     
-    // Aggiorna titolo mese
+    // Aggiorna titolo
     const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                        'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-    document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
+    document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
     
-    // Calcola giorni del mese
+    // Calcola primo e ultimo giorno
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Lunedì = 0
+    
+    // 0=Dom, 1=Lun... convertito in Lun=0, Mar=1...
+    const firstDayOfWeek = firstDay.getDay();
+    const startingDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     
     // Giorni del mese precedente
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
     
-    const calendarGrid = document.getElementById('calendar-grid');
+    const grid = document.getElementById('calendar-grid');
     let html = '';
     
-    // Header giorni settimana
-    const dayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-    dayNames.forEach(day => {
-        html += `<div class="calendar-header">${day}</div>`;
+    // Header settimana
+    const weekDays = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    weekDays.forEach(day => {
+        html += `<div class="calendar-weekday">${day}</div>`;
     });
     
-    // Giorni del mese precedente
+    // Giorni mese precedente
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-        const day = prevMonthLastDay - i;
         html += `<div class="calendar-day other-month">
-            <div class="calendar-day-number">${day}</div>
+            <span class="calendar-day-number">${prevMonthDays - i}</span>
         </div>`;
     }
     
-    // Giorni del mese corrente
+    // Giorni mese corrente
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = today.toDateString();
     
     for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isToday = dateStr === todayStr;
-        const events = getEventsForDay(new Date(year, month, day));
+        const currentDate = new Date(year, month, day);
+        const isToday = currentDate.toDateString() === todayStr;
+        const dateKey = formatDateKey(currentDate);
+        const events = getEventsForDate(currentDate);
         
-        html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="showDayDetails('${dateStr}')">
-            <div class="calendar-day-number">${day}</div>
-            <div class="calendar-events">
-                ${events.map(e => `<div class="calendar-event-dot ${e.type}"></div>`).join('')}
-            </div>
+        let eventsHTML = '';
+        const maxVisible = 2;
+        events.slice(0, maxVisible).forEach(event => {
+            eventsHTML += `<div class="calendar-event ${event.className}">${event.title}</div>`;
+        });
+        
+        if (events.length > maxVisible) {
+            eventsHTML += `<div class="calendar-more">+${events.length - maxVisible} altro</div>`;
+        }
+        
+        html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="showDayDetails('${dateKey}')">
+            <span class="calendar-day-number">${day}</span>
+            <div class="calendar-events">${eventsHTML}</div>
         </div>`;
     }
     
-    // Giorni del mese successivo
-    const totalCells = Math.ceil((startingDayOfWeek + daysInMonth) / 7) * 7;
-    const remainingCells = totalCells - (startingDayOfWeek + daysInMonth);
+    // Giorni mese successivo
+    const totalCells = startingDayOfWeek + daysInMonth;
+    const remainingCells = (7 - (totalCells % 7)) % 7;
     for (let day = 1; day <= remainingCells; day++) {
         html += `<div class="calendar-day other-month">
-            <div class="calendar-day-number">${day}</div>
+            <span class="calendar-day-number">${day}</span>
         </div>`;
     }
     
-    calendarGrid.innerHTML = html;
+    grid.innerHTML = html;
 }
 
-function getEventsForDay(date) {
+function formatDateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getEventsForDate(date) {
     const events = [];
-    const dateStr = date.toISOString().split('T')[0];
+    const dateKey = formatDateKey(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Controlla interventi effettuati in quel giorno
-    interventions.forEach(intervention => {
-        const intervDate = intervention.date.split('T')[0];
-        if (intervDate === dateStr) {
-            events.push({ type: 'intervention', data: intervention });
+    // Scadenze
+    const deadlines = calculateDeadlines();
+    deadlines.forEach(deadline => {
+        const deadlineParts = deadline.nextDate.split('/');
+        const deadlineKey = `${deadlineParts[2]}-${deadlineParts[1]}-${deadlineParts[0]}`;
+        
+        if (deadlineKey === dateKey) {
+            let className = 'event-ok';
+            if (deadline.daysRemaining < 0) className = 'event-overdue';
+            else if (deadline.daysRemaining <= 7) className = 'event-urgent';
+            else if (deadline.daysRemaining <= 30) className = 'event-upcoming';
+            
+            events.push({
+                type: 'deadline',
+                title: deadline.machineName,
+                className: className,
+                data: deadline
+            });
         }
     });
     
-    // Controlla scadenze per quel giorno
-    const deadlines = calculateDeadlines();
-    deadlines.forEach(deadline => {
-        const deadlineDate = deadline.nextDate.split('/').reverse().join('-');
-        const deadlineDateParts = deadline.nextDate.split('/');
-        const formattedDeadline = `${deadlineDateParts[2]}-${deadlineDateParts[1]}-${deadlineDateParts[0]}`;
+    // Interventi
+    interventions.forEach(intervention => {
+        const intervDate = new Date(intervention.date);
+        const intervKey = formatDateKey(intervDate);
         
-        if (formattedDeadline === dateStr) {
-            let type = 'ok';
-            if (deadline.daysRemaining < 0) type = 'overdue';
-            else if (deadline.daysRemaining <= 7) type = 'urgent';
-            else if (deadline.daysRemaining <= 30) type = 'upcoming';
-            
-            events.push({ type, data: deadline });
+        if (intervKey === dateKey) {
+            const machine = machines.find(m => m.id === intervention.machine_id);
+            events.push({
+                type: 'intervention',
+                title: machine ? machine.name : 'Intervento',
+                className: 'event-intervention',
+                data: intervention
+            });
         }
     });
     
     return events;
 }
 
-function showDayDetails(dateStr) {
-    const date = new Date(dateStr + 'T00:00:00');
-    const dateParts = dateStr.split('-');
-    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+function showDayDetails(dateKey) {
+    const [year, month, day] = dateKey.split('-');
+    const date = new Date(year, parseInt(month) - 1, day);
+    const events = getEventsForDate(date);
     
-    document.getElementById('dayDetailsTitle').textContent = `Dettagli ${formattedDate}`;
+    const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+    const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                       'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
     
-    const events = getEventsForDay(date);
+    document.getElementById('dayModalTitle').textContent = 
+        `${dayNames[date.getDay()]} ${day} ${monthNames[date.getMonth()]} ${year}`;
+    
+    const body = document.getElementById('dayModalBody');
     
     if (events.length === 0) {
-        document.getElementById('day-details-content').innerHTML = '<p class="text-muted">Nessuna attività per questo giorno</p>';
+        body.innerHTML = '<p class="text-muted text-center">Nessun evento per questa giornata</p>';
     } else {
-        let html = '';
+        let html = '<div class="day-event-list">';
         
-        // Interventi
-        const interventionEvents = events.filter(e => e.type === 'intervention');
-        if (interventionEvents.length > 0) {
-            html += '<div class="day-details-section"><h6>🔧 Interventi Effettuati</h6>';
-            interventionEvents.forEach(e => {
-                const machine = machines.find(m => m.id === e.data.machine_id);
-                const machineName = machine ? machine.name : 'Sconosciuto';
-                html += `<div class="day-details-item">
-                    <strong>${machineName}</strong> - ${e.data.type}<br>
-                    <small>${e.data.description || 'Nessuna descrizione'}</small>
-                </div>`;
-            });
-            html += '</div>';
-        }
-        
-        // Scadenze
-        const deadlineEvents = events.filter(e => e.type !== 'intervention');
-        if (deadlineEvents.length > 0) {
-            html += '<div class="day-details-section"><h6>📅 Scadenze Manutenzione</h6>';
-            deadlineEvents.forEach(e => {
+        events.forEach(event => {
+            if (event.type === 'deadline') {
+                let badgeClass = 'bg-success';
                 let statusText = 'OK';
-                if (e.type === 'overdue') statusText = 'SCADUTO';
-                else if (e.type === 'urgent') statusText = 'URGENTE';
-                else if (e.type === 'upcoming') statusText = 'IN SCADENZA';
+                if (event.data.daysRemaining < 0) {
+                    badgeClass = 'bg-danger';
+                    statusText = 'SCADUTO';
+                } else if (event.data.daysRemaining <= 7) {
+                    badgeClass = 'bg-danger';
+                    statusText = 'URGENTE';
+                } else if (event.data.daysRemaining <= 30) {
+                    badgeClass = 'bg-warning';
+                    statusText = 'IN SCADENZA';
+                }
                 
-                html += `<div class="day-details-item">
-                    <strong>${e.data.machineName}</strong><br>
-                    <small>Stato: <span class="badge status-${e.type}">${statusText}</span></small>
+                html += `<div class="day-event-item">
+                    <h6>📅 Scadenza Manutenzione</h6>
+                    <span class="badge ${badgeClass}">${statusText}</span>
+                    <p class="mb-0 mt-2"><strong>${event.data.machineName}</strong></p>
+                    <small class="text-muted">Giorni rimanenti: ${event.data.daysRemaining}</small>
                 </div>`;
-            });
-            html += '</div>';
-        }
+            } else {
+                const machine = machines.find(m => m.id === event.data.machine_id);
+                html += `<div class="day-event-item">
+                    <h6>🔧 Intervento Effettuato</h6>
+                    <span class="badge" style="background-color: #8b0000;">${event.data.type}</span>
+                    <p class="mb-0 mt-2"><strong>${machine ? machine.name : 'N/A'}</strong></p>
+                    <small class="text-muted">${event.data.description || 'Nessuna descrizione'}</small>
+                </div>`;
+            }
+        });
         
-        document.getElementById('day-details-content').innerHTML = html;
+        html += '</div>';
+        body.innerHTML = html;
     }
     
-    if (!dayDetailsModal) {
-        dayDetailsModal = new bootstrap.Modal(document.getElementById('dayDetailsModal'));
+    if (!dayModal) {
+        dayModal = new bootstrap.Modal(document.getElementById('dayModal'));
     }
-    dayDetailsModal.show();
+    dayModal.show();
 }
 
 function previousMonth() {
@@ -1690,6 +1720,11 @@ function previousMonth() {
 
 function nextMonth() {
     currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    renderCalendar();
+}
+
+function goToToday() {
+    currentCalendarDate = new Date();
     renderCalendar();
 }
 

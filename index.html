@@ -307,32 +307,35 @@
 
                 <!-- Calendario Section -->
                 <div id="calendario-section" class="content-section" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>Calendario Manutenzioni</h2>
                         <div class="d-flex gap-2 align-items-center">
-                            <button class="btn btn-sm btn-secondary" onclick="previousMonth()">← Mese Prec.</button>
-                            <span id="current-month" style="font-weight: 600; min-width: 150px; text-align: center;">-</span>
-                            <button class="btn btn-sm btn-secondary" onclick="nextMonth()">Mese Succ. →</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="previousMonth()">
+                                <i class="bi bi-chevron-left"></i> Precedente
+                            </button>
+                            <h5 id="calendar-month-year" class="mb-0 mx-3">-</h5>
+                            <button class="btn btn-sm btn-outline-primary" onclick="nextMonth()">
+                                Successivo <i class="bi bi-chevron-right"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary ms-3" onclick="goToToday()">Oggi</button>
                         </div>
                     </div>
                     
                     <!-- Legenda -->
-                    <div class="card mb-3">
-                        <div class="card-body py-2">
-                            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                                <small><span class="calendar-legend calendar-overdue"></span> Scaduto</small>
-                                <small><span class="calendar-legend calendar-urgent"></span> Urgente (≤7 giorni)</small>
-                                <small><span class="calendar-legend calendar-upcoming"></span> In scadenza (≤30 giorni)</small>
-                                <small><span class="calendar-legend calendar-ok"></span> OK (>30 giorni)</small>
-                                <small><span class="calendar-legend calendar-intervention"></span> Intervento effettuato</small>
-                            </div>
+                    <div class="alert alert-dark mb-3">
+                        <div class="d-flex gap-4 justify-content-center flex-wrap small">
+                            <span><span class="badge bg-danger">●</span> Scaduto</span>
+                            <span><span class="badge" style="background-color: #ff6b6b;">●</span> Urgente (≤7gg)</span>
+                            <span><span class="badge bg-warning">●</span> In scadenza (≤30gg)</span>
+                            <span><span class="badge bg-success">●</span> Programmata</span>
+                            <span><span class="badge" style="background-color: #8b0000;">●</span> Intervento effettuato</span>
                         </div>
                     </div>
                     
-                    <!-- Calendario -->
-                    <div class="card">
-                        <div class="card-body p-0">
-                            <div id="calendar-grid"></div>
+                    <!-- Calendario Grid -->
+                    <div class="calendar-container">
+                        <div class="calendar-grid" id="calendar-grid">
+                            <!-- Generato da JS -->
                         </div>
                     </div>
                 </div>
@@ -341,17 +344,15 @@
     </div>
 
     <!-- Modal Dettagli Giornata -->
-    <div class="modal fade" id="dayDetailsModal" tabindex="-1">
+    <div class="modal fade" id="dayModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="dayDetailsTitle">Dettagli Giornata</h5>
+                    <h5 class="modal-title" id="dayModalTitle">Dettagli Giornata</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div id="day-details-content">
-                        <p class="text-muted">Nessuna attività per questo giorno</p>
-                    </div>
+                <div class="modal-body" id="dayModalBody">
+                    <!-- Contenuto generato da JS -->
                 </div>
             </div>
         </div>
