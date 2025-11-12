@@ -1,8 +1,8 @@
 // Gestionale Manutenzioni
 
 // ==================== VERSION LOG ====================
-const APP_VERSION = '2.1.1';
-const LAST_UPDATE = '2025-11-12 - UX Polish';
+const APP_VERSION = '2.1.3';
+const LAST_UPDATE = '2025-11-13 - Fix UX e Performance';
 
 console.log('%c┌─────────────────────────────────────────────┐', 'color: #8b0000; font-weight: bold;');
 console.log('%c│   🔧 GESTIONALE MANUTENZIONI RJ             │', 'color: #8b0000; font-weight: bold;');
@@ -528,7 +528,7 @@ function renderInterventionsTable() {
         const durationText = formatDuration(intervention.hours, intervention.minutes);
         
         const statusButton = intervention.status === 'programmato'
-            ? `<button class="btn btn-sm btn-danger me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">Conferma</button>`
+            ? `<button class="btn btn-sm btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">Conferma</button>`
             : '';
         
         return `
@@ -539,10 +539,10 @@ function renderInterventionsTable() {
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
-                <td class="text-end">
+                <td>
                     ${statusButton}
-                    <button class="btn btn-sm btn-secondary me-1" onclick="editIntervention('${intervention.id}')">Modifica</button>
-                    <button class="btn btn-sm btn-secondary" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
+                    <button class="btn btn-sm btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="editIntervention('${intervention.id}')">Modifica</button>
+                    <button class="btn btn-sm btn-secondary ms-1" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
         `;
@@ -659,8 +659,21 @@ function updatePrioritiesAndAttentions() {
     
     const deadlines = calculateDeadlines();
     
-    // Interventi scaduti
-    const overdue = deadlines.filter(d => d.daysRemaining < 0);
+    // Interventi programmati scaduti (status=programmato con data passata)
+    const overdueScheduled = interventions.filter(i => {
+        if (i.status === 'programmato' && i.date) {
+            const intervDate = new Date(i.date);
+            intervDate.setHours(0, 0, 0, 0);
+            return intervDate < today;
+        }
+        return false;
+    });
+    
+    // Scadenze manutenzione
+    const overdueDeadlines = deadlines.filter(d => d.daysRemaining < 0);
+    
+    // Combina i due tipi di scaduti
+    const totalOverdue = overdueScheduled.length + overdueDeadlines.length;
     
     // Interventi oggi/domani
     const todayTomorrow = deadlines.filter(d => d.daysRemaining >= 0 && d.daysRemaining <= 1);
@@ -669,21 +682,32 @@ function updatePrioritiesAndAttentions() {
     const lowStock = components.filter(c => c.quantity <= 2);
     
     // Aggiorna contatori
-    document.getElementById('overdue-count').textContent = overdue.length;
+    document.getElementById('overdue-count').textContent = totalOverdue;
     document.getElementById('today-tomorrow-count').textContent = todayTomorrow.length;
     document.getElementById('low-stock-count').textContent = lowStock.length;
     
     // Aggiorna lista interventi scaduti
     const overdueList = document.getElementById('overdue-list');
-    if (overdue.length === 0) {
+    if (totalOverdue === 0) {
         overdueList.innerHTML = '<small class="text-muted">Nessun intervento in ritardo</small>';
     } else {
         let html = '<ul class="list-unstyled mb-0">';
-        overdue.slice(0, 5).forEach(d => {
-            html += `<li class="mb-1"><small>• <strong>${d.machineName}</strong> - Scaduto da ${Math.abs(d.daysRemaining)} giorni</small></li>`;
+        
+        // Mostra interventi programmati scaduti
+        overdueScheduled.slice(0, 3).forEach(i => {
+            const machineName = getMachineName(i.machine_id);
+            const intervDate = new Date(i.date);
+            const daysPast = Math.floor((today - intervDate) / (1000 * 60 * 60 * 24));
+            html += `<li class="mb-1"><small>• <strong>${machineName}</strong> - ${i.type} (${daysPast}gg fa)</small></li>`;
         });
-        if (overdue.length > 5) {
-            html += `<li><small class="text-muted">...e altri ${overdue.length - 5}</small></li>`;
+        
+        // Mostra scadenze manutenzione
+        overdueDeadlines.slice(0, 3).forEach(d => {
+            html += `<li class="mb-1"><small>• <strong>${d.machineName}</strong> - Manutenzione (${Math.abs(d.daysRemaining)}gg fa)</small></li>`;
+        });
+        
+        if (totalOverdue > 6) {
+            html += `<li><small class="text-muted">...e altri ${totalOverdue - 6}</small></li>`;
         }
         html += '</ul>';
         overdueList.innerHTML = html;
@@ -745,7 +769,7 @@ function updateShiftNotes() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <small class="text-muted">${icon} ${dateStr} - ${note.author}</small>
-                            <p class="mb-0 mt-1">${note.text}</p>
+                            <p class="mb-0 mt-1" style="color: var(--text-primary);">${note.text}</p>
                         </div>
                         <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteShiftNote(${shiftNotes.length - 1 - index})" title="Elimina">×</button>
                     </div>
@@ -2212,7 +2236,7 @@ function filterInterventions() {
         const durationText = formatDuration(intervention.hours, intervention.minutes);
         
         const statusButton = intervention.status === 'programmato'
-            ? `<button class="btn btn-sm btn-danger me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">Conferma</button>`
+            ? `<button class="btn btn-sm btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">Conferma</button>`
             : '';
         
         return `
@@ -2223,10 +2247,10 @@ function filterInterventions() {
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
-                <td class="text-end">
+                <td>
                     ${statusButton}
-                    <button class="btn btn-sm btn-secondary me-1" onclick="editIntervention('${intervention.id}')">Modifica</button>
-                    <button class="btn btn-sm btn-secondary" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
+                    <button class="btn btn-sm btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="editIntervention('${intervention.id}')">Modifica</button>
+                    <button class="btn btn-sm btn-secondary ms-1" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
         `;
