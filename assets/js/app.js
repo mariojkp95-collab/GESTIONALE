@@ -1,8 +1,8 @@
 // Gestionale Manutenzioni
 
 // ==================== VERSION LOG ====================
-const APP_VERSION = '2.0.1';
-const LAST_UPDATE = '2025-11-12 - Design/UX Update';
+const APP_VERSION = '2.1.0';
+const LAST_UPDATE = '2025-11-12 - Dashboard Operativa';
 
 console.log('%c┌─────────────────────────────────────────────┐', 'color: #8b0000; font-weight: bold;');
 console.log('%c│   🔧 GESTIONALE MANUTENZIONI RJ             │', 'color: #8b0000; font-weight: bold;');
@@ -355,6 +355,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Inizializza tema salvato
     initTheme();
     
+    // Aggiorna ora ogni minuto nel dashboard
+    setInterval(updateCurrentDateTime, 60000);
+    
     // Inizializza autenticazione
     initAuth();
 });
@@ -631,98 +634,223 @@ function getLastIntervention(machineId) {
 
 let machineTimeChart, interventionTypeChart, monthlyTrendChart, topComponentsChart;
 
+// Sistema note turno - salvate in localStorage
+let shiftNotes = JSON.parse(localStorage.getItem('shiftNotes') || '[]');
+
 function updateDashboard() {
+    updateCurrentDateTime();
+    updateTodayPriorities();
+    updateShiftNotes();
+    updateAttentions();
+    updateWeekSchedule();
+}
+
+function updateCurrentDateTime() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const el = document.getElementById('current-datetime');
+    if (el) el.textContent = `${dateStr} - ${timeStr}`;
+}
+
+function updateTodayPriorities() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const deadlines = calculateDeadlines();
+    
+    // Interventi scaduti
+    const overdue = deadlines.filter(d => d.daysRemaining < 0);
+    
+    // Interventi oggi/domani
+    const todayTomorrow = deadlines.filter(d => d.daysRemaining >= 0 && d.daysRemaining <= 1);
+    
+    const prioritiesDiv = document.getElementById('today-priorities');
+    const card = document.getElementById('today-priorities-card');
+    
+    if (overdue.length === 0 && todayTomorrow.length === 0) {
+        prioritiesDiv.innerHTML = '<p class="text-muted mb-0">Nessuna priorità critica oggi ✅</p>';
+        card.classList.remove('border-danger');
+        card.classList.add('border-success');
+        card.querySelector('.card-header').classList.remove('bg-danger');
+        card.querySelector('.card-header').classList.add('bg-success');
+    } else {
+        card.classList.remove('border-success');
+        card.classList.add('border-danger');
+        card.querySelector('.card-header').classList.remove('bg-success');
+        card.querySelector('.card-header').classList.add('bg-danger');
+        
+        let html = '<div class="list-group list-group-flush">';
+        
+        if (overdue.length > 0) {
+            html += '<div class="list-group-item list-group-item-danger"><strong>❌ SCADUTI (' + overdue.length + '):</strong></div>';
+            overdue.slice(0, 5).forEach(d => {
+                html += `<div class="list-group-item">
+                    <strong>${d.machineName}</strong> - Scaduto da ${Math.abs(d.daysRemaining)} giorni
+                    <small class="d-block text-muted">Previsto: ${d.nextDate}</small>
+                </div>`;
+            });
+        }
+        
+        if (todayTomorrow.length > 0) {
+            html += '<div class="list-group-item list-group-item-warning"><strong>⏰ OGGI/DOMANI (' + todayTomorrow.length + '):</strong></div>';
+            todayTomorrow.forEach(d => {
+                const when = d.daysRemaining === 0 ? 'OGGI' : 'DOMANI';
+                html += `<div class="list-group-item">
+                    <span class="badge bg-warning">${when}</span> <strong>${d.machineName}</strong>
+                    <small class="d-block text-muted">${d.nextDate} - ogni ${d.frequencyDays} giorni</small>
+                </div>`;
+            });
+        }
+        
+        html += '</div>';
+        prioritiesDiv.innerHTML = html;
+    }
+}
+
+function updateShiftNotes() {
+    const notesDiv = document.getElementById('shift-notes');
+    
+    if (shiftNotes.length === 0) {
+        notesDiv.innerHTML = '<p class="text-muted">Nessuna nota dal turno precedente</p>';
+    } else {
+        let html = '';
+        // Mostra ultime 10 note, le più recenti prima
+        shiftNotes.slice(-10).reverse().forEach((note, index) => {
+            const noteDate = new Date(note.timestamp);
+            const dateStr = noteDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            const isImportant = note.important ? ' border-warning' : '';
+            const icon = note.important ? '⚠️' : '📝';
+            
+            html += `<div class="card mb-2${isImportant}">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <small class="text-muted">${icon} ${dateStr} - ${note.author}</small>
+                            <p class="mb-0 mt-1">${note.text}</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteShiftNote(${shiftNotes.length - 1 - index})" title="Elimina">×</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+        notesDiv.innerHTML = html;
+    }
+}
+
+function addShiftNote() {
+    const userEmail = document.getElementById('user-email').textContent || 'Anonimo';
+    const text = prompt('Inserisci nota per il prossimo turno:');
+    
+    if (text && text.trim()) {
+        const important = confirm('Segnare come IMPORTANTE (⚠️)?');
+        
+        shiftNotes.push({
+            text: text.trim(),
+            author: userEmail,
+            timestamp: new Date().toISOString(),
+            important: important
+        });
+        
+        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+        updateShiftNotes();
+    }
+}
+
+function deleteShiftNote(index) {
+    if (confirm('Eliminare questa nota?')) {
+        shiftNotes.splice(index, 1);
+        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+        updateShiftNotes();
+    }
+}
+
+function updateAttentions() {
+    // Interventi in ritardo
+    const deadlines = calculateDeadlines();
+    const overdue = deadlines.filter(d => d.daysRemaining < 0);
+    
+    document.getElementById('overdue-count').textContent = overdue.length;
+    const overdueList = document.getElementById('overdue-list');
+    
+    if (overdue.length === 0) {
+        overdueList.innerHTML = '<small class="text-muted">✅ Nessun intervento in ritardo</small>';
+    } else {
+        let html = '<ul class="list-unstyled mb-0">';
+        overdue.slice(0, 5).forEach(d => {
+            html += `<li class="mb-1"><small>• <strong>${d.machineName}</strong> (${Math.abs(d.daysRemaining)}gg fa)</small></li>`;
+        });
+        if (overdue.length > 5) {
+            html += `<li><small class="text-muted">...e altri ${overdue.length - 5}</small></li>`;
+        }
+        html += '</ul>';
+        overdueList.innerHTML = html;
+    }
+    
+    // Componenti sotto scorta
+    const lowStock = components.filter(c => c.quantity <= 2);
+    document.getElementById('low-stock-count').textContent = lowStock.length;
+    const lowStockList = document.getElementById('low-stock-list');
+    
+    if (lowStock.length === 0) {
+        lowStockList.innerHTML = '<small class="text-muted">✅ Scorte sufficienti</small>';
+    } else {
+        let html = '<ul class="list-unstyled mb-0">';
+        lowStock.slice(0, 5).forEach(c => {
+            const status = c.quantity === 0 ? '❌ ESAURITO' : `⚠️ ${c.quantity} pz`;
+            html += `<li class="mb-1"><small>• <strong>${c.name}</strong> (${status})</small></li>`;
+        });
+        if (lowStock.length > 5) {
+            html += `<li><small class="text-muted">...e altri ${lowStock.length - 5}</small></li>`;
+        }
+        html += '</ul>';
+        lowStockList.innerHTML = html;
+    }
+}
+
+function updateWeekSchedule() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const deadlines = calculateDeadlines();
-    const overdueDeadlines = deadlines.filter(d => d.daysRemaining < 0);
-    const overdueEl = document.getElementById('overdue-deadlines');
-    if (overdueEl) overdueEl.textContent = overdueDeadlines.length;
     
-    const lowStockComponents = components.filter(c => c.quantity <= 2);
-    const lowStockEl = document.getElementById('low-stock-components');
-    if (lowStockEl) lowStockEl.textContent = lowStockComponents.length;
+    // Prossimi 7 giorni (esclusi oggi che è già in priorità)
+    const nextWeek = deadlines.filter(d => d.daysRemaining > 1 && d.daysRemaining <= 7);
     
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const monthInterventions = interventions.filter(i => {
-        const iDate = new Date(i.date);
-        return iDate.getMonth() === currentMonth && iDate.getFullYear() === currentYear;
-    });
-    const monthIntEl = document.getElementById('month-interventions');
-    const monthDetEl = document.getElementById('month-interventions-detail');
-    if (monthIntEl) monthIntEl.textContent = monthInterventions.length;
-    if (monthDetEl) monthDetEl.textContent = monthInterventions.length > 0 ? `${monthInterventions.length} completati` : 'Nessuno';
+    const scheduleDiv = document.getElementById('week-schedule');
     
-    if (machines.length > 0 && interventions.length > 0) {
-        const machineInterventionCount = {};
-        interventions.forEach(i => {
-            machineInterventionCount[i.machine_id] = (machineInterventionCount[i.machine_id] || 0) + 1;
+    if (nextWeek.length === 0) {
+        scheduleDiv.innerHTML = '<p class="text-muted">Nessun intervento programmato nei prossimi 7 giorni</p>';
+    } else {
+        // Raggruppa per giorno
+        const byDay = {};
+        nextWeek.forEach(d => {
+            const key = d.daysRemaining;
+            if (!byDay[key]) byDay[key] = [];
+            byDay[key].push(d);
         });
         
-        const mostActiveMachineId = Object.keys(machineInterventionCount).reduce((a, b) => 
-            machineInterventionCount[a] > machineInterventionCount[b] ? a : b
-        );
+        let html = '';
+        Object.keys(byDay).sort((a, b) => a - b).forEach(days => {
+            const interventions = byDay[days];
+            const date = new Date(today);
+            date.setDate(date.getDate() + parseInt(days));
+            const dateStr = date.toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
+            
+            html += `<div class="mb-2">
+                <h6 class="mb-1">📅 ${dateStr} (tra ${days}gg)</h6>
+                <ul class="list-unstyled ms-3 mb-0">`;
+            
+            interventions.forEach(d => {
+                html += `<li><small>• ${d.machineName}</small></li>`;
+            });
+            
+            html += `</ul></div>`;
+        });
         
-        const mostActiveMachine = machines.find(m => m.id === mostActiveMachineId);
-        const count = machineInterventionCount[mostActiveMachineId];
-        
-        const machEl = document.getElementById('most-active-machine');
-        const countEl = document.getElementById('most-active-count');
-        if (machEl) machEl.textContent = mostActiveMachine ? mostActiveMachine.name : '-';
-        if (countEl) countEl.textContent = `${count} interventi`;
-    } else {
-        const machEl = document.getElementById('most-active-machine');
-        const countEl = document.getElementById('most-active-count');
-        if (machEl) machEl.textContent = '-';
-        if (countEl) countEl.textContent = 'Nessun intervento';
-    }
-    
-    const upcomingDeadlines = deadlines.filter(d => d.daysRemaining >= 0).sort((a, b) => a.daysRemaining - b.daysRemaining);
-    const nextMachEl = document.getElementById('next-deadline-machine');
-    const nextDateEl = document.getElementById('next-deadline-date');
-    if (upcomingDeadlines.length > 0 && nextMachEl && nextDateEl) {
-        const nextDeadline = upcomingDeadlines[0];
-        nextMachEl.textContent = nextDeadline.machineName;
-        nextDateEl.textContent = `Tra ${nextDeadline.daysRemaining} giorni (${nextDeadline.nextDate})`;
-    } else {
-        if (nextMachEl) nextMachEl.textContent = '-';
-        if (nextDateEl) nextDateEl.textContent = 'Nessuna scadenza';
-    }
-    
-    const lastMachEl = document.getElementById('last-activity-machine');
-    const lastDateEl = document.getElementById('last-activity-date');
-    if (interventions.length > 0 && lastMachEl && lastDateEl) {
-        const lastIntervention = sortByDateDesc([...interventions])[0];
-        const machineName = getMachineName(lastIntervention.machine_id);
-        lastMachEl.textContent = machineName;
-        lastDateEl.textContent = formatDate(lastIntervention.date);
-    } else {
-        if (lastMachEl) lastMachEl.textContent = '-';
-        if (lastDateEl) lastDateEl.textContent = 'Nessuna attività';
-    }
-    
-    const recentDiv = document.getElementById('recent-interventions');
-    if (recentDiv) {
-        const recent = sortByDateDesc([...interventions]).slice(0, 5);
-        
-        if (recent.length === 0) {
-            recentDiv.innerHTML = '<p class="text-muted">Nessun intervento registrato</p>';
-        } else {
-            recentDiv.innerHTML = '<ul class="list-group">' + recent.map(intervention => {
-                const machineName = getMachineName(intervention.machine_id);
-                const date = formatDate(intervention.date);
-                const duration = formatDuration(intervention.hours, intervention.minutes);
-                const durationText = duration !== '-' ? ` - ${duration}` : '';
-                return `
-                    <li class="list-group-item">
-                        <strong>${machineName}</strong> - ${date}${durationText}<br>
-                        <small>${intervention.type}: ${intervention.description}</small>
-                    </li>
-                `;
-            }).join('') + '</ul>';
-        }
+        scheduleDiv.innerHTML = html;
     }
 }
 

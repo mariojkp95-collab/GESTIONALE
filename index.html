@@ -33,7 +33,7 @@
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                     </svg>
                 </button>
-                <small class="text-muted ms-3" style="font-size: 0.75rem;">v2.0.0</small>
+                <small class="text-muted ms-3" style="font-size: 0.75rem;">v2.1.0</small>
             </div>
         </div>
     </nav>
@@ -135,72 +135,99 @@
             <!-- Main Content -->
             <div class="col-md-9">
                 <div id="dashboard-section" class="content-section">
-                    <h2>Dashboard</h2>
-                    <div class="row">
-                        <!-- Riga 1 -->
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-danger mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2>🏠 Dashboard Operativa</h2>
+                        <small class="text-muted" id="current-datetime"></small>
+                    </div>
+
+                    <!-- PRIORITÀ OGGI -->
+                    <div class="card mb-3 border-danger" id="today-priorities-card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">🚨 PRIORITÀ OGGI</h5>
+                        </div>
+                        <div class="card-body" id="today-priorities">
+                            <p class="text-muted mb-0">Nessuna priorità critica oggi</p>
+                        </div>
+                    </div>
+
+                    <!-- NOTE TURNO -->
+                    <div class="card mb-3 border-warning">
+                        <div class="card-header" style="background-color: var(--accent-primary); color: white;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">📋 Note Turno</h5>
+                                <button class="btn btn-sm btn-light" onclick="addShiftNote()">+ Aggiungi Nota</button>
+                            </div>
+                        </div>
+                        <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                            <div id="shift-notes">
+                                <p class="text-muted">Nessuna nota dal turno precedente</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <!-- ATTENZIONI -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning">
+                                    <h5 class="mb-0">⚠️ Attenzioni</h5>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title">Scadenze in Ritardo</h5>
-                                    <h2 id="overdue-deadlines">0</h2>
-                                    <small>Interventi non completati</small>
+                                    <h6 class="text-danger">Interventi in Ritardo: <span id="overdue-count">0</span></h6>
+                                    <div id="overdue-list" class="mb-3" style="max-height: 120px; overflow-y: auto;">
+                                        <small class="text-muted">Nessun intervento in ritardo</small>
+                                    </div>
+                                    
+                                    <h6 class="text-warning">Componenti Sotto Scorta: <span id="low-stock-count">0</span></h6>
+                                    <div id="low-stock-list" style="max-height: 120px; overflow-y: auto;">
+                                        <small class="text-muted">Scorte sufficienti</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-warning mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Componenti Sotto Scorta</h5>
-                                    <h2 id="low-stock-components">0</h2>
-                                    <small>Quantità sotto 2 unità</small>
+
+                        <!-- PROGRAMMAZIONE SETTIMANA -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-info">
+                                    <h5 class="mb-0">📅 Prossimi 7 Giorni</h5>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-info mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Interventi Questo Mese</h5>
-                                    <h2 id="month-interventions">0</h2>
-                                    <small id="month-interventions-detail">Nessuno</small>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-primary mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Macchina Più Attiva</h5>
-                                    <h3 id="most-active-machine" style="font-size: 1.2rem;">-</h3>
-                                    <small id="most-active-count">Nessun intervento</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-success mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Prossima Scadenza</h5>
-                                    <h3 id="next-deadline-machine" style="font-size: 1.2rem;">-</h3>
-                                    <small id="next-deadline-date">Nessuna scadenza</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-neutral mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Ultima Attività</h5>
-                                    <h3 id="last-activity-machine" style="font-size: 1.2rem;">-</h3>
-                                    <small id="last-activity-date">Nessuna attività</small>
+                                <div class="card-body" style="max-height: 320px; overflow-y: auto;">
+                                    <div id="week-schedule">
+                                        <p class="text-muted">Nessun intervento programmato</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- QUICK ACTIONS -->
                     <div class="card">
                         <div class="card-header">
-                            Ultimi Interventi
+                            <h5 class="mb-0">🔧 Azioni Rapide</h5>
                         </div>
                         <div class="card-body">
-                            <div id="recent-interventions">
-                                <p class="text-muted">Nessun intervento registrato</p>
+                            <div class="row g-2">
+                                <div class="col-md-3 col-6">
+                                    <button class="btn btn-primary w-100" onclick="showSection('interventi'); setTimeout(() => document.getElementById('add-intervention-btn').click(), 100);">
+                                        ➕ Nuovo Intervento
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <button class="btn btn-success w-100" onclick="showSection('magazzino')">
+                                        📦 Cerca Componente
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <button class="btn btn-info w-100" onclick="showSection('calendario')">
+                                        📆 Vedi Scadenze
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <button class="btn btn-warning w-100" onclick="showSection('macchinari')">
+                                        🔩 Gestisci Macchinari
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
