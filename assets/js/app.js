@@ -385,43 +385,6 @@ function loadData() {
     renderDeadlinesTable();
     updateMachineSelect();
     updateDashboard();
-    
-    // Mobile menu toggle
-    initMobileMenu();
-}
-
-// ==================== MOBILE MENU ====================
-function initMobileMenu() {
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
-    
-    if (!menuToggle || !sidebar) return;
-    
-    menuToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('show');
-        document.body.classList.toggle('menu-open');
-    });
-    
-    // Close menu when clicking backdrop
-    document.body.addEventListener('click', function(e) {
-        if (document.body.classList.contains('menu-open') && 
-            !sidebar.contains(e.target) && 
-            !menuToggle.contains(e.target)) {
-            sidebar.classList.remove('show');
-            document.body.classList.remove('menu-open');
-        }
-    });
-    
-    // Close menu when selecting a section
-    const menuButtons = sidebar.querySelectorAll('.list-group-item');
-    menuButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('show');
-                document.body.classList.remove('menu-open');
-            }
-        });
-    });
 }
 
 // ==================== RENDERING TABELLE ====================
