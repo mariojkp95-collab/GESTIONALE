@@ -115,6 +115,24 @@ body {
     font-weight: 600;
     font-size: 1.1rem;
     letter-spacing: -0.02em;
+    color: var(--text-primary) !important;
+}
+
+.navbar-user-email {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.navbar-export-btn {
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    background: transparent;
+}
+
+.navbar-export-btn:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 .navbar-logo {

@@ -13,7 +13,7 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-dark bg-dark">
+    <nav class="navbar">
         <div class="container-fluid">
             <div class="navbar-brand mb-0 h1 d-flex align-items-center">
                 <img src="assets/images/logo.png" alt="RJ Logo" class="navbar-logo me-2">
@@ -21,9 +21,9 @@
                 <span id="sync-status" class="badge bg-secondary ms-2" style="font-size: 0.7rem;">⚡ Sync</span>
             </div>
             <div class="d-flex align-items-center">
-                <span id="user-email" class="text-light me-3" style="font-size: 0.9rem;"></span>
+                <span id="user-email" class="navbar-user-email me-3"></span>
                 <button id="logout-btn" class="btn btn-sm btn-outline-danger me-2" onclick="logout()" style="display: none;">Logout</button>
-                <button class="btn btn-sm btn-outline-light me-2" onclick="exportData()">Export Dati</button>
+                <button class="btn btn-sm navbar-export-btn me-2" onclick="exportData()">Export Dati</button>
                 <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme" title="Cambia tema">
                     <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display: none;">
                         <circle cx="12" cy="12" r="5"/>
