@@ -579,7 +579,10 @@ function calculateDeadlines() {
 
 // Ottieni ultimo intervento per macchinario
 function getLastIntervention(machineId) {
-    const machineInterventions = interventions.filter(i => i.machine_id === machineId);
+    // Considera solo interventi effettuati per calcolare scadenze
+    const machineInterventions = interventions.filter(i => 
+        i.machine_id === machineId && i.status === 'effettuato'
+    );
     if (machineInterventions.length === 0) return null;
     return machineInterventions.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 }
