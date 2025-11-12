@@ -363,50 +363,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // ==================== THEME MANAGEMENT ====================
-
+// Forza solo tema dark
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
-    console.log(`%c🎨 Tema attivo: ${savedTheme.toUpperCase()}`, `color: ${savedTheme === 'dark' ? '#8b0000' : '#2196f3'}; font-weight: bold;`);
-}
-
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeIcon(newTheme);
-    
-    console.log(`%c🎨 Tema cambiato: ${currentTheme.toUpperCase()} → ${newTheme.toUpperCase()}`, `color: ${newTheme === 'dark' ? '#8b0000' : '#2196f3'}; font-weight: bold;`);
-    
-    // Rigenera grafici con i nuovi colori del tema
-    if (typeof generateMachineTimeChart !== 'undefined') {
-        generateMachineTimeChart();
-        generateInterventionTypeChart();
-        generateMonthlyTrendChart();
-        generateTopComponentsChart();
-    }
-    
-    // Animazione di transizione
-    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-    setTimeout(() => {
-        document.body.style.transition = '';
-    }, 300);
-}
-
-function updateThemeIcon(theme) {
-    const sunIcon = document.getElementById('theme-icon-sun');
-    const moonIcon = document.getElementById('theme-icon-moon');
-    
-    if (theme === 'light') {
-        sunIcon.style.display = 'none';
-        moonIcon.style.display = 'block';
-    } else {
-        sunIcon.style.display = 'block';
-        moonIcon.style.display = 'none';
-    }
+    document.documentElement.setAttribute('data-theme', 'dark');
+    console.log('%c🎨 Tema: DARK (fisso)', 'color: #8b0000; font-weight: bold;');
 }
 
 function loadData() {
@@ -492,7 +452,7 @@ function renderMachinesTable() {
                 <td>${machine.type || '-'}</td>
                 <td>${machine.location || '-'}</td>
                 <td>${lastDate}</td>
-                <td onclick="event.stopPropagation()">
+                <td class="text-end" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-danger" onclick="deleteMachine('${machine.id}')">Elimina</button>
                 </td>
             </tr>
@@ -539,7 +499,7 @@ function renderInterventionsTable() {
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
-                <td>
+                <td class="text-end">
                     ${statusButton}
                     <button class="btn btn-sm btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="editIntervention('${intervention.id}')">Modifica</button>
                     <button class="btn btn-sm btn-secondary ms-1" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
@@ -693,17 +653,30 @@ function updatePrioritiesAndAttentions() {
     } else {
         let html = '<ul class="list-unstyled mb-0">';
         
-        // Mostra interventi programmati scaduti
+        // Mostra interventi programmati scaduti con dettagli completi
         overdueScheduled.slice(0, 3).forEach(i => {
             const machineName = getMachineName(i.machine_id);
             const intervDate = new Date(i.date);
             const daysPast = Math.floor((today - intervDate) / (1000 * 60 * 60 * 24));
-            html += `<li class="mb-1"><small>• <strong>${machineName}</strong> - ${i.type} (${daysPast}gg fa)</small></li>`;
+            const duration = i.hours || i.minutes ? `${i.hours || 0}h ${i.minutes || 0}m` : 'N/D';
+            html += `<li class="mb-2" style="color: #ffffff;">
+                <small>
+                    <strong>${machineName}</strong> - ${i.type}<br>
+                    <span class="text-danger">Scaduto ${daysPast}gg fa</span> (${formatDate(i.date)})<br>
+                    ${i.description || 'Nessuna descrizione'} - Durata: ${duration}
+                </small>
+            </li>`;
         });
         
         // Mostra scadenze manutenzione
         overdueDeadlines.slice(0, 3).forEach(d => {
-            html += `<li class="mb-1"><small>• <strong>${d.machineName}</strong> - Manutenzione (${Math.abs(d.daysRemaining)}gg fa)</small></li>`;
+            html += `<li class="mb-2" style="color: #ffffff;">
+                <small>
+                    <strong>${d.machineName}</strong> - Manutenzione programmata<br>
+                    <span class="text-danger">Scaduto ${Math.abs(d.daysRemaining)}gg fa</span><br>
+                    Ultimo: ${d.interventionType} il ${d.lastIntervention}
+                </small>
+            </li>`;
         });
         
         if (totalOverdue > 6) {
@@ -725,7 +698,7 @@ function updatePrioritiesAndAttentions() {
         todayTomorrow.forEach(d => {
             const when = d.daysRemaining === 0 ? 'OGGI' : 'DOMANI';
             const badgeClass = d.daysRemaining === 0 ? 'bg-danger' : 'bg-warning';
-            html += `<li class="mb-1"><small><span class="badge ${badgeClass}">${when}</span> <strong>${d.machineName}</strong></small></li>`;
+            html += `<li class="mb-1" style="color: #ffffff;"><small><span class="badge ${badgeClass}">${when}</span> <strong>${d.machineName}</strong></small></li>`;
         });
         html += '</ul>';
         todayTomorrowList.innerHTML = html;
@@ -770,6 +743,7 @@ function updateShiftNotes() {
                         <div class="flex-grow-1">
                             <small class="text-muted">${icon} ${dateStr} - ${note.author}</small>
                             <p class="mb-0 mt-1" style="color: var(--text-primary);">${note.text}</p>
+                            ${note.photoUrl ? `<img src="${note.photoUrl}" class="img-fluid mt-2 rounded" style="max-height: 200px;" alt="Foto nota">` : ''}
                         </div>
                         <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteShiftNote(${shiftNotes.length - 1 - index})" title="Elimina">×</button>
                     </div>
@@ -783,6 +757,7 @@ function updateShiftNotes() {
 function addShiftNote() {
     // Pulisci campi
     document.getElementById('shift-note-text').value = '';
+    document.getElementById('shift-note-photo').value = '';
     document.getElementById('shift-note-important').checked = false;
     
     // Apri modal
@@ -794,20 +769,33 @@ function saveShiftNote() {
     const userEmail = document.getElementById('user-email').textContent || 'Anonimo';
     const text = document.getElementById('shift-note-text').value.trim();
     const important = document.getElementById('shift-note-important').checked;
+    const photoInput = document.getElementById('shift-note-photo');
     
     if (text) {
-        shiftNotes.push({
+        const note = {
             text: text,
             author: userEmail,
             timestamp: new Date().toISOString(),
             important: important
-        });
+        };
         
-        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
-        updateShiftNotes();
-        
-        // Chiudi modal
-        bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+        // Se c'è una foto, convertila in base64
+        if (photoInput.files && photoInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                note.photoUrl = e.target.result;
+                shiftNotes.push(note);
+                localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+                updateShiftNotes();
+                bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+            };
+            reader.readAsDataURL(photoInput.files[0]);
+        } else {
+            shiftNotes.push(note);
+            localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+            updateShiftNotes();
+            bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+        }
     } else {
         alert('Inserisci un testo per la nota');
     }
@@ -856,14 +844,20 @@ function updateWeekSchedule() {
             byDay[key].push({ type: 'scadenza', text: d.machineName });
         });
         
-        // Aggiungi interventi programmati
+        // Aggiungi interventi programmati nei prossimi 7 giorni
         scheduledInterventions.forEach(i => {
             const intervDate = new Date(i.date);
             intervDate.setHours(0, 0, 0, 0);
             const diffDays = Math.ceil((intervDate - today) / (1000 * 60 * 60 * 24));
             if (!byDay[diffDays]) byDay[diffDays] = [];
             const machineName = getMachineName(i.machine_id);
-            byDay[diffDays].push({ type: 'programmato', text: `${machineName} - ${i.type}` });
+            const duration = i.hours || i.minutes ? `${i.hours || 0}h ${i.minutes || 0}m` : 'N/D';
+            byDay[diffDays].push({ 
+                type: 'programmato', 
+                text: `${machineName} - ${i.type}`,
+                description: i.description || 'Nessuna descrizione',
+                duration: duration
+            });
         });
         
         let html = '';
@@ -878,8 +872,16 @@ function updateWeekSchedule() {
                 <ul class="list-unstyled ms-3 mb-0">`;
             
             items.forEach(item => {
-                const badge = item.type === 'scadenza' ? '<span class="badge bg-info">Scadenza</span>' : '<span class="badge bg-primary">Programmato</span>';
-                html += `<li style="color: var(--text-primary);"><small>${badge} ${item.text}</small></li>`;
+                if (item.type === 'scadenza') {
+                    html += `<li style="color: #ffffff;"><small><span class="badge bg-info">Scadenza</span> ${item.text}</small></li>`;
+                } else {
+                    html += `<li class="mb-2" style="color: #ffffff;">
+                        <small>
+                            <span class="badge bg-primary">Programmato</span> <strong>${item.text}</strong><br>
+                            ${item.description} - Durata: ${item.duration}
+                        </small>
+                    </li>`;
+                }
             });
             
             html += `</ul></div>`;
@@ -2111,7 +2113,7 @@ function renderWarehouseTable() {
                 </td>
                 <td>${comp.minStock}</td>
                 <td>${statusBadge}</td>
-                <td>
+                <td class="text-end">
                     <button class="btn btn-sm btn-danger" onclick="deleteComponent('${comp.id}')">Elimina</button>
                 </td>
             </tr>
