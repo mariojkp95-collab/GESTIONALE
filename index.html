@@ -121,74 +121,122 @@
             <div class="col-md-9">
                 <!-- Dashboard Section -->
                 <div id="dashboard-section" class="content-section">
-                    <h2>Dashboard</h2>
-                    <div class="row">
-                        <!-- Riga 1 -->
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-danger mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">🚨 Scadenze in Ritardo</h5>
-                                    <h2 id="overdue-deadlines">0</h2>
-                                    <small>Interventi non completati</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-warning mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">⚠️ Componenti Sotto Scorta</h5>
-                                    <h2 id="low-stock-components">0</h2>
-                                    <small>Quantità ≤ 2 unità</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2>Report e Statistiche</h2>
+                        <button class="btn btn-primary" onclick="exportMonthlyReport()">
+                            📄 Esporta Report PDF
+                        </button>
+                    </div>
+
+                    <!-- Statistiche Generali -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
                             <div class="card dashboard-card-info mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">🔧 Interventi Questo Mese</h5>
-                                    <h2 id="month-interventions">0</h2>
-                                    <small id="month-interventions-detail">Nessuno</small>
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">⏱️ Ore Totali</h5>
+                                    <h2 id="total-hours">0</h2>
+                                    <small>Ore di manutenzione</small>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Riga 2 -->
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-primary mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">📊 Macchina Più Attiva</h5>
-                                    <h3 id="most-active-machine" style="font-size: 1.2rem;">-</h3>
-                                    <small id="most-active-count">Nessun intervento</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card dashboard-card-success mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">📅 Prossima Scadenza</h5>
-                                    <h3 id="next-deadline-machine" style="font-size: 1.2rem;">-</h3>
-                                    <small id="next-deadline-date">Nessuna scadenza</small>
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">🔧 Interventi Totali</h5>
+                                    <h2 id="total-interventions">0</h2>
+                                    <small>Manutenzioni eseguite</small>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card dashboard-card-neutral mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">🔄 Ultima Attività</h5>
-                                    <h3 id="last-activity-machine" style="font-size: 1.2rem;">-</h3>
-                                    <small id="last-activity-date">Nessuna attività</small>
+                        <div class="col-md-3">
+                            <div class="card dashboard-card-warning mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">🏭 Macchinari Attivi</h5>
+                                    <h2 id="active-machines">0</h2>
+                                    <small>In gestione</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card dashboard-card-primary mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">� Componenti Usati</h5>
+                                    <h2 id="total-components">0</h2>
+                                    <small>Pezzi in inventario</small>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Grafici -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    ⏱️ Tempo Interventi per Macchinario (Ore)
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="machineTimeChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    📊 Distribuzione Tipi di Intervento
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="interventionTypeChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    📈 Interventi Ultimi 6 Mesi
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="monthlyTrendChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    🔧 Componenti Più Utilizzati
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="topComponentsChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabella Statistiche Dettagliate -->
                     <div class="card">
                         <div class="card-header">
-                            Ultimi Interventi
+                            📋 Statistiche Dettagliate per Macchinario
                         </div>
                         <div class="card-body">
-                            <div id="recent-interventions">
-                                <p class="text-muted">Nessun intervento registrato</p>
-                            </div>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Macchinario</th>
+                                        <th>N° Interventi</th>
+                                        <th>Ore Totali</th>
+                                        <th>Media Ore/Intervento</th>
+                                        <th>Ultimo Intervento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stats-table">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Nessun dato disponibile</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -616,6 +664,12 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <!-- Firebase -->
     <script type="module">

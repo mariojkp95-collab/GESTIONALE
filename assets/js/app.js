@@ -586,102 +586,330 @@ function getLastIntervention(machineId) {
     return machineInterventions.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 }
 
-// Aggiorna dashboard
+// Variabili globali per i grafici
+let machineTimeChart, interventionTypeChart, monthlyTrendChart, topComponentsChart;
+
+// Aggiorna dashboard con report e statistiche
 function updateDashboard() {
+    // Statistiche generali
+    const totalHours = interventions.reduce((sum, i) => sum + (i.hours || 0) + (i.minutes || 0) / 60, 0);
+    document.getElementById('total-hours').textContent = Math.round(totalHours);
+    document.getElementById('total-interventions').textContent = interventions.length;
+    document.getElementById('active-machines').textContent = machines.length;
+    document.getElementById('total-components').textContent = components.length;
+    
+    // Genera grafici
+    generateMachineTimeChart();
+    generateInterventionTypeChart();
+    generateMonthlyTrendChart();
+    generateTopComponentsChart();
+    generateStatsTable();
+}
+
+// Grafico: Tempo interventi per macchinario
+function generateMachineTimeChart() {
+    const canvas = document.getElementById('machineTimeChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Calcola ore per macchinario
+    const machineHours = {};
+    interventions.forEach(i => {
+        const hours = (i.hours || 0) + (i.minutes || 0) / 60;
+        machineHours[i.machine_id] = (machineHours[i.machine_id] || 0) + hours;
+    });
+    
+    // Ordina per ore decrescenti e prendi top 10
+    const sorted = Object.entries(machineHours)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    
+    const labels = sorted.map(([machineId]) => {
+        const machine = machines.find(m => m.id === machineId);
+        return machine ? machine.name : 'Sconosciuto';
+    });
+    
+    const data = sorted.map(([, hours]) => Math.round(hours * 10) / 10);
+    
+    if (machineTimeChart) machineTimeChart.destroy();
+    
+    machineTimeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ore di Manutenzione',
+                data: data,
+                backgroundColor: '#8b0000',
+                borderColor: '#a01010',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Ore' }
+                }
+            }
+        }
+    });
+}
+
+// Grafico: Distribuzione tipi di intervento
+function generateInterventionTypeChart() {
+    const canvas = document.getElementById('interventionTypeChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Conta per tipo
+    const typeCounts = {};
+    interventions.forEach(i => {
+        typeCounts[i.type] = (typeCounts[i.type] || 0) + 1;
+    });
+    
+    const labels = Object.keys(typeCounts);
+    const data = Object.values(typeCounts);
+    
+    const colors = ['#8b0000', '#a01010', '#c62828', '#e57373', '#ff6b6b', '#ffa726', '#66bb6a'];
+    
+    if (interventionTypeChart) interventionTypeChart.destroy();
+    
+    interventionTypeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderColor: '#1e1e1e',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#e8e8e8' }
+                }
+            }
+        }
+    });
+}
+
+// Grafico: Trend interventi ultimi 6 mesi
+function generateMonthlyTrendChart() {
+    const canvas = document.getElementById('monthlyTrendChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Ultimi 6 mesi
+    const months = [];
+    const counts = [];
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
     
-    // 1. Scadenze in Ritardo
-    const deadlines = calculateDeadlines();
-    const overdueDeadlines = deadlines.filter(d => d.daysRemaining < 0);
-    document.getElementById('overdue-deadlines').textContent = overdueDeadlines.length;
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const monthName = d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+        months.push(monthName);
+        
+        const count = interventions.filter(interv => {
+            const intervDate = new Date(interv.date);
+            return intervDate.getMonth() === d.getMonth() && intervDate.getFullYear() === d.getFullYear();
+        }).length;
+        
+        counts.push(count);
+    }
     
-    // 2. Componenti Sotto Scorta (quantità <= 2)
-    const lowStockComponents = components.filter(c => c.quantity <= 2);
-    document.getElementById('low-stock-components').textContent = lowStockComponents.length;
+    if (monthlyTrendChart) monthlyTrendChart.destroy();
     
-    // 3. Interventi Questo Mese
+    monthlyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Interventi',
+                data: counts,
+                borderColor: '#8b0000',
+                backgroundColor: 'rgba(139, 0, 0, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#e8e8e8' } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+}
+
+// Grafico: Componenti più utilizzati (basato su quantità bassa = molto usato)
+function generateTopComponentsChart() {
+    const canvas = document.getElementById('topComponentsChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Ordina per quantità crescente (più usati = meno disponibili)
+    const sorted = [...components]
+        .sort((a, b) => a.quantity - b.quantity)
+        .slice(0, 8);
+    
+    const labels = sorted.map(c => c.name);
+    const data = sorted.map(c => c.quantity);
+    
+    if (topComponentsChart) topComponentsChart.destroy();
+    
+    topComponentsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Quantità Rimanente',
+                data: data,
+                backgroundColor: data.map(q => q <= 2 ? '#c62828' : q <= 5 ? '#ffa726' : '#66bb6a'),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Quantità' }
+                }
+            }
+        }
+    });
+}
+
+// Genera tabella statistiche dettagliate
+function generateStatsTable() {
+    const tbody = document.getElementById('stats-table');
+    if (!tbody) return;
+    
+    if (machines.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun dato disponibile</td></tr>';
+        return;
+    }
+    
+    const stats = machines.map(machine => {
+        const machineInterventions = interventions.filter(i => i.machine_id === machine.id);
+        const totalHours = machineInterventions.reduce((sum, i) => sum + (i.hours || 0) + (i.minutes || 0) / 60, 0);
+        const avgHours = machineInterventions.length > 0 ? totalHours / machineInterventions.length : 0;
+        const lastInterv = machineInterventions.length > 0 
+            ? new Date(Math.max(...machineInterventions.map(i => new Date(i.date)))).toLocaleDateString('it-IT')
+            : 'Mai';
+        
+        return {
+            name: machine.name,
+            count: machineInterventions.length,
+            totalHours: Math.round(totalHours * 10) / 10,
+            avgHours: Math.round(avgHours * 10) / 10,
+            lastDate: lastInterv
+        };
+    }).sort((a, b) => b.totalHours - a.totalHours);
+    
+    tbody.innerHTML = stats.map(s => `
+        <tr>
+            <td><strong>${s.name}</strong></td>
+            <td>${s.count}</td>
+            <td>${s.totalHours}h</td>
+            <td>${s.avgHours}h</td>
+            <td>${s.lastDate}</td>
+        </tr>
+    `).join('');
+}
+
+// Export PDF Report Mensile
+function exportMonthlyReport() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const today = new Date();
+    const monthName = today.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+    
+    // Titolo
+    doc.setFontSize(18);
+    doc.text('Report Manutenzioni', 20, 20);
+    doc.setFontSize(12);
+    doc.text(monthName, 20, 30);
+    
+    // Statistiche generali
+    doc.setFontSize(14);
+    doc.text('Statistiche Generali', 20, 45);
+    doc.setFontSize(10);
+    
+    const totalHours = interventions.reduce((sum, i) => sum + (i.hours || 0) + (i.minutes || 0) / 60, 0);
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     const monthInterventions = interventions.filter(i => {
-        const iDate = new Date(i.date);
-        return iDate.getMonth() === currentMonth && iDate.getFullYear() === currentYear;
+        const d = new Date(i.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
-    document.getElementById('month-interventions').textContent = monthInterventions.length;
-    document.getElementById('month-interventions-detail').textContent = 
-        monthInterventions.length > 0 ? `${monthInterventions.length} completati` : 'Nessuno';
     
-    // 4. Macchinario Più Attivo (con più interventi)
-    if (machines.length > 0 && interventions.length > 0) {
-        const machineInterventionCount = {};
-        interventions.forEach(i => {
-            machineInterventionCount[i.machine_id] = (machineInterventionCount[i.machine_id] || 0) + 1;
-        });
+    let y = 55;
+    doc.text(`Totale Ore Manutenzione: ${Math.round(totalHours)}h`, 20, y);
+    y += 7;
+    doc.text(`Interventi Totali: ${interventions.length}`, 20, y);
+    y += 7;
+    doc.text(`Interventi Questo Mese: ${monthInterventions.length}`, 20, y);
+    y += 7;
+    doc.text(`Macchinari Gestiti: ${machines.length}`, 20, y);
+    y += 7;
+    doc.text(`Componenti in Inventario: ${components.length}`, 20, y);
+    
+    // Tabella interventi recenti
+    y += 15;
+    doc.setFontSize(14);
+    doc.text('Ultimi 10 Interventi', 20, y);
+    y += 10;
+    
+    doc.setFontSize(9);
+    const recent = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+    
+    recent.forEach(interv => {
+        const machine = machines.find(m => m.id === interv.machine_id);
+        const machineName = machine ? machine.name : 'Sconosciuto';
+        const date = new Date(interv.date).toLocaleDateString('it-IT');
+        const duration = `${interv.hours || 0}h ${interv.minutes || 0}m`;
         
-        const mostActiveMachineId = Object.keys(machineInterventionCount).reduce((a, b) => 
-            machineInterventionCount[a] > machineInterventionCount[b] ? a : b
-        );
+        doc.text(`${date} - ${machineName} - ${interv.type} - ${duration}`, 20, y);
+        y += 6;
         
-        const mostActiveMachine = machines.find(m => m.id === mostActiveMachineId);
-        const count = machineInterventionCount[mostActiveMachineId];
-        
-        document.getElementById('most-active-machine').textContent = mostActiveMachine ? mostActiveMachine.name : '-';
-        document.getElementById('most-active-count').textContent = `${count} interventi`;
-    } else {
-        document.getElementById('most-active-machine').textContent = '-';
-        document.getElementById('most-active-count').textContent = 'Nessun intervento';
-    }
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+    });
     
-    // 5. Prossima Scadenza
-    const upcomingDeadlines = deadlines.filter(d => d.daysRemaining >= 0).sort((a, b) => a.daysRemaining - b.daysRemaining);
-    if (upcomingDeadlines.length > 0) {
-        const nextDeadline = upcomingDeadlines[0];
-        const machine = machines.find(m => m.id === nextDeadline.machine_id);
-        document.getElementById('next-deadline-machine').textContent = machine ? machine.name : '-';
-        document.getElementById('next-deadline-date').textContent = 
-            `Tra ${nextDeadline.daysRemaining} giorni (${new Date(nextDeadline.deadline).toLocaleDateString('it-IT')})`;
-    } else {
-        document.getElementById('next-deadline-machine').textContent = '-';
-        document.getElementById('next-deadline-date').textContent = 'Nessuna scadenza';
-    }
-    
-    // 6. Ultima Attività
-    if (interventions.length > 0) {
-        const lastIntervention = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-        const machine = machines.find(m => m.id === lastIntervention.machine_id);
-        document.getElementById('last-activity-machine').textContent = machine ? machine.name : '-';
-        document.getElementById('last-activity-date').textContent = 
-            new Date(lastIntervention.date).toLocaleDateString('it-IT');
-    } else {
-        document.getElementById('last-activity-machine').textContent = '-';
-        document.getElementById('last-activity-date').textContent = 'Nessuna attività';
-    }
-    
-    // Ultimi interventi (lista in basso)
-    const recentDiv = document.getElementById('recent-interventions');
-    const recent = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-    
-    if (recent.length === 0) {
-        recentDiv.innerHTML = '<p class="text-muted">Nessun intervento registrato</p>';
-    } else {
-        recentDiv.innerHTML = '<ul class="list-group">' + recent.map(intervention => {
-            const machine = machines.find(m => m.id === intervention.machine_id);
-            const machineName = machine ? machine.name : 'Sconosciuto';
-            const date = new Date(intervention.date).toLocaleDateString('it-IT');
-            let durationText = '';
-            if (intervention.hours || intervention.minutes) {
-                const h = intervention.hours || 0;
-                const m = intervention.minutes || 0;
-                durationText = ` - ⏱️ ${h}h ${m}m`;
-            }
-            return `
-                <li class="list-group-item">
-                    <strong>${machineName}</strong> - ${date}${durationText}<br>
-                    <small>${intervention.type}: ${intervention.description}</small>
-                </li>
-            `;
-        }).join('') + '</ul>';
-    }
+    // Salva PDF
+    doc.save(`report-manutenzioni-${today.toISOString().split('T')[0]}.pdf`);
+    showAlert('Report PDF generato con successo!', 'success');
 }
 
 // Aggiorna select macchinari
