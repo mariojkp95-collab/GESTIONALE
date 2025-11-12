@@ -1688,17 +1688,27 @@ function showDayDetails(dateKey) {
                 
                 html += `<div class="day-event-item">
                     <h6>📅 Scadenza Manutenzione</h6>
-                    <span class="badge ${badgeClass}">${statusText}</span>
-                    <p class="mb-0 mt-2"><strong>${event.data.machineName}</strong></p>
-                    <small class="text-muted">Giorni rimanenti: ${event.data.daysRemaining}</small>
+                    <span class="badge ${badgeClass} mb-2">${statusText}</span>
+                    <p class="mb-1"><strong>Macchina:</strong> ${event.data.machineName}</p>
+                    <p class="mb-1"><strong>Data scadenza:</strong> ${event.data.nextDate}</p>
+                    <p class="mb-1"><strong>Giorni rimanenti:</strong> ${event.data.daysRemaining}</p>
+                    <p class="mb-0"><strong>Ultimo intervento:</strong> ${event.data.lastIntervention || 'Mai eseguito'}</p>
                 </div>`;
             } else {
                 const machine = machines.find(m => m.id === event.data.machine_id);
+                const durationParts = [];
+                if (event.data.hours) durationParts.push(`${event.data.hours}h`);
+                if (event.data.minutes) durationParts.push(`${event.data.minutes}m`);
+                const duration = durationParts.length > 0 ? durationParts.join(' ') : 'Non specificata';
+                
                 html += `<div class="day-event-item">
                     <h6>🔧 Intervento Effettuato</h6>
-                    <span class="badge" style="background-color: #8b0000;">${event.data.type}</span>
-                    <p class="mb-0 mt-2"><strong>${machine ? machine.name : 'N/A'}</strong></p>
-                    <small class="text-muted">${event.data.description || 'Nessuna descrizione'}</small>
+                    <span class="badge mb-2" style="background-color: #8b0000;">${event.data.type}</span>
+                    <p class="mb-1"><strong>Macchina:</strong> ${machine ? machine.name : 'N/A'}</p>
+                    <p class="mb-1"><strong>Data:</strong> ${new Date(event.data.date).toLocaleDateString('it-IT')}</p>
+                    <p class="mb-1"><strong>Descrizione:</strong> ${event.data.description || 'Nessuna descrizione'}</p>
+                    <p class="mb-1"><strong>Durata:</strong> ${duration}</p>
+                    ${event.data.next_maintenance_days ? `<p class="mb-0"><strong>Prossima manutenzione tra:</strong> ${event.data.next_maintenance_days} giorni</p>` : ''}
                 </div>`;
             }
         });
