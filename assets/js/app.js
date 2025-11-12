@@ -378,6 +378,14 @@ function toggleTheme() {
     
     console.log(`%c🎨 Tema cambiato: ${currentTheme.toUpperCase()} → ${newTheme.toUpperCase()}`, `color: ${newTheme === 'dark' ? '#8b0000' : '#2196f3'}; font-weight: bold;`);
     
+    // Rigenera grafici con i nuovi colori del tema
+    if (typeof generateMachineTimeChart !== 'undefined') {
+        generateMachineTimeChart();
+        generateInterventionTypeChart();
+        generateMonthlyTrendChart();
+        generateTopComponentsChart();
+    }
+    
     // Animazione di transizione
     document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
     setTimeout(() => {
@@ -733,12 +741,19 @@ function updateReportStats() {
     generateStatsTable();
 }
 
+// Helper per ottenere il colore del tema corrente
+function getThemeColor(variable) {
+    return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+}
+
 // Grafico: Tempo interventi per macchinario
 function generateMachineTimeChart() {
     const canvas = document.getElementById('machineTimeChart');
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    const textColor = getThemeColor('--text-primary');
+    const gridColor = getThemeColor('--border-color');
     
     // Calcola ore per macchinario
     const machineHours = {};
@@ -785,13 +800,13 @@ function generateMachineTimeChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Ore', color: '#e8e8e8' },
-                    ticks: { color: '#e8e8e8' },
-                    grid: { color: '#333' }
+                    title: { display: true, text: 'Ore', color: textColor },
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
                 },
                 x: {
-                    ticks: { color: '#e8e8e8' },
-                    grid: { color: '#333' }
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
                 }
             }
         }
@@ -804,6 +819,8 @@ function generateInterventionTypeChart() {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    const textColor = getThemeColor('--text-primary');
+    const bgColor = getThemeColor('--bg-secondary');
     
     // Conta per tipo
     const typeCounts = {};
@@ -835,7 +852,7 @@ function generateInterventionTypeChart() {
             datasets: [{
                 data: data,
                 backgroundColor: colors.slice(0, labels.length),
-                borderColor: '#1e1e1e',
+                borderColor: bgColor,
                 borderWidth: 2
             }]
         },
@@ -845,7 +862,7 @@ function generateInterventionTypeChart() {
             plugins: {
                 legend: {
                     position: 'right',
-                    labels: { color: '#e8e8e8' }
+                    labels: { color: textColor }
                 }
             }
         }
@@ -858,6 +875,8 @@ function generateMonthlyTrendChart() {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    const textColor = getThemeColor('--text-primary');
+    const gridColor = getThemeColor('--border-color');
     
     // Ultimi 6 mesi
     const months = [];
@@ -900,18 +919,18 @@ function generateMonthlyTrendChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#e8e8e8' } }
+                legend: { labels: { color: textColor } }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { stepSize: 1, color: '#e8e8e8' },
-                    grid: { color: '#333' },
-                    title: { display: true, text: 'N° Interventi', color: '#e8e8e8' }
+                    ticks: { stepSize: 1, color: textColor },
+                    grid: { color: gridColor },
+                    title: { display: true, text: 'N° Interventi', color: textColor }
                 },
                 x: {
-                    ticks: { color: '#e8e8e8' },
-                    grid: { color: '#333' }
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
                 }
             }
         }
@@ -923,6 +942,8 @@ function generateTopComponentsChart() {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
+    const textColor = getThemeColor('--text-primary');
+    const gridColor = getThemeColor('--border-color');
     
     // Ordina per quantità crescente (più usati = meno disponibili)
     const sorted = [...components]
@@ -970,13 +991,13 @@ function generateTopComponentsChart() {
             scales: {
                 x: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Quantità', color: '#ffffff' },
-                    ticks: { color: '#ffffff' },
-                    grid: { color: '#333' }
+                    title: { display: true, text: 'Quantità', color: textColor },
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
                 },
                 y: {
-                    ticks: { color: '#ffffff' },
-                    grid: { color: '#333' }
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
                 }
             }
         }
