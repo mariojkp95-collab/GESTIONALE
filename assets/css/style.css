@@ -928,6 +928,62 @@ button, a, input, select, textarea {
 }
 
 @media (max-width: 768px) {
+    /* Navbar compatta per mobile */
+    .navbar {
+        padding: 0.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 0.9rem !important;
+        flex-wrap: wrap;
+    }
+    
+    .navbar-brand span:first-of-type {
+        font-size: 0.85rem;
+    }
+    
+    .navbar-logo {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    .navbar-user-email {
+        display: none; /* Nascondi email su mobile per risparmiare spazio */
+    }
+    
+    .navbar .d-flex {
+        gap: 0.25rem;
+    }
+    
+    .navbar .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .navbar .text-muted {
+        display: none; /* Nascondi versione su mobile */
+    }
+    
+    .theme-toggle {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    
+    /* Menu sidebar compatto */
+    .col-md-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .list-group-item {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    
     /* Tabelle scrollabili orizzontalmente */
     .table-responsive {
         border-radius: 8px;
@@ -937,15 +993,17 @@ button, a, input, select, textarea {
     }
     
     table {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         min-width: 100%;
     }
     
     table th,
     table td {
-        padding: 0.5rem;
+        padding: 0.4rem 0.3rem;
         white-space: normal;
         word-wrap: break-word;
+        max-width: 150px;
+        font-size: 0.75rem;
     }
     
     table td:first-child,
@@ -954,6 +1012,8 @@ button, a, input, select, textarea {
         left: 0;
         background-color: var(--bg-card);
         z-index: 1;
+        min-width: 80px;
+        max-width: 120px;
     }
     
     /* Buttons più grandi per touch */
@@ -976,16 +1036,58 @@ button, a, input, select, textarea {
         min-height: 44px;
     }
     
-    /* Modal full screen */
+    /* Modal ottimizzato per mobile verticale */
     .modal-dialog {
-        margin: 0;
-        max-width: 100%;
-        height: 100%;
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+        height: auto;
+        max-height: calc(100vh - 1rem);
     }
     
     .modal-content {
-        height: 100%;
-        border-radius: 0;
+        height: auto;
+        max-height: calc(100vh - 1rem);
+        border-radius: 8px;
+        overflow-y: auto;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .modal-header,
+    .modal-footer {
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Dashboard cards ottimizzate */
+    .dashboard-card-danger,
+    .dashboard-card-warning,
+    .dashboard-card-info,
+    .dashboard-card-primary,
+    .dashboard-card-success,
+    .dashboard-card-neutral {
+        margin-bottom: 0.75rem;
+    }
+    
+    .dashboard-card-danger h2,
+    .dashboard-card-warning h2,
+    .dashboard-card-info h2,
+    .dashboard-card-primary h2,
+    .dashboard-card-success h2,
+    .dashboard-card-neutral h2 {
+        font-size: 1.75rem;
+    }
+    
+    .dashboard-card-danger .card-title,
+    .dashboard-card-warning .card-title,
+    .dashboard-card-info .card-title,
+    .dashboard-card-primary .card-title,
+    .dashboard-card-success .card-title,
+    .dashboard-card-neutral .card-title {
+        font-size: 0.8rem;
     }
     
     /* Stats cards stack verticale */
@@ -995,33 +1097,126 @@ button, a, input, select, textarea {
         gap: 1rem;
     }
     
-    /* Calendar responsive */
+    /* Calendar responsive ottimizzato */
+    .calendar-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .calendar-grid {
+        min-width: 100%;
+    }
+    
     .calendar-day {
-        min-height: 80px;
-        padding: 0.5rem;
+        min-height: 70px;
+        padding: 0.3rem;
     }
     
     .calendar-day-number {
-        font-size: 0.875rem;
-    }
-    
-    .calendar-weekday {
-        padding: 0.75rem 0.5rem;
         font-size: 0.75rem;
     }
     
+    .calendar-weekday {
+        padding: 0.5rem 0.3rem;
+        font-size: 0.7rem;
+    }
+    
     .calendar-events {
-        max-height: 40px;
+        max-height: 35px;
+        overflow-y: auto;
     }
     
     .calendar-event {
-        font-size: 0.65rem;
-        padding: 1px 4px;
+        font-size: 0.6rem;
+        padding: 1px 3px;
+        margin-bottom: 1px;
     }
     
-    /* Charts responsive */
+    .calendar-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1rem;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .calendar-nav {
+        display: flex;
+        gap: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Charts responsive - height ridotto */
     canvas {
-        max-height: 250px !important;
+        max-height: 220px !important;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    /* Riduci spacing generale */
+    .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .row {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+    }
+    
+    .row > * {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* Titoli sezioni */
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Bottoni azioni */
+    .btn-group {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    
+    .btn-group .btn {
+        flex: 1 1 auto;
+        min-width: fit-content;
+    }
+    
+    /* Assicura che nulla esca dai bordi */
+    * {
+        box-sizing: border-box;
+    }
+    
+    img,
+    svg,
+    video {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Overflow nascosto per prevenire scroll orizzontale */
+    body {
+        overflow-x: hidden;
+    }
+    
+    .container-fluid,
+    .row,
+    .card,
+    .modal-content {
+        max-width: 100vw;
+        overflow-x: hidden;
     }
     
     /* Navbar spacing */
@@ -1037,17 +1232,50 @@ button, a, input, select, textarea {
 }
 
 @media (max-width: 576px) {
-    /* Ancora più compatto per mobile piccoli */
-    h1, .h1 {
-        font-size: 1.75rem;
+    /* Ancora più compatto per mobile piccoli (portrait) */
+    body {
+        font-size: 0.875rem;
     }
     
-    h2, .h2 {
+    h1, .h1 {
         font-size: 1.5rem;
     }
     
-    h3, .h3 {
+    h2, .h2 {
         font-size: 1.25rem;
+    }
+    
+    h3, .h3 {
+        font-size: 1.1rem;
+    }
+    
+    /* Navbar ultra-compatta */
+    .navbar-brand {
+        font-size: 0.8rem !important;
+    }
+    
+    .navbar-brand span:first-of-type {
+        font-size: 0.75rem;
+    }
+    
+    .navbar-logo {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    #sync-status {
+        font-size: 0.6rem !important;
+        padding: 0.2em 0.4em !important;
+    }
+    
+    .navbar .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
+    }
+    
+    .theme-toggle {
+        width: 26px !important;
+        height: 26px !important;
     }
     
     /* Riduci padding */
@@ -1078,25 +1306,64 @@ button, a, input, select, textarea {
         padding: 0.35em 0.65em;
     }
     
-    /* Table actions */
+    /* Table actions verticali compatte */
     .table-actions {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.2rem;
     }
     
     .table-actions .btn {
         width: 100%;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
     }
     
-    /* Calendar navigation */
-    .calendar-header {
-        flex-direction: column;
-        gap: 0.5rem;
+    /* Cards ancora più compatte */
+    .card {
+        margin-bottom: 0.75rem;
     }
     
-    .calendar-header h4 {
-        font-size: 1.25rem;
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .card-header {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Form ottimizzati */
+    .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .form-control,
+    .form-select {
+        font-size: 0.875rem;
+        padding: 0.6rem;
+    }
+    
+    /* Charts più piccoli */
+    canvas {
+        max-height: 180px !important;
+    }
+    
+    /* Dashboard cards compatte */
+    .dashboard-card-danger h2,
+    .dashboard-card-warning h2,
+    .dashboard-card-info h2,
+    .dashboard-card-primary h2,
+    .dashboard-card-success h2,
+    .dashboard-card-neutral h2 {
+        font-size: 1.5rem;
+    }
+    
+    /* Menu laterale compatto */
+    .nav-link {
+        padding: 0.75rem;
+        font-size: 0.875rem;
     }
 }
 
