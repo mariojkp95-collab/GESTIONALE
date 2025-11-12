@@ -505,6 +505,7 @@ function renderInterventionsTable() {
                 <td>${durationText}</td>
                 <td>
                     ${statusButton}
+                    <button class="btn btn-sm btn-warning me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
@@ -1242,11 +1243,109 @@ function showAddInterventionModal() {
         showAlert('Aggiungi prima almeno un macchinario', 'warning');
         return;
     }
+    
+    // Reset form e rimuovi ID hidden (modalità aggiungi)
     document.getElementById('add-intervention-form').reset();
+    const hiddenId = document.getElementById('intervention-id');
+    if (hiddenId) hiddenId.remove();
+    
     document.getElementById('intervention-date').valueAsDate = new Date();
+    document.querySelector('#addInterventionModal .modal-title').textContent = 'Registra Intervento';
+    
+    // Reset componenti container
+    const container = document.getElementById('intervention-components-container');
+    container.innerHTML = `
+        <div class="row mb-2">
+            <div class="col-8">
+                <select class="form-select component-select">
+                    <option value="">Seleziona componente</option>
+                </select>
+            </div>
+            <div class="col-3">
+                <input type="number" class="form-control component-quantity" min="1" value="1" placeholder="Qt">
+            </div>
+            <div class="col-1">
+                <button type="button" class="btn btn-sm btn-success" onclick="addComponentRow()">+</button>
+            </div>
+        </div>
+    `;
     
     // Popola select componenti
     populateComponentsSelect();
+    
+    addInterventionModal.show();
+}
+
+function editIntervention(id) {
+    const intervention = interventions.find(i => i.id === id);
+    if (!intervention) return;
+    
+    // Cambia titolo modal
+    document.querySelector('#addInterventionModal .modal-title').textContent = 'Modifica Intervento';
+    
+    // Aggiungi campo hidden con ID
+    let hiddenId = document.getElementById('intervention-id');
+    if (!hiddenId) {
+        hiddenId = document.createElement('input');
+        hiddenId.type = 'hidden';
+        hiddenId.id = 'intervention-id';
+        document.getElementById('add-intervention-form').appendChild(hiddenId);
+    }
+    hiddenId.value = id;
+    
+    // Popola form
+    document.getElementById('intervention-machine').value = intervention.machine_id;
+    document.getElementById('intervention-date').value = intervention.date;
+    document.getElementById('intervention-type').value = intervention.type;
+    document.getElementById('intervention-status').value = intervention.status;
+    document.getElementById('intervention-description').value = intervention.description;
+    document.getElementById('intervention-hours').value = intervention.hours || '';
+    document.getElementById('intervention-minutes').value = intervention.minutes || '';
+    document.getElementById('intervention-next-days').value = intervention.next_maintenance_days || '';
+    
+    // Popola componenti usati
+    const container = document.getElementById('intervention-components-container');
+    if (intervention.used_components && intervention.used_components.length > 0) {
+        container.innerHTML = intervention.used_components.map((uc, index) => `
+            <div class="row mb-2">
+                <div class="col-8">
+                    <select class="form-select component-select">
+                        <option value="">Seleziona componente</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <input type="number" class="form-control component-quantity" min="1" value="${uc.quantity}" placeholder="Qt">
+                </div>
+                <div class="col-1">
+                    <button type="button" class="btn btn-sm ${index === 0 ? 'btn-success" onclick="addComponentRow()">+' : 'btn-danger" onclick="this.closest(\'.row\').remove()">-'}</button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Imposta valori select
+        populateComponentsSelect();
+        intervention.used_components.forEach((uc, index) => {
+            const selects = container.querySelectorAll('.component-select');
+            if (selects[index]) selects[index].value = uc.componentId;
+        });
+    } else {
+        container.innerHTML = `
+            <div class="row mb-2">
+                <div class="col-8">
+                    <select class="form-select component-select">
+                        <option value="">Seleziona componente</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <input type="number" class="form-control component-quantity" min="1" value="1" placeholder="Qt">
+                </div>
+                <div class="col-1">
+                    <button type="button" class="btn btn-sm btn-success" onclick="addComponentRow()">+</button>
+                </div>
+            </div>
+        `;
+        populateComponentsSelect();
+    }
     
     addInterventionModal.show();
 }
@@ -1321,31 +1420,68 @@ async function saveIntervention() {
         return;
     }
     
-    const newIntervention = {
-        id: generateId(),
-        machine_id: machineId,
-        date,
-        type,
-        status,
-        description,
-        hours: hours ? parseInt(hours) : 0,
-        minutes: minutes ? parseInt(minutes) : 0,
-        next_maintenance_days: nextDays ? parseInt(nextDays) : null,
-        used_components: usedComponents,
-        created_at: new Date().toISOString()
-    };
+    // Verifica se è modifica o nuovo
+    const hiddenId = document.getElementById('intervention-id');
+    const isEdit = hiddenId && hiddenId.value;
     
-    // Scala componenti dal magazzino
+    let interventionData;
+    let oldIntervention;
+    
+    if (isEdit) {
+        // Modifica intervento esistente
+        oldIntervention = interventions.find(i => i.id === hiddenId.value);
+        interventionData = {
+            ...oldIntervention,
+            machine_id: machineId,
+            date,
+            type,
+            status,
+            description,
+            hours: hours ? parseInt(hours) : 0,
+            minutes: minutes ? parseInt(minutes) : 0,
+            next_maintenance_days: nextDays ? parseInt(nextDays) : null,
+            used_components: usedComponents
+        };
+        
+        // Ripristina componenti vecchi al magazzino
+        if (oldIntervention.used_components) {
+            for (const { componentId, quantity } of oldIntervention.used_components) {
+                await adjustComponentStock(componentId, quantity);
+            }
+        }
+    } else {
+        // Nuovo intervento
+        interventionData = {
+            id: generateId(),
+            machine_id: machineId,
+            date,
+            type,
+            status,
+            description,
+            hours: hours ? parseInt(hours) : 0,
+            minutes: minutes ? parseInt(minutes) : 0,
+            next_maintenance_days: nextDays ? parseInt(nextDays) : null,
+            used_components: usedComponents,
+            created_at: new Date().toISOString()
+        };
+    }
+    
+    // Scala nuovi componenti dal magazzino
     for (const { componentId, quantity } of usedComponents) {
         await adjustComponentStock(componentId, -quantity);
     }
     
     // Salva su Firebase
-    await saveToFirebase('interventions', newIntervention);
+    await saveToFirebase('interventions', interventionData);
     
     // Fallback localStorage
     if (!firebaseInitialized) {
-        interventions.push(newIntervention);
+        if (isEdit) {
+            const index = interventions.findIndex(i => i.id === hiddenId.value);
+            if (index !== -1) interventions[index] = interventionData;
+        } else {
+            interventions.push(interventionData);
+        }
         saveToStorage(STORAGE_KEYS.interventions, interventions);
         renderInterventionsTable();
         renderDeadlinesTable();
@@ -1354,7 +1490,7 @@ async function saveIntervention() {
     
     addInterventionModal.hide();
     document.getElementById('add-intervention-form').reset();
-    showAlert('Intervento registrato con successo!', 'success');
+    showAlert(isEdit ? 'Intervento modificato con successo!' : 'Intervento registrato con successo!', 'success');
 }
 
 function deleteIntervention(id) {
@@ -2200,8 +2336,8 @@ function getEventsForDate(date) {
                     // Giallo: programmato entro 7 giorni
                     className = 'event-upcoming';
                 } else {
-                    // Programmato oltre 7 giorni - non mostrare
-                    return;
+                    // Blu: programmato oltre 7 giorni
+                    className = 'event-scheduled';
                 }
             }
             
