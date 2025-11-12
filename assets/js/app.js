@@ -505,6 +505,8 @@ function renderInterventionsTable() {
 // Rendering tabella scadenze
 function renderDeadlinesTable() {
     const tbody = document.getElementById('deadlines-table');
+    if (!tbody) return; // Elemento non presente nella DOM (es. calendario attivo)
+    
     const deadlines = calculateDeadlines();
     
     if (deadlines.length === 0) {
@@ -1617,12 +1619,9 @@ function getEventsForDate(date) {
     
     // Scadenze
     const deadlines = calculateDeadlines();
-    console.log('Deadlines totali:', deadlines.length, 'per data:', dateKey);
     deadlines.forEach(deadline => {
         const deadlineParts = deadline.nextDate.split('/');
         const deadlineKey = `${deadlineParts[2]}-${deadlineParts[1]}-${deadlineParts[0]}`;
-        
-        console.log('Confronto:', deadlineKey, '===', dateKey, '?', deadlineKey === dateKey);
         
         if (deadlineKey === dateKey) {
             let className = 'event-ok';
@@ -1655,7 +1654,6 @@ function getEventsForDate(date) {
         }
     });
     
-    console.log('Eventi trovati per', dateKey, ':', events.length);
     return events;
 }
 
