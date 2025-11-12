@@ -385,6 +385,43 @@ function loadData() {
     renderDeadlinesTable();
     updateMachineSelect();
     updateDashboard();
+    
+    // Inizializza menu mobile
+    initMobileMenu();
+}
+
+// ==================== MENU MOBILE ====================
+function initMobileMenu() {
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.getElementById('sidebar-menu');
+    
+    if (!menuBtn || !sidebar) return;
+    
+    // Toggle menu
+    menuBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sidebar.classList.toggle('show');
+        document.body.classList.toggle('menu-open');
+    });
+    
+    // Chiudi quando clicchi fuori
+    document.addEventListener('click', function(e) {
+        if (sidebar.classList.contains('show') && 
+            !sidebar.contains(e.target) && 
+            !menuBtn.contains(e.target)) {
+            sidebar.classList.remove('show');
+            document.body.classList.remove('menu-open');
+        }
+    });
+    
+    // Chiudi menu dopo selezione sezione
+    const menuItems = sidebar.querySelectorAll('.list-group-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            document.body.classList.remove('menu-open');
+        });
+    });
 }
 
 // ==================== RENDERING TABELLE ====================
