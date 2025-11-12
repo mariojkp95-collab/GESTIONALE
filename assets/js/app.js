@@ -566,7 +566,10 @@ function calculateDeadlines() {
                 machineId: machine.id,
                 machineName: machine.name,
                 nextDate: nextDate.toLocaleDateString('it-IT'),
-                daysRemaining: daysRemaining
+                daysRemaining: daysRemaining,
+                lastIntervention: lastIntervention.date,
+                interventionType: lastIntervention.type,
+                interventionDescription: lastIntervention.description
             });
         }
     });
@@ -1690,9 +1693,11 @@ function showDayDetails(dateKey) {
                     <h6>📅 Scadenza Manutenzione</h6>
                     <span class="badge ${badgeClass} mb-2">${statusText}</span>
                     <p class="mb-1"><strong>Macchina:</strong> ${event.data.machineName}</p>
+                    <p class="mb-1"><strong>Tipo intervento previsto:</strong> ${event.data.interventionType}</p>
+                    <p class="mb-1"><strong>Descrizione:</strong> ${event.data.interventionDescription || 'N/A'}</p>
                     <p class="mb-1"><strong>Data scadenza:</strong> ${event.data.nextDate}</p>
                     <p class="mb-1"><strong>Giorni rimanenti:</strong> ${event.data.daysRemaining}</p>
-                    <p class="mb-0"><strong>Ultimo intervento:</strong> ${event.data.lastIntervention || 'Mai eseguito'}</p>
+                    <p class="mb-0"><strong>Ultimo intervento:</strong> ${new Date(event.data.lastIntervention).toLocaleDateString('it-IT')}</p>
                 </div>`;
             } else {
                 const machine = machines.find(m => m.id === event.data.machine_id);
