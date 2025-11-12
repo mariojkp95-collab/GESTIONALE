@@ -727,12 +727,14 @@ button, a, input, select, textarea {
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    border: 1px solid var(--border-color);
 }
 
 .calendar-day:hover {
     background-color: var(--bg-tertiary);
     transform: scale(1.02);
     z-index: 1;
+    box-shadow: 0 4px 8px rgba(139, 0, 0, 0.2);
 }
 
 .calendar-day-number {
@@ -757,14 +759,14 @@ button, a, input, select, textarea {
 .calendar-events {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
+    margin-top: 0.25rem;
 }
 
 .calendar-event-dot {
     width: 100%;
-    height: 4px;
-    border-radius: 2px;
-    margin-top: 2px;
+    height: 6px;
+    border-radius: 3px;
 }
 
 .calendar-event-dot.overdue {

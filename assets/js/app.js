@@ -222,6 +222,7 @@ function setupFirebaseListeners() {
         renderDeadlinesTable();
         updateDashboard();
         populateFilterDropdowns(); // Aggiunto
+        renderCalendar(); // Aggiunto per aggiornare calendario
     });
     
     // Listener per componenti
@@ -399,6 +400,7 @@ function loadData() {
     renderDeadlinesTable();
     updateMachineSelect();
     updateDashboard();
+    renderCalendar(); // Aggiungo rendering calendario
 }
 
 // ==================== RENDERING TABELLE ====================
