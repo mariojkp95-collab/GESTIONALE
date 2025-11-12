@@ -1,7 +1,7 @@
 /* Stili personalizzati Gestionale Manutenzioni - RJ Theme */
 
 :root {
-    /* Colori base ispirati al logo RJ */
+    /* Colori base ispirati al logo RJ - DARK THEME (default) */
     --bg-primary: #0a0a0a;
     --bg-secondary: #1a1a1a;
     --bg-tertiary: #2a2a2a;
@@ -20,6 +20,58 @@
     --warning: #ffa726;
     --danger: #c62828;
     --info: #8b0000;
+}
+
+/* LIGHT THEME */
+[data-theme="light"] {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e0e0e0;
+    --bg-card: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --border-color: #d0d0d0;
+    
+    /* Rosso più vivace per light theme */
+    --accent-primary: #c62828;
+    --accent-hover: #d32f2f;
+    --accent-dark: #b71c1c;
+    
+    /* Colori di stato */
+    --success: #4caf50;
+    --warning: #ff9800;
+    --danger: #f44336;
+    --info: #2196f3;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    background: var(--accent-primary);
+    border: none;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1) rotate(180deg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.theme-toggle svg {
+    width: 28px;
+    height: 28px;
+    fill: white;
 }
 
 * {
@@ -74,38 +126,43 @@ body {
 .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    box-shadow: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
-    border-radius: 12px;
-    transition: all 0.2s ease;
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 }
 
 .card:hover {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 1px var(--accent-primary);
+    box-shadow: 0 8px 24px rgba(139, 0, 0, 0.2);
+    transform: translateY(-2px);
 }
 
 .card-header {
-    background-color: var(--bg-tertiary);
-    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+    border-bottom: 2px solid var(--accent-primary);
     font-weight: 600;
-    border-radius: 12px 12px 0 0 !important;
-    padding: 1rem 1.25rem;
-    font-size: 0.95rem;
+    border-radius: 16px 16px 0 0 !important;
+    padding: 1.25rem 1.5rem;
+    font-size: 1rem;
+    position: relative;
 }
 
 .card-body {
-    padding: 1.25rem;
+    padding: 1.5rem;
 }
 
-/* Dashboard Cards - Tutte uniformi con tema oro/ocra */
+/* Dashboard Cards - Gradient migliorati */
 .dashboard-card-danger,
 .dashboard-card-warning,
 .dashboard-card-info,
 .dashboard-card-primary,
 .dashboard-card-success,
 .dashboard-card-neutral {
-    background: var(--bg-card);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+    border-left: 4px solid var(--accent-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border: 2px solid var(--accent-primary);
     color: var(--text-primary);
     transition: all 0.3s ease;
@@ -285,51 +342,59 @@ body {
 }
 
 .btn-success {
-    background-color: var(--success);
+    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
     color: #ffffff;
     border: none;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
 .btn-success:hover {
-    background-color: #81c784;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 187, 106, 0.3);
+    background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 187, 106, 0.4);
     color: #ffffff;
 }
 
 .btn-danger {
-    background-color: var(--danger);
+    background: linear-gradient(135deg, #c62828 0%, #d32f2f 100%);
     color: #ffffff;
     border: none;
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
 }
 
 .btn-danger:hover {
-    background-color: #e57373;
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #d32f2f 0%, #e57373 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.4);
     color: #ffffff;
 }
 
 .btn-info {
-    background-color: var(--info);
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
     color: #ffffff;
     border: none;
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
 }
 
 .btn-info:hover {
-    background-color: var(--accent-hover);
+    background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent-dark) 100%);
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
+    transform: translateY(-2px);
     color: #ffffff;
 }
 
 .btn-warning {
-    background-color: var(--warning);
+    background: linear-gradient(135deg, #ff9800 0%, #ffa726 100%);
     color: #ffffff;
     border: none;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
 }
 
 .btn-warning:hover {
-    background-color: #ffb74d;
+    background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
     color: #ffffff;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -362,20 +427,22 @@ body {
 .modal-content {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
 }
 
 .modal-header {
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-tertiary);
-    border-radius: 12px 12px 0 0;
-    padding: 1.25rem 1.5rem;
+    border-bottom: 2px solid var(--accent-primary);
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+    border-radius: 16px 16px 0 0;
+    padding: 1.5rem 2rem;
 }
 
 .modal-title {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-primary);
 }
 
 .modal-body {
@@ -402,22 +469,25 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
 }
 
 .form-control, .form-select {
     background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    border: 2px solid var(--border-color);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    transition: all 0.2s ease;
+    border-radius: 10px;
+    padding: 0.875rem 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .form-control:focus, .form-select:focus {
     background-color: var(--bg-primary);
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
+    box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.1);
+    transform: translateY(-1px);
     color: var(--text-primary);
 }
 
@@ -840,8 +910,135 @@ button, a, input, select, textarea {
     margin-right: 0.5rem;
 }
 
-/* Responsive */
+/* ==================== RESPONSIVE MOBILE IMPROVEMENTS ==================== */
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 1200px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Sidebar collapsible */
+    .sidebar {
+        position: fixed;
+        left: -250px;
+        transition: left 0.3s ease;
+        z-index: 1050;
+        height: 100vh;
+    }
+    
+    .sidebar.show {
+        left: 0;
+    }
+    
+    /* Overlay per chiudere sidebar */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        display: none;
+    }
+    
+    .sidebar-overlay.show {
+        display: block;
+    }
+    
+    /* Main content prende tutto lo spazio */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+    
+    /* Hamburger menu button */
+    .mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1060;
+        background: var(--accent-primary);
+        border: none;
+        padding: 0.75rem;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-menu-btn:hover {
+        background: var(--accent-hover);
+    }
+    
+    /* Cards in colonna singola */
+    .row > [class*='col-'] {
+        margin-bottom: 1rem;
+    }
+}
+
 @media (max-width: 768px) {
+    /* Tabelle scrollabili orizzontalmente */
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    table {
+        font-size: 0.875rem;
+    }
+    
+    table th,
+    table td {
+        padding: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* Buttons più grandi per touch */
+    .btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+        min-height: 44px;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        min-height: 38px;
+    }
+    
+    /* Form inputs più grandi */
+    .form-control,
+    .form-select {
+        padding: 0.75rem;
+        font-size: 1rem;
+        min-height: 44px;
+    }
+    
+    /* Modal full screen */
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+    
+    /* Stats cards stack verticale */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    /* Calendar responsive */
     .calendar-day {
         min-height: 80px;
         padding: 0.5rem;
@@ -864,4 +1061,382 @@ button, a, input, select, textarea {
         font-size: 0.65rem;
         padding: 1px 4px;
     }
+    
+    /* Charts responsive */
+    canvas {
+        max-height: 250px !important;
+    }
+    
+    /* Navbar spacing */
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Card headers */
+    .card-header {
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
 }
+
+@media (max-width: 576px) {
+    /* Ancora più compatto per mobile piccoli */
+    h1, .h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2, .h2 {
+        font-size: 1.5rem;
+    }
+    
+    h3, .h3 {
+        font-size: 1.25rem;
+    }
+    
+    /* Riduci padding */
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Buttons full width */
+    .btn-block-mobile {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Form groups */
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Alert più compatti */
+    .alert {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Badge size */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+    }
+    
+    /* Table actions */
+    .table-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .table-actions .btn {
+        width: 100%;
+    }
+    
+    /* Calendar navigation */
+    .calendar-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .calendar-header h4 {
+        font-size: 1.25rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Rimuovi hover effects su touch devices */
+    .card:hover {
+        transform: none;
+    }
+    
+    tbody tr:hover {
+        transform: none;
+    }
+    
+    /* Aumenta area touch per piccoli elementi */
+    .btn-sm {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Migliora spacing tra elementi cliccabili */
+    .nav-link {
+        padding: 1rem;
+    }
+}
+
+/* Landscape orientation su mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .modal-dialog {
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar {
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+/* ==================== ANIMATIONS & TRANSITIONS ==================== */
+
+/* Smooth transitions globali */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Animazioni per buttons */
+.btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Animazioni per cards */
+.card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Animazioni per modals */
+.modal.fade .modal-dialog {
+    transform: scale(0.8) translateY(-50px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* Animazioni per tabelle */
+tbody tr {
+    transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(139, 0, 0, 0.1) !important;
+    transform: scale(1.01);
+}
+
+/* Animazioni per sidebar menu */
+.nav-link {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: var(--accent-primary);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover::before,
+.nav-link.active::before {
+    transform: scaleY(1);
+}
+
+/* Animazioni per form inputs */
+.form-control,
+.form-select {
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
+}
+
+/* Animazioni per badges */
+.badge {
+    transition: all 0.3s ease;
+}
+
+.badge:hover {
+    transform: scale(1.1);
+}
+
+/* Pulse animation per elementi importanti */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Slide-in animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+}
+
+/* Bounce animation per alerts */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.bounce {
+    animation: bounce 1s;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Shimmer effect per loading states */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--bg-card) 0%,
+        var(--bg-tertiary) 50%,
+        var(--bg-card) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Calendar events animations */
+.calendar-event {
+    transition: all 0.2s ease;
+}
+
+.calendar-event:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+/* Stats cards pulse on update */
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card.updated {
+    animation: pulse 0.5s;
+}
+
+/* Ripple effect for clickable items */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.ripple:active::after {
+    width: 200%;
+    height: 200%;
+}
+

@@ -23,17 +23,17 @@
             <div>
                 <span id="user-email" class="text-light me-3" style="font-size: 0.9rem;"></span>
                 <button id="logout-btn" class="btn btn-sm btn-outline-danger me-2" onclick="logout()" style="display: none;">Logout</button>
-                <button class="btn btn-sm btn-outline-light" onclick="exportData()">📥 Export Dati</button>
+                <button class="btn btn-sm btn-outline-light" onclick="exportData()">Export Dati</button>
+                <small class="text-muted ms-3" style="font-size: 0.75rem;">v2.0.0</small>
             </div>
         </div>
     </nav>
 
-    <!-- Login Modal -->
     <div id="login-modal" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">🔐 Login</h5>
+                    <h5 class="modal-title">Login</h5>
                 </div>
                 <div class="modal-body">
                     <div id="login-tabs">
@@ -87,6 +87,16 @@
         </div>
     </div>
 
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn d-lg-none" onclick="toggleMobileSidebar()" aria-label="Toggle Menu">
+        <svg width="24" height="24" fill="currentColor">
+            <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <!-- Sidebar Overlay per mobile -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     <div class="container-fluid mt-4">
         <div class="row">
             <!-- Sidebar -->
@@ -118,22 +128,21 @@
                 </div>
                 <div class="card mt-3">
                     <div class="card-body text-center">
-                        <small class="text-muted">💾 Dati salvati nel browser</small>
+                        <small class="text-muted">Dati salvati nel browser</small>
                     </div>
                 </div>
             </div>
 
             <!-- Main Content -->
             <div class="col-md-9">
-                <!-- Dashboard Section -->
-                                <div id="dashboard-section" class="content-section">
+                <div id="dashboard-section" class="content-section">
                     <h2>Dashboard</h2>
                     <div class="row">
                         <!-- Riga 1 -->
                         <div class="col-md-4">
                             <div class="card dashboard-card-danger mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title"> Scadenze in Ritardo</h5>
+                                    <h5 class="card-title">Scadenze in Ritardo</h5>
                                     <h2 id="overdue-deadlines">0</h2>
                                     <small>Interventi non completati</small>
                                 </div>
@@ -142,27 +151,26 @@
                         <div class="col-md-4">
                             <div class="card dashboard-card-warning mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title"> Componenti Sotto Scorta</h5>
+                                    <h5 class="card-title">Componenti Sotto Scorta</h5>
                                     <h2 id="low-stock-components">0</h2>
-                                    <small>Quantità  2 unità</small>
+                                    <small>Quantità sotto 2 unità</small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card dashboard-card-info mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title"> Interventi Questo Mese</h5>
+                                    <h5 class="card-title">Interventi Questo Mese</h5>
                                     <h2 id="month-interventions">0</h2>
                                     <small id="month-interventions-detail">Nessuno</small>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Riga 2 -->
                         <div class="col-md-4">
                             <div class="card dashboard-card-primary mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title"> Macchina Più Attiva</h5>
+                                    <h5 class="card-title">Macchina Più Attiva</h5>
                                     <h3 id="most-active-machine" style="font-size: 1.2rem;">-</h3>
                                     <small id="most-active-count">Nessun intervento</small>
                                 </div>
@@ -171,7 +179,7 @@
                         <div class="col-md-4">
                             <div class="card dashboard-card-success mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title"> Prossima Scadenza</h5>
+                                    <h5 class="card-title">Prossima Scadenza</h5>
                                     <h3 id="next-deadline-machine" style="font-size: 1.2rem;">-</h3>
                                     <small id="next-deadline-date">Nessuna scadenza</small>
                                 </div>
@@ -180,7 +188,7 @@
                         <div class="col-md-4">
                             <div class="card dashboard-card-neutral mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title"> Ultima Attività</h5>
+                                    <h5 class="card-title">Ultima Attività</h5>
                                     <h3 id="last-activity-machine" style="font-size: 1.2rem;">-</h3>
                                     <small id="last-activity-date">Nessuna attività</small>
                                 </div>
@@ -199,16 +207,12 @@
                     </div>
                 </div>
 
-                <!-- Report Section -->
                 <div id="report-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2>Report e Statistiche</h2>
-                        <button class="btn btn-primary" onclick="exportMonthlyReport()">
-                             Esporta Report PDF
-                        </button>
+                        <button class="btn btn-primary" onclick="exportMonthlyReport()">Esporta Report PDF</button>
                     </div>
 
-                    <!-- Statistiche Generali -->
                     <div class="row mb-4">
                         <div class="col-md-3">
                             <div class="card dashboard-card-info mb-3">
@@ -248,13 +252,10 @@
                         </div>
                     </div>
 
-                    <!-- Grafici -->
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card">
-                                <div class="card-header text-white">
-                                     Tempo Interventi per Macchinario (Ore)
-                                </div>
+                                <div class="card-header text-white">Tempo Interventi per Macchinario (Ore)</div>
                                 <div class="card-body">
                                     <canvas id="machineTimeChart" height="300"></canvas>
                                 </div>
@@ -262,9 +263,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="card">
-                                <div class="card-header text-white">
-                                     Distribuzione Tipi di Intervento
-                                </div>
+                                <div class="card-header text-white">Distribuzione Tipi di Intervento</div>
                                 <div class="card-body">
                                     <canvas id="interventionTypeChart" height="300"></canvas>
                                 </div>
@@ -275,9 +274,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card">
-                                <div class="card-header text-white">
-                                     Interventi Ultimi 6 Mesi
-                                </div>
+                                <div class="card-header text-white">Interventi Ultimi 6 Mesi</div>
                                 <div class="card-body">
                                     <canvas id="monthlyTrendChart" height="300"></canvas>
                                 </div>
@@ -285,9 +282,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="card">
-                                <div class="card-header text-white">
-                                     Componenti Più Utilizzati
-                                </div>
+                                <div class="card-header text-white">Componenti Più Utilizzati</div>
                                 <div class="card-body">
                                     <canvas id="topComponentsChart" height="300"></canvas>
                                 </div>
@@ -295,11 +290,8 @@
                         </div>
                     </div>
 
-                    <!-- Tabella Statistiche Dettagliate -->
                     <div class="card">
-                        <div class="card-header text-white">
-                             Statistiche Dettagliate per Macchinario
-                        </div>
+                        <div class="card-header text-white">Statistiche Dettagliate per Macchinario</div>
                         <div class="card-body">
                             <table class="table table-striped">
                                 <thead>
@@ -321,15 +313,11 @@
                     </div>
                 </div>
 
-                <!-- Macchinari Section -->
                 <div id="macchinari-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2>Gestione Macchinari</h2>
-                        <button class="btn btn-primary" onclick="showAddMachineModal()">
-                            + Aggiungi Macchinario
-                        </button>
+                        <button class="btn btn-primary" onclick="showAddMachineModal()">+ Aggiungi Macchinario</button>
                     </div>
-                    <!-- Search and Filter Bar -->
                     <div class="card mb-3">
                         <div class="card-body py-2">
                             <div class="row g-2">
@@ -373,15 +361,11 @@
                     </div>
                 </div>
 
-                <!-- Interventi Section -->
                 <div id="interventi-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2>Registro Interventi</h2>
-                        <button class="btn btn-success" onclick="showAddInterventionModal()">
-                            + Registra Intervento
-                        </button>
+                        <button class="btn btn-success" onclick="showAddInterventionModal()">+ Registra Intervento</button>
                     </div>
-                    <!-- Intervention Filters -->
                     <div class="card mb-3">
                         <div class="card-body py-2">
                             <div class="row g-2">
@@ -434,7 +418,6 @@
                     </div>
                 </div>
 
-                <!-- Magazzino Section -->
                 <div id="magazzino-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>Magazzino Componenti e Ricambi</h2>
@@ -476,44 +459,34 @@
                     </div>
                 </div>
 
-                <!-- Calendario Section -->
                 <div id="calendario-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>Calendario Manutenzioni</h2>
                         <div class="d-flex gap-2 align-items-center">
-                            <button class="btn btn-sm btn-outline-primary" onclick="previousMonth()">
-                                <i class="bi bi-chevron-left"></i> Precedente
-                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="previousMonth()">Precedente</button>
                             <h5 id="calendar-month-year" class="mb-0 mx-3">-</h5>
-                            <button class="btn btn-sm btn-outline-primary" onclick="nextMonth()">
-                                Successivo <i class="bi bi-chevron-right"></i>
-                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="nextMonth()">Successivo</button>
                             <button class="btn btn-sm btn-primary ms-3" onclick="goToToday()">Oggi</button>
                         </div>
                     </div>
                     
-                    <!-- Legenda -->
                     <div class="alert mb-3">
                         <div class="d-flex gap-4 justify-content-center flex-wrap small">
                             <span style="color: #ffffff;"><span class="badge bg-success">●</span> Intervento effettuato</span>
                             <span style="color: #ffffff;"><span class="badge bg-warning text-dark">●</span> Programmato (entro 7gg)</span>
-                            <span style="color: #ffffff;"><span class="badge bg-primary">●</span> Programmato (oltre 7gg)</span>
+                            <span style="color: #ffffff;"><span class="badge" style="background-color: #0d6efd;">●</span> Programmato (oltre 7gg)</span>
                             <span style="color: #ffffff;"><span class="badge bg-danger">●</span> Programmato scaduto</span>
                         </div>
                     </div>
                     
-                    <!-- Calendario Grid -->
                     <div class="calendar-container">
-                        <div class="calendar-grid" id="calendar-grid">
-                            <!-- Generato da JS -->
-                        </div>
+                        <div class="calendar-grid" id="calendar-grid"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Dettagli Giornata -->
     <div class="modal fade" id="dayModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -521,14 +494,11 @@
                     <h5 class="modal-title" id="dayModalTitle">Dettagli Giornata</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="dayModalBody">
-                    <!-- Contenuto generato da JS -->
-                </div>
+                <div class="modal-body" id="dayModalBody"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Aggiungi Macchinario -->
     <div class="modal fade" id="addMachineModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -744,44 +714,30 @@
                     <!-- Immagine principale -->
                     <img id="gallery-main-image" src="" alt="Foto" style="max-width: 90%; max-height: 80vh; object-fit: contain;">
                     
-                    <!-- Controlli navigazione -->
-                    <button class="btn btn-light position-absolute start-0 ms-3" id="gallery-prev" onclick="galleryNavigate(-1)" style="top: 50%; transform: translateY(-50%);">
-                        ‹
-                    </button>
-                    <button class="btn btn-light position-absolute end-0 me-3" id="gallery-next" onclick="galleryNavigate(1)" style="top: 50%; transform: translateY(-50%);">
-                        ›
-                    </button>
+                    <button class="btn btn-light position-absolute start-0 ms-3" id="gallery-prev" onclick="galleryNavigate(-1)" style="top: 50%; transform: translateY(-50%);">‹</button>
+                    <button class="btn btn-light position-absolute end-0 me-3" id="gallery-next" onclick="galleryNavigate(1)" style="top: 50%; transform: translateY(-50%);">›</button>
                     
-                    <!-- Indicatore posizione -->
                     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
                         <span id="gallery-counter">1 / 1</span>
                     </div>
                 </div>
                 <div class="modal-footer border-0 justify-content-center">
-                    <button class="btn btn-danger" onclick="deleteCurrentPhoto()">🗑️ Elimina Foto</button>
+                    <button class="btn btn-danger" onclick="deleteCurrentPhoto()">Elimina Foto</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- jsPDF for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase -->
     <script type="module">
-        // Import Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
         
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAK9qdjGwz6xs86_H2-d6VLe4FKeHZxJeA",
             authDomain: "gestionale-manutenzioni.firebaseapp.com",
@@ -791,13 +747,11 @@
             appId: "1:857041989069:web:44d0d540b8411bf2632884"
         };
         
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const storage = getStorage(app);
         
-        // Rendi Firebase disponibile globalmente
         window.firebaseDb = db;
         window.firebaseAuth = auth;
         window.firebaseStorage = storage;
@@ -806,7 +760,19 @@
         window.storageModules = { ref, uploadBytes, getDownloadURL, deleteObject };
     </script>
     
-    <script src="assets/js/app.js?v=5.5"></script>
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme" title="Cambia tema">
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display: none;">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v6m0 6v6m4.22-13.22l-1.42 1.42M7.76 16.24l-1.42 1.42M1 12h6m6 0h6m-13.22 4.22l1.42-1.42M16.24 7.76l1.42-1.42"/>
+        </svg>
+        <svg id="theme-icon-moon" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+    
+    <script src="assets/js/app.js?v=5.6"></script>
 </body>
 </html>
+
 

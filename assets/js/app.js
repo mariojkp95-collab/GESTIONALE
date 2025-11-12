@@ -1,6 +1,18 @@
-// Gestionale Manutenzioni - Firebase Cloud Sync Version
+// Gestionale Manutenzioni
 
-// Chiavi localStorage (fallback)
+// ==================== VERSION LOG ====================
+const APP_VERSION = '2.0.0';
+const LAST_UPDATE = '2025-11-12 - Design/UX Update';
+
+console.log('%c┌─────────────────────────────────────────────┐', 'color: #8b0000; font-weight: bold;');
+console.log('%c│   🔧 GESTIONALE MANUTENZIONI RJ             │', 'color: #8b0000; font-weight: bold;');
+console.log('%c├─────────────────────────────────────────────┤', 'color: #8b0000; font-weight: bold;');
+console.log(`%c│   Version: ${APP_VERSION.padEnd(30)} │`, 'color: #66bb6a; font-weight: bold;');
+console.log(`%c│   Updated: ${LAST_UPDATE.padEnd(30)} │`, 'color: #ffa726; font-weight: bold;');
+console.log(`%c│   Loaded:  ${new Date().toLocaleString('it-IT').padEnd(30)} │`, 'color: #2196f3; font-weight: bold;');
+console.log('%c└─────────────────────────────────────────────┘', 'color: #8b0000; font-weight: bold;');
+console.log('%c✅ App caricata con successo!', 'color: #66bb6a; font-size: 14px; font-weight: bold;');
+
 const STORAGE_KEYS = {
     machines: 'gestionale_machines',
     interventions: 'gestionale_interventions',
@@ -8,7 +20,6 @@ const STORAGE_KEYS = {
     machinePhotos: 'gestionale_machine_photos'
 };
 
-// Firebase collections
 const FIREBASE_COLLECTIONS = {
     machines: 'machines',
     interventions: 'interventions',
@@ -16,7 +27,6 @@ const FIREBASE_COLLECTIONS = {
     machinePhotos: 'machinePhotos'
 };
 
-// Variabili globali
 let machines = [];
 let interventions = [];
 let components = [];
@@ -38,7 +48,6 @@ let currentCalendarDate = new Date();
 
 function initAuth() {
     if (!window.firebaseAuth || !window.authModules) {
-        console.error('Firebase Auth non disponibile!');
         alert('Errore: Firebase Authentication non è caricato. Ricarica la pagina.');
         return;
     }
@@ -49,15 +58,11 @@ function initAuth() {
         currentUser = user;
         
         if (user) {
-            // Utente loggato
-            console.log('✓ Utente autenticato:', user.email);
             document.getElementById('user-email').textContent = user.email;
             document.getElementById('logout-btn').style.display = 'inline-block';
             hideLoginModal();
             initFirebase();
         } else {
-            // Utente non loggato
-            console.log('⚠ Utente non autenticato - richiedo login');
             document.getElementById('user-email').textContent = '';
             document.getElementById('logout-btn').style.display = 'none';
             showLoginModal();
@@ -90,7 +95,6 @@ async function handleLogin(event) {
         errorDiv.classList.add('d-none');
         document.getElementById('login-form').reset();
     } catch (error) {
-        console.error('Errore login:', error);
         errorDiv.textContent = getAuthErrorMessage(error.code);
         errorDiv.classList.remove('d-none');
     }
@@ -115,7 +119,7 @@ async function handleRegister(event) {
         const { createUserWithEmailAndPassword } = window.authModules;
         await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
         errorDiv.classList.add('d-none');
-        successDiv.textContent = '✓ Account creato! Accedi per continuare.';
+        successDiv.textContent = 'Account creato! Accedi per continuare.';
         successDiv.classList.remove('d-none');
         document.getElementById('register-form').reset();
         
@@ -125,7 +129,6 @@ async function handleRegister(event) {
             successDiv.classList.add('d-none');
         }, 2000);
     } catch (error) {
-        console.error('Errore registrazione:', error);
         errorDiv.textContent = getAuthErrorMessage(error.code);
         errorDiv.classList.remove('d-none');
         successDiv.classList.add('d-none');
@@ -136,9 +139,7 @@ async function logout() {
     try {
         const { signOut } = window.authModules;
         await signOut(window.firebaseAuth);
-    } catch (error) {
-        console.error('Errore logout:', error);
-    }
+    } catch (error) {}
 }
 
 function getAuthErrorMessage(code) {
@@ -159,23 +160,20 @@ function getAuthErrorMessage(code) {
 
 async function initFirebase() {
     if (!window.firebaseDb || !currentUser) {
-        console.warn('Firebase non disponibile o utente non autenticato');
+        console.log('%c⚠️  Firebase non inizializzato - modalità offline', 'color: #ffa726; font-weight: bold;');
         updateSyncStatus(false);
         return false;
     }
     
     try {
-        // Setup listeners per sincronizzazione real-time
+        console.log('%c🔥 Firebase connesso - modalità online', 'color: #66bb6a; font-weight: bold;');
         setupFirebaseListeners();
         firebaseInitialized = true;
         updateSyncStatus(true);
-        console.log('✓ Firebase connesso e sincronizzato');
-        
-        // Carica dati iniziali
         loadData();
         return true;
     } catch (error) {
-        console.error('Errore Firebase:', error);
+        console.error('%c❌ Errore connessione Firebase:', 'color: #c62828; font-weight: bold;', error);
         updateSyncStatus(false);
         return false;
     }
@@ -234,6 +232,7 @@ function setupFirebaseListeners() {
             renderMachineComponents(currentMachineId);
         }
         renderMachinesTable();
+        renderWarehouseTable();
         updateDashboard();
     });
     
@@ -251,32 +250,20 @@ function setupFirebaseListeners() {
 }
 
 async function saveToFirebase(collectionName, data) {
-    console.log('saveToFirebase chiamato:', { collectionName, dataId: data.id, firebaseInitialized });
-    
     if (!firebaseInitialized || !window.firebaseDb) {
-        console.warn('Firebase non disponibile, salvo in localStorage');
-        // Fallback localStorage - aggiungi all'array esistente
         const storageKey = STORAGE_KEYS[collectionName];
-        
-        if (!storageKey) {
-            console.error('Storage key non trovata per:', collectionName);
-            return;
-        }
+        if (!storageKey) return;
         
         const existingData = loadFromStorage(storageKey);
         const index = existingData.findIndex(item => item.id === data.id);
         
         if (index >= 0) {
-            existingData[index] = data; // Aggiorna esistente
-            console.log('Aggiornato in localStorage:', data.id);
+            existingData[index] = data;
         } else {
-            existingData.push(data); // Aggiungi nuovo
-            console.log('Aggiunto in localStorage:', data.id);
+            existingData.push(data);
         }
         
         saveToStorage(storageKey, existingData);
-        
-        // Aggiorna anche l'array globale
         updateGlobalArray(collectionName, existingData);
         return;
     }
@@ -285,10 +272,7 @@ async function saveToFirebase(collectionName, data) {
         const { setDoc, doc } = window.firebaseModules;
         const db = window.firebaseDb;
         await setDoc(doc(db, FIREBASE_COLLECTIONS[collectionName], data.id), data);
-        console.log(`✓ Salvato su Firebase: ${collectionName}/${data.id}`);
     } catch (error) {
-        console.error('Errore salvataggio Firebase:', error);
-        // Fallback localStorage in caso di errore
         const storageKey = STORAGE_KEYS[collectionName];
         const existingData = loadFromStorage(storageKey);
         const index = existingData.findIndex(item => item.id === data.id);
@@ -323,36 +307,28 @@ function updateGlobalArray(collectionName, data) {
 }
 
 async function deleteFromFirebase(collectionName, id) {
-    if (!firebaseInitialized) {
-        return;
-    }
+    if (!firebaseInitialized) return;
     
     try {
         const { deleteDoc, doc } = window.firebaseModules;
         const db = window.firebaseDb;
         await deleteDoc(doc(db, FIREBASE_COLLECTIONS[collectionName], id));
-    } catch (error) {
-        console.error('Errore eliminazione Firebase:', error);
-    }
+    } catch (error) {}
 }
 
 // ==================== GESTIONE LOCALSTORAGE ====================
 
-// Carica dati da localStorage
 function loadFromStorage(key) {
     try {
         const data = localStorage.getItem(key);
         if (!data) return [];
         const parsed = JSON.parse(data);
-        // Assicurati che sia sempre un array
         return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-        console.error('Errore caricamento localStorage:', key, error);
         return [];
     }
 }
 
-// Salva dati in localStorage
 function saveToStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
@@ -376,22 +352,61 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Imposta la data di oggi come default
     document.getElementById('intervention-date').valueAsDate = new Date();
     
+    // Inizializza tema salvato
+    initTheme();
+    
     // Inizializza autenticazione
     initAuth();
 });
 
-// Caricamento dati
-function loadData() {
-    if (firebaseInitialized) {
-        // I dati arrivano già dai listener Firebase
-        console.log('Dati caricati da Firebase');
+// ==================== THEME MANAGEMENT ====================
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    console.log(`%c🎨 Tema attivo: ${savedTheme.toUpperCase()}`, `color: ${savedTheme === 'dark' ? '#8b0000' : '#2196f3'}; font-weight: bold;`);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+    
+    console.log(`%c🎨 Tema cambiato: ${currentTheme.toUpperCase()} → ${newTheme.toUpperCase()}`, `color: ${newTheme === 'dark' ? '#8b0000' : '#2196f3'}; font-weight: bold;`);
+    
+    // Animazione di transizione
+    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    setTimeout(() => {
+        document.body.style.transition = '';
+    }, 300);
+}
+
+function updateThemeIcon(theme) {
+    const sunIcon = document.getElementById('theme-icon-sun');
+    const moonIcon = document.getElementById('theme-icon-moon');
+    
+    if (theme === 'light') {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
     } else {
-        // Fallback localStorage
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+    }
+}
+
+function loadData() {
+    if (!firebaseInitialized) {
         machines = loadFromStorage(STORAGE_KEYS.machines);
         interventions = loadFromStorage(STORAGE_KEYS.interventions);
         components = loadFromStorage(STORAGE_KEYS.components);
         machinePhotos = loadFromStorage(STORAGE_KEYS.machinePhotos);
-        console.log('Dati caricati da localStorage');
+        console.log(`%c📦 Dati caricati da localStorage - Macchinari: ${machines.length}, Interventi: ${interventions.length}, Componenti: ${components.length}`, 'color: #ffa726; font-weight: bold;');
+    } else {
+        console.log('%c📡 Dati sincronizzati con Firebase', 'color: #66bb6a; font-weight: bold;');
     }
     
     renderMachinesTable();
@@ -403,16 +418,46 @@ function loadData() {
 
 // ==================== RENDERING TABELLE ====================
 
-// Rendering tabella macchinari
+function formatDuration(hours, minutes) {
+    const h = hours || 0;
+    const m = minutes || 0;
+    if (!h && !m) return '-';
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+}
+
+function getMachineName(machineId) {
+    const machine = machines.find(m => m.id === machineId);
+    return machine ? machine.name : 'Sconosciuto';
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('it-IT');
+}
+
+function sortByDateDesc(items) {
+    return items.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function getStatusBadge(status) {
+    return status === 'effettuato' 
+        ? '<span class="badge bg-success">Effettuato</span>'
+        : '<span class="badge bg-warning text-dark">Programmato</span>';
+}
+
+function emptyTableRow(colspan, message) {
+    return `<tr><td colspan="${colspan}" class="text-center text-muted">${message}</td></tr>`;
+}
+
 function renderMachinesTable() {
     const tbody = document.getElementById('machines-table');
     
     if (machines.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun macchinario presente</td></tr>';
+        tbody.innerHTML = emptyTableRow(5, 'Nessun macchinario presente');
         return;
     }
     
-    // Usa filterMachines() se ci sono filtri attivi, altrimenti mostra tutto
     const searchText = document.getElementById('searchMachine')?.value || '';
     const filterType = document.getElementById('filterMachineType')?.value || '';
     const filterLocation = document.getElementById('filterMachineLocation')?.value || '';
@@ -449,11 +494,10 @@ function renderInterventionsTable() {
     const tbody = document.getElementById('interventions-table');
     
     if (interventions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun intervento registrato</td></tr>';
+        tbody.innerHTML = emptyTableRow(7, 'Nessun intervento registrato');
         return;
     }
     
-    // Usa filterInterventions() se ci sono filtri attivi
     const filterMachine = document.getElementById('filterIntervMachine')?.value || '';
     const filterType = document.getElementById('filterIntervType')?.value || '';
     const filterDateFrom = document.getElementById('filterIntervDateFrom')?.value || '';
@@ -464,33 +508,14 @@ function renderInterventionsTable() {
         return;
     }
     
-    const sortedInterventions = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedInterventions = sortByDateDesc([...interventions]);
     
     tbody.innerHTML = sortedInterventions.map(intervention => {
-        const machine = machines.find(m => m.id === intervention.machine_id);
-        const machineName = machine ? machine.name : 'Sconosciuto';
-        const date = new Date(intervention.date).toLocaleDateString('it-IT');
+        const machineName = getMachineName(intervention.machine_id);
+        const date = formatDate(intervention.date);
+        const statusBadge = getStatusBadge(intervention.status);
+        const durationText = formatDuration(intervention.hours, intervention.minutes);
         
-        // Badge stato
-        const statusBadge = intervention.status === 'effettuato' 
-            ? '<span class="badge bg-success">Effettuato</span>'
-            : '<span class="badge bg-warning text-dark">Programmato</span>';
-        
-        // Formatta durata
-        let durationText = '-';
-        if (intervention.hours || intervention.minutes) {
-            const h = intervention.hours || 0;
-            const m = intervention.minutes || 0;
-            if (h > 0 && m > 0) {
-                durationText = `${h}h ${m}m`;
-            } else if (h > 0) {
-                durationText = `${h}h`;
-            } else if (m > 0) {
-                durationText = `${m}m`;
-            }
-        }
-        
-        // Pulsante cambia stato (solo per programmati)
         const statusButton = intervention.status === 'programmato'
             ? `<button class="btn btn-sm btn-success me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">✓</button>`
             : '';
@@ -516,16 +541,15 @@ function renderInterventionsTable() {
 // Rendering tabella scadenze
 function renderDeadlinesTable() {
     const tbody = document.getElementById('deadlines-table');
-    if (!tbody) return; // Elemento non presente nella DOM (es. calendario attivo)
+    if (!tbody) return;
     
     const deadlines = calculateDeadlines();
     
     if (deadlines.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nessuna scadenza programmata</td></tr>';
+        tbody.innerHTML = emptyTableRow(4, 'Nessuna scadenza programmata');
         return;
     }
     
-    // Usa filterDeadlines() se c'è un filtro attivo
     const activeFilter = document.querySelector('input[name="filterDeadline"]:checked')?.value || 'all';
     
     if (activeFilter !== 'all') {
@@ -561,7 +585,6 @@ function renderDeadlinesTable() {
 
 // ==================== CALCOLI E UTILITY ====================
 
-// Calcola scadenze
 function calculateDeadlines() {
     const deadlines = [];
     const today = new Date();
@@ -590,36 +613,29 @@ function calculateDeadlines() {
     return deadlines.sort((a, b) => a.daysRemaining - b.daysRemaining);
 }
 
-// Ottieni ultimo intervento per macchinario
 function getLastIntervention(machineId) {
-    // Considera solo interventi effettuati per calcolare scadenze
     const machineInterventions = interventions.filter(i => 
         i.machine_id === machineId && i.status === 'effettuato'
     );
     if (machineInterventions.length === 0) return null;
-    return machineInterventions.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+    return sortByDateDesc(machineInterventions)[0];
 }
 
-// Variabili globali per i grafici
 let machineTimeChart, interventionTypeChart, monthlyTrendChart, topComponentsChart;
 
-// Aggiorna dashboard classica
 function updateDashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // 1. Scadenze in Ritardo
     const deadlines = calculateDeadlines();
     const overdueDeadlines = deadlines.filter(d => d.daysRemaining < 0);
     const overdueEl = document.getElementById('overdue-deadlines');
     if (overdueEl) overdueEl.textContent = overdueDeadlines.length;
     
-    // 2. Componenti Sotto Scorta
     const lowStockComponents = components.filter(c => c.quantity <= 2);
     const lowStockEl = document.getElementById('low-stock-components');
     if (lowStockEl) lowStockEl.textContent = lowStockComponents.length;
     
-    // 3. Interventi Questo Mese
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     const monthInterventions = interventions.filter(i => {
@@ -631,7 +647,6 @@ function updateDashboard() {
     if (monthIntEl) monthIntEl.textContent = monthInterventions.length;
     if (monthDetEl) monthDetEl.textContent = monthInterventions.length > 0 ? `${monthInterventions.length} completati` : 'Nessuno';
     
-    // 4. Macchinario Più Attivo
     if (machines.length > 0 && interventions.length > 0) {
         const machineInterventionCount = {};
         interventions.forEach(i => {
@@ -656,7 +671,6 @@ function updateDashboard() {
         if (countEl) countEl.textContent = 'Nessun intervento';
     }
     
-    // 5. Prossima Scadenza
     const upcomingDeadlines = deadlines.filter(d => d.daysRemaining >= 0).sort((a, b) => a.daysRemaining - b.daysRemaining);
     const nextMachEl = document.getElementById('next-deadline-machine');
     const nextDateEl = document.getElementById('next-deadline-date');
@@ -669,37 +683,30 @@ function updateDashboard() {
         if (nextDateEl) nextDateEl.textContent = 'Nessuna scadenza';
     }
     
-    // 6. Ultima Attività
     const lastMachEl = document.getElementById('last-activity-machine');
     const lastDateEl = document.getElementById('last-activity-date');
     if (interventions.length > 0 && lastMachEl && lastDateEl) {
-        const lastIntervention = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-        const machine = machines.find(m => m.id === lastIntervention.machine_id);
-        lastMachEl.textContent = machine ? machine.name : '-';
-        lastDateEl.textContent = new Date(lastIntervention.date).toLocaleDateString('it-IT');
+        const lastIntervention = sortByDateDesc([...interventions])[0];
+        const machineName = getMachineName(lastIntervention.machine_id);
+        lastMachEl.textContent = machineName;
+        lastDateEl.textContent = formatDate(lastIntervention.date);
     } else {
         if (lastMachEl) lastMachEl.textContent = '-';
         if (lastDateEl) lastDateEl.textContent = 'Nessuna attività';
     }
     
-    // Ultimi interventi
     const recentDiv = document.getElementById('recent-interventions');
     if (recentDiv) {
-        const recent = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+        const recent = sortByDateDesc([...interventions]).slice(0, 5);
         
         if (recent.length === 0) {
             recentDiv.innerHTML = '<p class="text-muted">Nessun intervento registrato</p>';
         } else {
             recentDiv.innerHTML = '<ul class="list-group">' + recent.map(intervention => {
-                const machine = machines.find(m => m.id === intervention.machine_id);
-                const machineName = machine ? machine.name : 'Sconosciuto';
-                const date = new Date(intervention.date).toLocaleDateString('it-IT');
-                let durationText = '';
-                if (intervention.hours || intervention.minutes) {
-                    const h = intervention.hours || 0;
-                    const m = intervention.minutes || 0;
-                    durationText = ` - ⏱️ ${h}h ${m}m`;
-                }
+                const machineName = getMachineName(intervention.machine_id);
+                const date = formatDate(intervention.date);
+                const duration = formatDuration(intervention.hours, intervention.minutes);
+                const durationText = duration !== '-' ? ` - ${duration}` : '';
                 return `
                     <li class="list-group-item">
                         <strong>${machineName}</strong> - ${date}${durationText}<br>
@@ -711,9 +718,7 @@ function updateDashboard() {
     }
 }
 
-// Aggiorna Report e Statistiche
 function updateReportStats() {
-    // Statistiche generali
     const totalHours = interventions.reduce((sum, i) => sum + (i.hours || 0) + (i.minutes || 0) / 60, 0);
     document.getElementById('total-hours').textContent = Math.round(totalHours);
     document.getElementById('total-interventions').textContent = interventions.length;
@@ -742,15 +747,11 @@ function generateMachineTimeChart() {
         machineHours[i.machine_id] = (machineHours[i.machine_id] || 0) + hours;
     });
     
-    // Ordina per ore decrescenti e prendi top 10
     const sorted = Object.entries(machineHours)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
     
-    const labels = sorted.map(([machineId]) => {
-        const machine = machines.find(m => m.id === machineId);
-        return machine ? machine.name : 'Sconosciuto';
-    });
+    const labels = sorted.map(([machineId]) => getMachineName(machineId));
     
     const data = sorted.map(([, hours]) => Math.round(hours * 10) / 10);
     
@@ -988,7 +989,7 @@ function generateStatsTable() {
     if (!tbody) return;
     
     if (machines.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun dato disponibile</td></tr>';
+        tbody.innerHTML = emptyTableRow(5, 'Nessun dato disponibile');
         return;
     }
     
@@ -1065,13 +1066,12 @@ function exportMonthlyReport() {
     y += 10;
     
     doc.setFontSize(9);
-    const recent = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+    const recent = sortByDateDesc([...interventions]).slice(0, 10);
     
     recent.forEach(interv => {
-        const machine = machines.find(m => m.id === interv.machine_id);
-        const machineName = machine ? machine.name : 'Sconosciuto';
-        const date = new Date(interv.date).toLocaleDateString('it-IT');
-        const duration = `${interv.hours || 0}h ${interv.minutes || 0}m`;
+        const machineName = getMachineName(interv.machine_id);
+        const date = formatDate(interv.date);
+        const duration = formatDuration(interv.hours, interv.minutes);
         
         doc.text(`${date} - ${machineName} - ${interv.type} - ${duration}`, 20, y);
         y += 6;
@@ -1150,14 +1150,9 @@ async function saveMachine() {
         created_at: new Date().toISOString()
     };
     
-    console.log('Tentativo salvataggio macchinario:', newMachine);
-    
-    // Salva su Firebase
     await saveToFirebase('machines', newMachine);
     
-    // Se usa localStorage (fallback), renderizza manualmente
     if (!firebaseInitialized) {
-        console.log('Rendering manuale dopo salvataggio localStorage');
         renderMachinesTable();
         updateMachineSelect();
         updateDashboard();
@@ -1166,8 +1161,6 @@ async function saveMachine() {
     addMachineModal.hide();
     document.getElementById('add-machine-form').reset();
     showAlert('Macchinario aggiunto con successo!', 'success');
-    
-    console.log('Macchinari totali:', machines.length);
 }
 
 function deleteMachine(id) {
@@ -1220,10 +1213,10 @@ function viewMachine(id) {
     
     if (machineInterventions.length > 0) {
         html += '<ul class="list-group">';
-        machineInterventions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(i => {
+        sortByDateDesc(machineInterventions).forEach(i => {
             html += `
                 <li class="list-group-item">
-                    <strong>${new Date(i.date).toLocaleDateString('it-IT')}</strong> - ${i.type}<br>
+                    <strong>${formatDate(i.date)}</strong> - ${i.type}<br>
                     <small>${i.description}</small>
                 </li>
             `;
@@ -1569,7 +1562,7 @@ function renderMachinePhotos(machineId) {
                      style="height: 200px; object-fit: cover; cursor: pointer;"
                      onclick="openPhotoGallery('${photo.id}')">
                 <div class="card-body p-2 text-center">
-                    <small class="text-muted">${new Date(photo.created_at).toLocaleDateString('it-IT')}</small>
+                    <small class="text-muted">${formatDate(photo.created_at)}</small>
                 </div>
             </div>
         </div>
@@ -1581,7 +1574,7 @@ function renderMachineComponents(machineId) {
     const tbody = document.getElementById('machine-components-table');
     
     if (machineComponents.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nessun componente registrato</td></tr>';
+        tbody.innerHTML = emptyTableRow(4, 'Nessun componente registrato');
         return;
     }
     
@@ -1613,8 +1606,6 @@ function showAddPhotoModal() {
     document.getElementById('photo-preview').innerHTML = '';
     addPhotoModal.show();
 }
-
-// ==================== GESTIONE FOTO ====================
 
 let photoGalleryModal;
 let currentGalleryPhotos = [];
@@ -1691,12 +1682,10 @@ async function savePhoto() {
         return;
     }
     
-    showAlert('⏳ Compressione e caricamento foto...', 'info', 3000);
+    showAlert('Compressione e caricamento foto...', 'info', 3000);
     
     try {
-        // Comprimi immagine
         const compressedBlob = await compressImage(file);
-        console.log('Immagine compressa, dimensione:', compressedBlob.size);
         
         // Converti blob compresso in base64
         const reader = new FileReader();
@@ -1704,11 +1693,10 @@ async function savePhoto() {
             const newPhoto = {
                 id: generateId(),
                 machine_id: currentMachineId,
-                dataUrl: e.target.result, // base64 compresso
+                dataUrl: e.target.result,
                 created_at: new Date().toISOString()
             };
             
-            console.log('Salvo foto su Firestore...');
             await saveToFirebase('machinePhotos', newPhoto);
             
             if (!firebaseInitialized) {
@@ -1719,12 +1707,10 @@ async function savePhoto() {
             addPhotoModal.hide();
             input.value = '';
             document.getElementById('photo-preview').innerHTML = '';
-            showAlert('✓ Foto caricata con successo!', 'success');
-            console.log('Foto salvata correttamente');
+            showAlert('Foto caricata con successo!', 'success');
         };
         reader.readAsDataURL(compressedBlob);
     } catch (error) {
-        console.error('Errore upload foto:', error);
         showAlert('Errore durante il caricamento della foto: ' + error.message, 'danger');
     }
 }
@@ -1746,7 +1732,6 @@ async function deletePhoto(photoId) {
         
         showAlert('Foto eliminata', 'success');
     } catch (error) {
-        console.error('Errore eliminazione foto:', error);
         showAlert('Errore durante l\'eliminazione', 'danger');
     }
 }
@@ -1919,7 +1904,7 @@ function renderWarehouseTable() {
     }
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun componente trovato</td></tr>';
+        tbody.innerHTML = emptyTableRow(6, 'Nessun componente trovato');
         return;
     }
     
@@ -2006,7 +1991,7 @@ function filterMachines() {
     });
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nessun macchinario trovato</td></tr>';
+        tbody.innerHTML = emptyTableRow(5, 'Nessun macchinario trovato');
         return;
     }
     
@@ -2054,38 +2039,33 @@ function filterInterventions() {
     });
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun intervento trovato</td></tr>';
+        tbody.innerHTML = emptyTableRow(7, 'Nessun intervento trovato');
         return;
     }
     
-    const sortedInterventions = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedInterventions = sortByDateDesc([...filtered]);
     
     tbody.innerHTML = sortedInterventions.map(intervention => {
-        const machine = machines.find(m => m.id === intervention.machine_id);
-        const machineName = machine ? machine.name : 'Sconosciuto';
-        const date = new Date(intervention.date).toLocaleDateString('it-IT');
+        const machineName = getMachineName(intervention.machine_id);
+        const date = formatDate(intervention.date);
+        const statusBadge = getStatusBadge(intervention.status);
+        const durationText = formatDuration(intervention.hours, intervention.minutes);
         
-        let durationText = '-';
-        if (intervention.hours || intervention.minutes) {
-            const h = intervention.hours || 0;
-            const m = intervention.minutes || 0;
-            if (h > 0 && m > 0) {
-                durationText = `${h}h ${m}m`;
-            } else if (h > 0) {
-                durationText = `${h}h`;
-            } else if (m > 0) {
-                durationText = `${m}m`;
-            }
-        }
+        const statusButton = intervention.status === 'programmato'
+            ? `<button class="btn btn-sm btn-success me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">✓</button>`
+            : '';
         
         return `
             <tr>
                 <td>${date}</td>
                 <td>${machineName}</td>
                 <td><span class="badge bg-primary">${intervention.type}</span></td>
+                <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
-                <td>⏱️ ${durationText}</td>
+                <td>${durationText}</td>
                 <td>
+                    ${statusButton}
+                    <button class="btn btn-sm btn-warning me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
@@ -2151,7 +2131,7 @@ function filterDeadlines() {
     }
     
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nessuna scadenza trovata</td></tr>';
+        tbody.innerHTML = emptyTableRow(4, 'Nessuna scadenza trovata');
         return;
     }
     
@@ -2316,34 +2296,30 @@ function getEventsForDate(date) {
     // Solo interventi (programmati ed effettuati)
     interventions.forEach(intervention => {
         const intervDate = new Date(intervention.date);
+        intervDate.setHours(0, 0, 0, 0); // Normalizza a mezzanotte
         const intervKey = formatDateKey(intervDate);
         
         if (intervKey === dateKey) {
-            const machine = machines.find(m => m.id === intervention.machine_id);
+            const machineName = getMachineName(intervention.machine_id);
             let className = '';
             
             if (intervention.status === 'effettuato') {
-                // Verde: intervento effettuato
                 className = 'event-completed';
             } else {
-                // Programmato
                 const daysUntil = Math.floor((intervDate - today) / (1000 * 60 * 60 * 24));
                 
                 if (daysUntil < 0) {
-                    // Rosso: programmato ma data passata (non effettuato)
                     className = 'event-overdue';
                 } else if (daysUntil <= 7) {
-                    // Giallo: programmato entro 7 giorni
                     className = 'event-upcoming';
                 } else {
-                    // Blu: programmato oltre 7 giorni
                     className = 'event-scheduled';
                 }
             }
             
             events.push({
                 type: 'intervention',
-                title: machine ? machine.name : 'Intervento',
+                title: machineName,
                 className: className,
                 data: intervention
             });
@@ -2395,20 +2371,17 @@ function showDayDetails(dateKey) {
                     <p class="mb-1"><strong>Descrizione:</strong> ${event.data.interventionDescription || 'N/A'}</p>
                     <p class="mb-1"><strong>Data scadenza:</strong> ${event.data.nextDate}</p>
                     <p class="mb-1"><strong>Giorni rimanenti:</strong> ${event.data.daysRemaining}</p>
-                    <p class="mb-0"><strong>Ultimo intervento:</strong> ${new Date(event.data.lastIntervention).toLocaleDateString('it-IT')}</p>
+                    <p class="mb-0"><strong>Ultimo intervento:</strong> ${formatDate(event.data.lastIntervention)}</p>
                 </div>`;
             } else {
-                const machine = machines.find(m => m.id === event.data.machine_id);
-                const durationParts = [];
-                if (event.data.hours) durationParts.push(`${event.data.hours}h`);
-                if (event.data.minutes) durationParts.push(`${event.data.minutes}m`);
-                const duration = durationParts.length > 0 ? durationParts.join(' ') : 'Non specificata';
+                const machineName = getMachineName(event.data.machine_id);
+                const duration = formatDuration(event.data.hours, event.data.minutes);
                 
                 html += `<div class="day-event-item">
                     <h6>🔧 Intervento Effettuato</h6>
                     <span class="badge mb-2" style="background-color: #8b0000;">${event.data.type}</span>
-                    <p class="mb-1"><strong>Macchina:</strong> ${machine ? machine.name : 'N/A'}</p>
-                    <p class="mb-1"><strong>Data:</strong> ${new Date(event.data.date).toLocaleDateString('it-IT')}</p>
+                    <p class="mb-1"><strong>Macchina:</strong> ${machineName}</p>
+                    <p class="mb-1"><strong>Data:</strong> ${formatDate(event.data.date)}</p>
                     <p class="mb-1"><strong>Descrizione:</strong> ${event.data.description || 'Nessuna descrizione'}</p>
                     <p class="mb-1"><strong>Durata:</strong> ${duration}</p>
                     ${event.data.next_maintenance_days ? `<p class="mb-0"><strong>Prossima manutenzione tra:</strong> ${event.data.next_maintenance_days} giorni</p>` : ''}
@@ -2440,4 +2413,52 @@ function goToToday() {
     currentCalendarDate = new Date();
     renderCalendar();
 }
+
+// ==================== MOBILE MENU ====================
+
+function toggleMobileSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+    
+    // Previeni scroll del body quando sidebar è aperta
+    if (sidebar.classList.contains('show')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+}
+
+// Chiudi sidebar quando si cambia sezione su mobile
+function showSection(sectionId) {
+    // Nascondi tutte le sezioni
+    document.querySelectorAll('.main-content > section').forEach(sec => {
+        sec.style.display = 'none';
+    });
+    // Mostra la sezione selezionata
+    document.getElementById(sectionId).style.display = 'block';
+    // Aggiorna menu attivo
+    document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
+    event.target.classList.add('active');
+    // Renderizza calendario quando si apre quella sezione
+    if (sectionId === 'calendario-section') {
+        setTimeout(renderCalendar, 100);
+    }
+    // Renderizza report e grafici quando si apre quella sezione
+    if (sectionId === 'report-section') {
+        updateReportStats();
+    }
+    // Renderizza magazzino quando si apre quella sezione
+    if (sectionId === 'magazzino-section') {
+        renderWarehouse();
+    }
+    
+    // Chiudi sidebar su mobile dopo aver selezionato una sezione
+    if (window.innerWidth < 992) {
+        toggleMobileSidebar();
+    }
+}
+
 
