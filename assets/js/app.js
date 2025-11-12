@@ -17,14 +17,16 @@ const STORAGE_KEYS = {
     machines: 'gestionale_machines',
     interventions: 'gestionale_interventions',
     components: 'gestionale_components',
-    machinePhotos: 'gestionale_machine_photos'
+    machinePhotos: 'gestionale_machine_photos',
+    shiftNotes: 'shiftNotes'
 };
 
 const FIREBASE_COLLECTIONS = {
     machines: 'machines',
     interventions: 'interventions',
     components: 'components',
-    machinePhotos: 'machinePhotos'
+    machinePhotos: 'machinePhotos',
+    shiftNotes: 'shiftNotes'
 };
 
 let machines = [];
@@ -246,6 +248,17 @@ function setupFirebaseListeners() {
             renderMachinePhotos(currentMachineId);
         }
         renderMachinesTable();
+    });
+    
+    // Listener per note turno
+    onSnapshot(collection(db, FIREBASE_COLLECTIONS.shiftNotes), (snapshot) => {
+        shiftNotes = [];
+        snapshot.forEach((doc) => {
+            shiftNotes.push({ id: doc.id, ...doc.data() });
+        });
+        // Salva in localStorage per compatibilità
+        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+        updateShiftNotes();
     });
 }
 
@@ -821,19 +834,56 @@ function saveShiftNote() {
         // Se c'è una foto, convertila in base64
         if (photoInput.files && photoInput.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 note.photoUrl = e.target.result;
-                shiftNotes.push(note);
-                localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
-                updateShiftNotes();
+                
+                // Salva su Firebase se disponibile
+                if (firebaseInitialized && window.firebaseDb) {
+                    const { addDoc, collection } = window.firebaseModules;
+                    try {
+                        await addDoc(collection(window.firebaseDb, FIREBASE_COLLECTIONS.shiftNotes), note);
+                        console.log('✅ Nota salvata su Firebase con foto');
+                    } catch (error) {
+                        console.error('❌ Errore salvataggio nota Firebase:', error);
+                        // Fallback su localStorage
+                        shiftNotes.push(note);
+                        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+                        updateShiftNotes();
+                    }
+                } else {
+                    // Solo localStorage se Firebase non disponibile
+                    shiftNotes.push(note);
+                    localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+                    updateShiftNotes();
+                }
+                
                 bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
             };
             reader.readAsDataURL(photoInput.files[0]);
         } else {
-            shiftNotes.push(note);
-            localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
-            updateShiftNotes();
-            bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+            // Salva su Firebase se disponibile
+            if (firebaseInitialized && window.firebaseDb) {
+                const { addDoc, collection } = window.firebaseModules;
+                addDoc(collection(window.firebaseDb, FIREBASE_COLLECTIONS.shiftNotes), note)
+                    .then(() => {
+                        console.log('✅ Nota salvata su Firebase');
+                        bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+                    })
+                    .catch((error) => {
+                        console.error('❌ Errore salvataggio nota Firebase:', error);
+                        // Fallback su localStorage
+                        shiftNotes.push(note);
+                        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+                        updateShiftNotes();
+                        bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+                    });
+            } else {
+                // Solo localStorage se Firebase non disponibile
+                shiftNotes.push(note);
+                localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+                updateShiftNotes();
+                bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+            }
         }
     } else {
         alert('Inserisci un testo per la nota');
@@ -842,9 +892,28 @@ function saveShiftNote() {
 
 function deleteShiftNote(index) {
     if (confirm('Eliminare questa nota?')) {
-        shiftNotes.splice(index, 1);
-        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
-        updateShiftNotes();
+        const noteToDelete = shiftNotes[index];
+        
+        // Elimina da Firebase se disponibile
+        if (firebaseInitialized && window.firebaseDb && noteToDelete.id) {
+            const { deleteDoc, doc } = window.firebaseModules;
+            deleteDoc(doc(window.firebaseDb, FIREBASE_COLLECTIONS.shiftNotes, noteToDelete.id))
+                .then(() => {
+                    console.log('✅ Nota eliminata da Firebase');
+                })
+                .catch((error) => {
+                    console.error('❌ Errore eliminazione nota Firebase:', error);
+                    // Fallback: elimina da localStorage
+                    shiftNotes.splice(index, 1);
+                    localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+                    updateShiftNotes();
+                });
+        } else {
+            // Solo localStorage se Firebase non disponibile
+            shiftNotes.splice(index, 1);
+            localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+            updateShiftNotes();
+        }
     }
 }
 
