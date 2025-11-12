@@ -917,6 +917,18 @@ function generateTopComponentsChart() {
     const labels = sorted.map(c => c.name);
     const data = sorted.map(c => c.quantity);
     
+    // Colori diversi per ogni componente - gradiente dal verde al rosso
+    const colors = [
+        '#ef5350', // rosso chiaro
+        '#ff7043', // arancio-rosso
+        '#ffa726', // arancio
+        '#ffca28', // giallo-arancio
+        '#9ccc65', // verde chiaro
+        '#66bb6a', // verde
+        '#26a69a', // turchese
+        '#42a5f5'  // blu
+    ];
+    
     if (topComponentsChart) topComponentsChart.destroy();
     
     topComponentsChart = new Chart(ctx, {
@@ -926,7 +938,8 @@ function generateTopComponentsChart() {
             datasets: [{
                 label: 'Quantità Rimanente',
                 data: data,
-                backgroundColor: data.map(q => q <= 2 ? '#c62828' : q <= 5 ? '#ffa726' : '#66bb6a'),
+                backgroundColor: labels.map((_, i) => colors[i % colors.length]),
+                borderColor: '#000',
                 borderWidth: 1
             }]
         },
@@ -935,12 +948,20 @@ function generateTopComponentsChart() {
             maintainAspectRatio: false,
             indexAxis: 'y',
             plugins: {
-                legend: { display: false }
+                legend: { 
+                    display: false
+                }
             },
             scales: {
                 x: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Quantità' }
+                    title: { display: true, text: 'Quantità', color: '#ffffff' },
+                    ticks: { color: '#ffffff' },
+                    grid: { color: '#333' }
+                },
+                y: {
+                    ticks: { color: '#ffffff' },
+                    grid: { color: '#333' }
                 }
             }
         }
