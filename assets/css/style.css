@@ -612,6 +612,51 @@ textarea.form-control {
         margin-bottom: 20px;
     }
     
+    /* Hide sidebar on mobile by default */
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        height: 100vh;
+        background: var(--bg-primary);
+        z-index: 1040;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding-top: 60px;
+    }
+    
+    #sidebar.show {
+        left: 0;
+    }
+    
+    /* Backdrop overlay when menu is open */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1039;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    
+    body.menu-open::before {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    /* Main content full width on mobile */
+    #main-content {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+    
     .navbar {
         padding: 0.75rem 1rem;
     }
