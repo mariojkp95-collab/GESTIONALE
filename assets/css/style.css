@@ -791,18 +791,18 @@ button, a, input, select, textarea {
     color: #fff;
 }
 
-/* SOLO 3 COLORI DISTINTI */
-.calendar-event.event-overdue {
-    background-color: #dc3545; /* Rosso - Scaduto */
+/* SOLO 3 COLORI PER INTERVENTI */
+.calendar-event.event-completed {
+    background-color: #28a745; /* Verde - Effettuato */
 }
 
 .calendar-event.event-upcoming {
-    background-color: #ffc107; /* Giallo - In scadenza */
+    background-color: #ffc107; /* Giallo - Programmato entro 7gg */
     color: #000;
 }
 
-.calendar-event.event-programmed {
-    background-color: #0d6efd; /* Blu - Programmato */
+.calendar-event.event-overdue {
+    background-color: #dc3545; /* Rosso - Programmato scaduto */
 }
 
 .calendar-more {

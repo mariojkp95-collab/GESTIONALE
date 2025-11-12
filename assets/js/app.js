@@ -471,6 +471,11 @@ function renderInterventionsTable() {
         const machineName = machine ? machine.name : 'Sconosciuto';
         const date = new Date(intervention.date).toLocaleDateString('it-IT');
         
+        // Badge stato
+        const statusBadge = intervention.status === 'effettuato' 
+            ? '<span class="badge bg-success">Effettuato</span>'
+            : '<span class="badge bg-warning text-dark">Programmato</span>';
+        
         // Formatta durata
         let durationText = '-';
         if (intervention.hours || intervention.minutes) {
@@ -485,14 +490,21 @@ function renderInterventionsTable() {
             }
         }
         
+        // Pulsante cambia stato (solo per programmati)
+        const statusButton = intervention.status === 'programmato'
+            ? `<button class="btn btn-sm btn-success me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">✓</button>`
+            : '';
+        
         return `
             <tr>
                 <td>${date}</td>
                 <td>${machineName}</td>
                 <td><span class="badge bg-primary">${intervention.type}</span></td>
+                <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
-                <td>⏱️ ${durationText}</td>
+                <td>${durationText}</td>
                 <td>
+                    ${statusButton}
                     <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
@@ -1363,6 +1375,26 @@ function deleteIntervention(id) {
     showAlert('Intervento eliminato', 'success');
 }
 
+async function markAsCompleted(id) {
+    const intervention = interventions.find(i => i.id === id);
+    if (!intervention) return;
+    
+    intervention.status = 'effettuato';
+    
+    // Aggiorna su Firebase
+    await saveToFirebase('interventions', intervention);
+    
+    // Fallback localStorage
+    if (!firebaseInitialized) {
+        saveToStorage(STORAGE_KEYS.interventions, interventions);
+        renderInterventionsTable();
+        renderCalendar();
+        updateDashboard();
+    }
+    
+    showAlert('Intervento segnato come effettuato!', 'success');
+}
+
 // ==================== GESTIONE DETTAGLI MACCHINARIO ====================
 
 function openMachineDetails(machineId) {
@@ -2145,37 +2177,38 @@ function getEventsForDate(date) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Scadenze manutenzione (solo se entro 30 giorni o scadute)
-    const deadlines = calculateDeadlines();
-    deadlines.forEach(deadline => {
-        const deadlineParts = deadline.nextDate.split('/');
-        const deadlineKey = `${deadlineParts[2]}-${deadlineParts[1]}-${deadlineParts[0]}`;
-        
-        if (deadlineKey === dateKey && deadline.daysRemaining <= 30) {
-            // Solo 2 stati: scaduto (rosso) o in scadenza (giallo)
-            let className = deadline.daysRemaining < 0 ? 'event-overdue' : 'event-upcoming';
-            
-            events.push({
-                type: 'deadline',
-                title: deadline.machineName,
-                className: className,
-                data: deadline
-            });
-        }
-    });
-    
-    // Interventi programmati (solo quelli futuri)
+    // Solo interventi (programmati ed effettuati)
     interventions.forEach(intervention => {
         const intervDate = new Date(intervention.date);
         const intervKey = formatDateKey(intervDate);
         
-        if (intervKey === dateKey && intervention.status === 'programmato') {
+        if (intervKey === dateKey) {
             const machine = machines.find(m => m.id === intervention.machine_id);
+            let className = '';
+            
+            if (intervention.status === 'effettuato') {
+                // Verde: intervento effettuato
+                className = 'event-completed';
+            } else {
+                // Programmato
+                const daysUntil = Math.floor((intervDate - today) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntil < 0) {
+                    // Rosso: programmato ma data passata (non effettuato)
+                    className = 'event-overdue';
+                } else if (daysUntil <= 7) {
+                    // Giallo: programmato entro 7 giorni
+                    className = 'event-upcoming';
+                } else {
+                    // Programmato oltre 7 giorni - non mostrare
+                    return;
+                }
+            }
             
             events.push({
                 type: 'intervention',
                 title: machine ? machine.name : 'Intervento',
-                className: 'event-programmed',
+                className: className,
                 data: intervention
             });
         }
