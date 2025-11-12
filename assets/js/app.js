@@ -2145,17 +2145,15 @@ function getEventsForDate(date) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Scadenze
+    // Scadenze manutenzione (solo se entro 30 giorni o scadute)
     const deadlines = calculateDeadlines();
     deadlines.forEach(deadline => {
         const deadlineParts = deadline.nextDate.split('/');
         const deadlineKey = `${deadlineParts[2]}-${deadlineParts[1]}-${deadlineParts[0]}`;
         
-        if (deadlineKey === dateKey) {
-            let className = 'event-ok';
-            if (deadline.daysRemaining < 0) className = 'event-overdue';
-            else if (deadline.daysRemaining <= 7) className = 'event-urgent';
-            else if (deadline.daysRemaining <= 30) className = 'event-upcoming';
+        if (deadlineKey === dateKey && deadline.daysRemaining <= 30) {
+            // Solo 2 stati: scaduto (rosso) o in scadenza (giallo)
+            let className = deadline.daysRemaining < 0 ? 'event-overdue' : 'event-upcoming';
             
             events.push({
                 type: 'deadline',
@@ -2166,19 +2164,18 @@ function getEventsForDate(date) {
         }
     });
     
-    // Interventi
+    // Interventi programmati (solo quelli futuri)
     interventions.forEach(intervention => {
         const intervDate = new Date(intervention.date);
         const intervKey = formatDateKey(intervDate);
         
-        if (intervKey === dateKey) {
+        if (intervKey === dateKey && intervention.status === 'programmato') {
             const machine = machines.find(m => m.id === intervention.machine_id);
-            const isProgrammato = intervention.status === 'programmato';
             
             events.push({
                 type: 'intervention',
                 title: machine ? machine.name : 'Intervento',
-                className: isProgrammato ? 'event-programmed' : 'event-intervention',
+                className: 'event-programmed',
                 data: intervention
             });
         }
