@@ -1,7 +1,7 @@
 // Gestionale Manutenzioni
 
 // ==================== VERSION LOG ====================
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.0.1';
 const LAST_UPDATE = '2025-11-12 - Design/UX Update';
 
 console.log('%c┌─────────────────────────────────────────────┐', 'color: #8b0000; font-weight: bold;');

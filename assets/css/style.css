@@ -44,33 +44,34 @@
     --info: #2196f3;
 }
 
-/* Theme toggle button */
+/* Theme toggle button - In navbar */
 .theme-toggle {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 1000;
-    background: var(--accent-primary);
-    border: none;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
+    background: transparent;
+    border: 1px solid var(--accent-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    margin-left: 0.5rem;
 }
 
 .theme-toggle:hover {
-    transform: scale(1.1) rotate(180deg);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    background: var(--accent-primary);
+    transform: scale(1.05);
 }
 
 .theme-toggle svg {
-    width: 28px;
-    height: 28px;
+    width: 20px;
+    height: 20px;
+    fill: var(--accent-primary);
+    transition: fill 0.3s ease;
+}
+
+.theme-toggle:hover svg {
     fill: white;
 }
 
@@ -202,7 +203,7 @@ body {
 .dashboard-card-success h3,
 .dashboard-card-neutral h2,
 .dashboard-card-neutral h3 {
-    color: var(--text-primary);
+    color: var(--accent-primary);
     font-weight: 700;
 }
 
@@ -212,8 +213,8 @@ body {
 .dashboard-card-primary small,
 .dashboard-card-success small,
 .dashboard-card-neutral small {
-    color: var(--text-secondary);
-    opacity: 0.9;
+    color: var(--accent-primary);
+    opacity: 0.8;
 }
 
 .list-group-item {
