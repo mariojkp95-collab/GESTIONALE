@@ -900,6 +900,11 @@ button, a, input, select, textarea {
     font-weight: 600;
 }
 
+/* Calendar legend */
+.calendar-legend-item {
+    color: var(--text-primary);
+}
+
 /* Modal Dettagli Giorno */
 .day-event-list {
     display: flex;
