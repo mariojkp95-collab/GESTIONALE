@@ -517,53 +517,6 @@ textarea.form-control {
     min-height: 100px;
 }
 
-/* Dashboard Cards */
-.card.text-white.bg-info {
-    background: linear-gradient(135deg, #58a6ff 0%, #1f6feb 100%) !important;
-    border: none;
-    box-shadow: 0 4px 16px rgba(88, 166, 255, 0.2);
-}
-
-.card.text-white.bg-success {
-    background: linear-gradient(135deg, #3fb950 0%, #2ea043 100%) !important;
-    border: none;
-    box-shadow: 0 4px 16px rgba(63, 185, 80, 0.2);
-}
-
-.card.text-white.bg-warning {
-    background: linear-gradient(135deg, #d29922 0%, #bb8009 100%) !important;
-    border: none;
-    box-shadow: 0 4px 16px rgba(210, 153, 34, 0.2);
-}
-
-.card.text-white h2 {
-    font-size: 2.75rem;
-    font-weight: 700;
-    margin: 0.5rem 0 0 0;
-    letter-spacing: -0.02em;
-}
-
-.card.text-white .card-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    opacity: 0.9;
-}
-
-.card.text-white:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(88, 166, 255, 0.3);
-}
-
-.card.text-white.bg-success:hover {
-    box-shadow: 0 8px 24px rgba(63, 185, 80, 0.3);
-}
-
-.card.text-white.bg-warning:hover {
-    box-shadow: 0 8px 24px rgba(210, 153, 34, 0.3);
-}
-
 /* Status badges */
 .status-ok {
     background-color: var(--success);
