@@ -47,32 +47,32 @@
 /* Theme toggle button - In navbar */
 .theme-toggle {
     background: transparent;
-    border: 1px solid var(--accent-primary);
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-left: 0.5rem;
+    margin-left: 0.75rem;
 }
 
 .theme-toggle:hover {
-    background: var(--accent-primary);
-    transform: scale(1.05);
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
 }
 
 .theme-toggle svg {
-    width: 20px;
-    height: 20px;
-    fill: var(--accent-primary);
+    width: 18px;
+    height: 18px;
+    fill: var(--text-secondary);
     transition: fill 0.3s ease;
 }
 
 .theme-toggle:hover svg {
-    fill: white;
+    fill: var(--accent-primary);
 }
 
 * {
@@ -285,6 +285,12 @@ body {
 .table tbody td {
     padding: 1rem;
     vertical-align: middle;
+    word-wrap: break-word;
+    max-width: 300px;
+}
+
+.table tbody td:first-child {
+    white-space: nowrap;
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
@@ -929,61 +935,6 @@ button, a, input, select, textarea {
 }
 
 @media (max-width: 992px) {
-    /* Sidebar collapsible */
-    .sidebar {
-        position: fixed;
-        left: -250px;
-        transition: left 0.3s ease;
-        z-index: 1050;
-        height: 100vh;
-    }
-    
-    .sidebar.show {
-        left: 0;
-    }
-    
-    /* Overlay per chiudere sidebar */
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1040;
-        display: none;
-    }
-    
-    .sidebar-overlay.show {
-        display: block;
-    }
-    
-    /* Main content prende tutto lo spazio */
-    .main-content {
-        margin-left: 0 !important;
-        width: 100%;
-    }
-    
-    /* Hamburger menu button */
-    .mobile-menu-btn {
-        display: block;
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1060;
-        background: var(--accent-primary);
-        border: none;
-        padding: 0.75rem;
-        border-radius: 8px;
-        color: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-menu-btn:hover {
-        background: var(--accent-hover);
-    }
-    
     /* Cards in colonna singola */
     .row > [class*='col-'] {
         margin-bottom: 1rem;
@@ -995,16 +946,28 @@ button, a, input, select, textarea {
     .table-responsive {
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     table {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
+        min-width: 100%;
     }
     
     table th,
     table td {
         padding: 0.5rem;
-        white-space: nowrap;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+    
+    table td:first-child,
+    table th:first-child {
+        position: sticky;
+        left: 0;
+        background-color: var(--bg-card);
+        z-index: 1;
     }
     
     /* Buttons più grandi per touch */

@@ -1121,11 +1121,6 @@ function showSection(section) {
     if (section === 'magazzino') {
         renderWarehouseTable();
     }
-    
-    // Chiudi sidebar su mobile dopo aver selezionato una sezione
-    if (window.innerWidth < 992) {
-        toggleMobileSidebar();
-    }
 }
 
 // ==================== GESTIONE MACCHINARI ====================
@@ -2417,22 +2412,5 @@ function nextMonth() {
 function goToToday() {
     currentCalendarDate = new Date();
     renderCalendar();
-}
-
-// ==================== MOBILE MENU ====================
-
-function toggleMobileSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.sidebar-overlay');
-    
-    sidebar.classList.toggle('show');
-    overlay.classList.toggle('show');
-    
-    // Previeni scroll del body quando sidebar è aperta
-    if (sidebar.classList.contains('show')) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = '';
-    }
 }
 
