@@ -608,44 +608,27 @@ textarea.form-control {
 
 /* Responsive */
 @media (max-width: 768px) {
-    /* Nasconde sidebar su mobile di default */
-    .sidebar-menu {
-        display: none !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 85%;
-        height: 100vh;
-        background: var(--bg-primary);
-        z-index: 9999;
-        overflow-y: auto;
-        padding: 1rem;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-    }
-    
-    .sidebar-menu.show {
-        display: block !important;
-    }
-    
-    /* Bottone hamburger mobile */
+    /* NASCONDI COMPLETAMENTE sidebar e bottone hamburger su mobile */
+    .sidebar-menu,
     .mobile-menu-toggle {
-        position: fixed;
-        top: 80px;
-        left: 15px;
-        z-index: 1000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        display: none !important;
     }
     
-    /* Overlay scuro quando menu aperto */
-    body.menu-open::after {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
+    /* Dashboard a tutto schermo su mobile */
+    .col-md-9 {
         width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.6);
-        z-index: 9998;
+        max-width: 100%;
+        flex: 0 0 100%;
+        padding: 0.5rem;
+    }
+    
+    /* Nascondi tutte le sezioni tranne dashboard */
+    #macchinari-section,
+    #interventi-section,
+    #magazzino-section,
+    #calendario-section,
+    #report-section {
+        display: none !important;
     }
     
     .navbar {
