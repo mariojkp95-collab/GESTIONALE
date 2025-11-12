@@ -1,8 +1,8 @@
 // Gestionale Manutenzioni
 
 // ==================== VERSION LOG ====================
-const APP_VERSION = '2.1.0';
-const LAST_UPDATE = '2025-11-12 - Dashboard Operativa';
+const APP_VERSION = '2.1.1';
+const LAST_UPDATE = '2025-11-12 - UX Polish';
 
 console.log('%c┌─────────────────────────────────────────────┐', 'color: #8b0000; font-weight: bold;');
 console.log('%c│   🔧 GESTIONALE MANUTENZIONI RJ             │', 'color: #8b0000; font-weight: bold;');
@@ -528,20 +528,20 @@ function renderInterventionsTable() {
         const durationText = formatDuration(intervention.hours, intervention.minutes);
         
         const statusButton = intervention.status === 'programmato'
-            ? `<button class="btn btn-sm btn-success me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">✓</button>`
+            ? `<button class="btn btn-sm btn-danger me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">Conferma</button>`
             : '';
         
         return `
             <tr>
                 <td>${date}</td>
                 <td>${machineName}</td>
-                <td><span class="badge bg-primary">${intervention.type}</span></td>
+                <td><span class="badge bg-secondary">${intervention.type}</span></td>
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
                 <td>
                     ${statusButton}
-                    <button class="btn btn-sm btn-warning me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
+                    <button class="btn btn-sm btn-secondary me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
@@ -671,7 +671,7 @@ function updateTodayPriorities() {
     const card = document.getElementById('today-priorities-card');
     
     if (overdue.length === 0 && todayTomorrow.length === 0) {
-        prioritiesDiv.innerHTML = '<p class="text-muted mb-0">Nessuna priorità critica oggi ✅</p>';
+        prioritiesDiv.innerHTML = '<p class="text-muted mb-0">Nessuna priorità critica oggi</p>';
         card.classList.remove('border-danger');
         card.classList.add('border-success');
         card.querySelector('.card-header').classList.remove('bg-danger');
@@ -685,7 +685,7 @@ function updateTodayPriorities() {
         let html = '<div class="list-group list-group-flush">';
         
         if (overdue.length > 0) {
-            html += '<div class="list-group-item list-group-item-danger"><strong>❌ SCADUTI (' + overdue.length + '):</strong></div>';
+            html += '<div class="list-group-item list-group-item-danger"><strong>SCADUTI (' + overdue.length + '):</strong></div>';
             overdue.slice(0, 5).forEach(d => {
                 html += `<div class="list-group-item">
                     <strong>${d.machineName}</strong> - Scaduto da ${Math.abs(d.daysRemaining)} giorni
@@ -695,7 +695,7 @@ function updateTodayPriorities() {
         }
         
         if (todayTomorrow.length > 0) {
-            html += '<div class="list-group-item list-group-item-warning"><strong>⏰ OGGI/DOMANI (' + todayTomorrow.length + '):</strong></div>';
+            html += '<div class="list-group-item list-group-item-warning"><strong>OGGI/DOMANI (' + todayTomorrow.length + '):</strong></div>';
             todayTomorrow.forEach(d => {
                 const when = d.daysRemaining === 0 ? 'OGGI' : 'DOMANI';
                 html += `<div class="list-group-item">
@@ -722,7 +722,7 @@ function updateShiftNotes() {
             const noteDate = new Date(note.timestamp);
             const dateStr = noteDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
             const isImportant = note.important ? ' border-warning' : '';
-            const icon = note.important ? '⚠️' : '📝';
+            const icon = note.important ? '[!]' : '';
             
             html += `<div class="card mb-2${isImportant}">
                 <div class="card-body py-2 px-3">
@@ -741,14 +741,23 @@ function updateShiftNotes() {
 }
 
 function addShiftNote() {
-    const userEmail = document.getElementById('user-email').textContent || 'Anonimo';
-    const text = prompt('Inserisci nota per il prossimo turno:');
+    // Pulisci campi
+    document.getElementById('shift-note-text').value = '';
+    document.getElementById('shift-note-important').checked = false;
     
-    if (text && text.trim()) {
-        const important = confirm('Segnare come IMPORTANTE (⚠️)?');
-        
+    // Apri modal
+    const modal = new bootstrap.Modal(document.getElementById('shift-note-modal'));
+    modal.show();
+}
+
+function saveShiftNote() {
+    const userEmail = document.getElementById('user-email').textContent || 'Anonimo';
+    const text = document.getElementById('shift-note-text').value.trim();
+    const important = document.getElementById('shift-note-important').checked;
+    
+    if (text) {
         shiftNotes.push({
-            text: text.trim(),
+            text: text,
             author: userEmail,
             timestamp: new Date().toISOString(),
             important: important
@@ -756,6 +765,11 @@ function addShiftNote() {
         
         localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
         updateShiftNotes();
+        
+        // Chiudi modal
+        bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
+    } else {
+        alert('Inserisci un testo per la nota');
     }
 }
 
@@ -776,7 +790,7 @@ function updateAttentions() {
     const overdueList = document.getElementById('overdue-list');
     
     if (overdue.length === 0) {
-        overdueList.innerHTML = '<small class="text-muted">✅ Nessun intervento in ritardo</small>';
+        overdueList.innerHTML = '<small class="text-muted">Nessun intervento in ritardo</small>';
     } else {
         let html = '<ul class="list-unstyled mb-0">';
         overdue.slice(0, 5).forEach(d => {
@@ -795,12 +809,13 @@ function updateAttentions() {
     const lowStockList = document.getElementById('low-stock-list');
     
     if (lowStock.length === 0) {
-        lowStockList.innerHTML = '<small class="text-muted">✅ Scorte sufficienti</small>';
+        lowStockList.innerHTML = '<small class="text-muted">Scorte sufficienti</small>';
     } else {
-        let html = '<ul class="list-unstyled mb-0">';
+        let html = '<ul class="list-unstyled mb-0" style="color: var(--text-primary);">';
         lowStock.slice(0, 5).forEach(c => {
-            const status = c.quantity === 0 ? '❌ ESAURITO' : `⚠️ ${c.quantity} pz`;
-            html += `<li class="mb-1"><small>• <strong>${c.name}</strong> (${status})</small></li>`;
+            const status = c.quantity === 0 ? 'ESAURITO' : `${c.quantity} pz`;
+            const statusClass = c.quantity === 0 ? 'text-danger' : 'text-warning';
+            html += `<li class="mb-1"><small>• <strong>${c.name}</strong> <span class="${statusClass}">(${status})</span></small></li>`;
         });
         if (lowStock.length > 5) {
             html += `<li><small class="text-muted">...e altri ${lowStock.length - 5}</small></li>`;
@@ -819,32 +834,56 @@ function updateWeekSchedule() {
     // Prossimi 7 giorni (esclusi oggi che è già in priorità)
     const nextWeek = deadlines.filter(d => d.daysRemaining > 1 && d.daysRemaining <= 7);
     
+    // Aggiungi interventi programmati nei prossimi 7 giorni
+    const scheduledInterventions = interventions.filter(i => {
+        if (i.status === 'programmato' && i.date) {
+            const intervDate = new Date(i.date);
+            intervDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil((intervDate - today) / (1000 * 60 * 60 * 24));
+            return diffDays > 1 && diffDays <= 7;
+        }
+        return false;
+    });
+    
     const scheduleDiv = document.getElementById('week-schedule');
     
-    if (nextWeek.length === 0) {
+    if (nextWeek.length === 0 && scheduledInterventions.length === 0) {
         scheduleDiv.innerHTML = '<p class="text-muted">Nessun intervento programmato nei prossimi 7 giorni</p>';
     } else {
         // Raggruppa per giorno
         const byDay = {};
+        
+        // Aggiungi scadenze manutenzione
         nextWeek.forEach(d => {
             const key = d.daysRemaining;
             if (!byDay[key]) byDay[key] = [];
-            byDay[key].push(d);
+            byDay[key].push({ type: 'scadenza', text: d.machineName });
+        });
+        
+        // Aggiungi interventi programmati
+        scheduledInterventions.forEach(i => {
+            const intervDate = new Date(i.date);
+            intervDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil((intervDate - today) / (1000 * 60 * 60 * 24));
+            if (!byDay[diffDays]) byDay[diffDays] = [];
+            const machineName = getMachineName(i.machine_id);
+            byDay[diffDays].push({ type: 'programmato', text: `${machineName} - ${i.type}` });
         });
         
         let html = '';
         Object.keys(byDay).sort((a, b) => a - b).forEach(days => {
-            const interventions = byDay[days];
+            const items = byDay[days];
             const date = new Date(today);
             date.setDate(date.getDate() + parseInt(days));
             const dateStr = date.toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
             
             html += `<div class="mb-2">
-                <h6 class="mb-1">📅 ${dateStr} (tra ${days}gg)</h6>
+                <h6 class="mb-1">${dateStr} (tra ${days}gg)</h6>
                 <ul class="list-unstyled ms-3 mb-0">`;
             
-            interventions.forEach(d => {
-                html += `<li><small>• ${d.machineName}</small></li>`;
+            items.forEach(item => {
+                const badge = item.type === 'scadenza' ? '<span class="badge bg-info">Scadenza</span>' : '<span class="badge bg-primary">Programmato</span>';
+                html += `<li><small>${badge} ${item.text}</small></li>`;
             });
             
             html += `</ul></div>`;
@@ -2201,20 +2240,20 @@ function filterInterventions() {
         const durationText = formatDuration(intervention.hours, intervention.minutes);
         
         const statusButton = intervention.status === 'programmato'
-            ? `<button class="btn btn-sm btn-success me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">✓</button>`
+            ? `<button class="btn btn-sm btn-danger me-2" onclick="markAsCompleted('${intervention.id}')" title="Segna come effettuato">Conferma</button>`
             : '';
         
         return `
             <tr>
                 <td>${date}</td>
                 <td>${machineName}</td>
-                <td><span class="badge bg-primary">${intervention.type}</span></td>
+                <td><span class="badge bg-secondary">${intervention.type}</span></td>
                 <td>${statusBadge}</td>
                 <td>${intervention.description}</td>
                 <td>${durationText}</td>
                 <td>
                     ${statusButton}
-                    <button class="btn btn-sm btn-warning me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
+                    <button class="btn btn-sm btn-secondary me-2" onclick="editIntervention('${intervention.id}')">Modifica</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteIntervention('${intervention.id}')">Elimina</button>
                 </td>
             </tr>
@@ -2513,7 +2552,7 @@ function showDayDetails(dateKey) {
                 }
                 
                 html += `<div class="day-event-item">
-                    <h6>📅 Scadenza Manutenzione</h6>
+                    <h6>Scadenza Manutenzione</h6>
                     <span class="badge ${badgeClass} mb-2">${statusText}</span>
                     <p class="mb-1"><strong>Macchina:</strong> ${event.data.machineName}</p>
                     <p class="mb-1"><strong>Tipo intervento previsto:</strong> ${event.data.interventionType}</p>

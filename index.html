@@ -96,6 +96,34 @@
         </div>
     </div>
 
+    <!-- Modal Nota Turno -->
+    <div id="shift-note-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Aggiungi Nota Turno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Testo Nota</label>
+                        <textarea class="form-control" id="shift-note-text" rows="3" placeholder="Descrivi problema, situazione o informazione per il prossimo turno..."></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="shift-note-important">
+                        <label class="form-check-label" for="shift-note-important">
+                            Segna come IMPORTANTE
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-primary" onclick="saveShiftNote()">Salva Nota</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container-fluid mt-4">
         <div class="row">
             <!-- Sidebar -->
@@ -136,14 +164,14 @@
             <div class="col-md-9">
                 <div id="dashboard-section" class="content-section">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2>🏠 Dashboard Operativa</h2>
+                        <h2>Dashboard Operativa</h2>
                         <small class="text-muted" id="current-datetime"></small>
                     </div>
 
                     <!-- PRIORITÀ OGGI -->
                     <div class="card mb-3 border-danger" id="today-priorities-card">
                         <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0">🚨 PRIORITÀ OGGI</h5>
+                            <h5 class="mb-0">PRIORITÀ OGGI</h5>
                         </div>
                         <div class="card-body" id="today-priorities">
                             <p class="text-muted mb-0">Nessuna priorità critica oggi</p>
@@ -154,7 +182,7 @@
                     <div class="card mb-3 border-warning">
                         <div class="card-header" style="background-color: var(--accent-primary); color: white;">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">📋 Note Turno</h5>
+                                <h5 class="mb-0">Note Turno</h5>
                                 <button class="btn btn-sm btn-light" onclick="addShiftNote()">+ Aggiungi Nota</button>
                             </div>
                         </div>
@@ -170,7 +198,7 @@
                         <div class="col-md-6">
                             <div class="card h-100">
                                 <div class="card-header bg-warning">
-                                    <h5 class="mb-0">⚠️ Attenzioni</h5>
+                                    <h5 class="mb-0">Attenzioni</h5>
                                 </div>
                                 <div class="card-body">
                                     <h6 class="text-danger">Interventi in Ritardo: <span id="overdue-count">0</span></h6>
@@ -190,7 +218,7 @@
                         <div class="col-md-6">
                             <div class="card h-100">
                                 <div class="card-header bg-info">
-                                    <h5 class="mb-0">📅 Prossimi 7 Giorni</h5>
+                                    <h5 class="mb-0">Prossimi 7 Giorni</h5>
                                 </div>
                                 <div class="card-body" style="max-height: 320px; overflow-y: auto;">
                                     <div id="week-schedule">
@@ -204,28 +232,28 @@
                     <!-- QUICK ACTIONS -->
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">🔧 Azioni Rapide</h5>
+                            <h5 class="mb-0">Azioni Rapide</h5>
                         </div>
                         <div class="card-body">
                             <div class="row g-2">
                                 <div class="col-md-3 col-6">
-                                    <button class="btn btn-primary w-100" onclick="showSection('interventi'); setTimeout(() => document.getElementById('add-intervention-btn').click(), 100);">
-                                        ➕ Nuovo Intervento
+                                    <button class="btn btn-danger w-100" onclick="showAddInterventionModal()">
+                                        Nuovo Intervento
                                     </button>
                                 </div>
                                 <div class="col-md-3 col-6">
-                                    <button class="btn btn-success w-100" onclick="showSection('magazzino')">
-                                        📦 Cerca Componente
+                                    <button class="btn btn-danger w-100" onclick="showAddComponentModal()">
+                                        Nuovo Componente
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <button class="btn btn-danger w-100" onclick="showAddMachineModal()">
+                                        Nuovo Macchinario
                                     </button>
                                 </div>
                                 <div class="col-md-3 col-6">
                                     <button class="btn btn-info w-100" onclick="showSection('calendario')">
-                                        📆 Vedi Scadenze
-                                    </button>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <button class="btn btn-warning w-100" onclick="showSection('macchinari')">
-                                        🔩 Gestisci Macchinari
+                                        Vedi Scadenze
                                     </button>
                                 </div>
                             </div>
@@ -390,7 +418,7 @@
                 <div id="interventi-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2>Registro Interventi</h2>
-                        <button class="btn btn-success" onclick="showAddInterventionModal()">+ Registra Intervento</button>
+                        <button class="btn btn-danger" onclick="showAddInterventionModal()">+ Registra Intervento</button>
                     </div>
                     <div class="card mb-3">
                         <div class="card-body py-2">
@@ -447,7 +475,7 @@
                 <div id="magazzino-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>Magazzino Componenti e Ricambi</h2>
-                        <button class="btn btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
+                        <button class="btn btn-danger" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
                     </div>
                     
                     <div class="row mb-3">

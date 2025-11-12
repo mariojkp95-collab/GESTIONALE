@@ -150,12 +150,15 @@ body {
     border-radius: 16px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
+    transform: translateZ(0);
 }
 
 .card:hover {
     border-color: var(--accent-primary);
     box-shadow: 0 8px 24px rgba(139, 0, 0, 0.2);
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
 }
 
 .card-header {
@@ -1062,6 +1065,27 @@ button, a, input, select, textarea {
         padding: 0.75rem 1rem;
     }
     
+    /* Dashboard operativa mobile */
+    #today-priorities-card .list-group-item {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    #shift-notes .card {
+        font-size: 0.875rem;
+    }
+    
+    #overdue-list,
+    #low-stock-list,
+    #week-schedule {
+        font-size: 0.875rem;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.2em 0.4em;
+    }
+    
     /* Dashboard cards ottimizzate */
     .dashboard-card-danger,
     .dashboard-card-warning,
@@ -1415,15 +1439,18 @@ button, a, input, select, textarea {
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
+    transform: translateZ(0);
 }
 
 .btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
     box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
 }
 
 .btn:active {
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
 }
 
 .btn::before {
