@@ -425,15 +425,13 @@ function renderMachinesTable() {
     tbody.innerHTML = machines.map(machine => {
         const lastIntervention = getLastIntervention(machine.id);
         const lastDate = lastIntervention ? new Date(lastIntervention.date).toLocaleDateString('it-IT') : 'Mai';
-        const machineComponents = components.filter(c => c.machine_id === machine.id);
         const photosCount = machinePhotos.filter(p => p.machine_id === machine.id).length;
         
         return `
             <tr style="cursor: pointer;" onclick="openMachineDetails('${machine.id}')">
                 <td>
                     <strong>${machine.name}</strong>
-                    ${photosCount > 0 ? `<span class="badge bg-info ms-2">📷 ${photosCount}</span>` : ''}
-                    ${machineComponents.length > 0 ? `<span class="badge bg-success ms-1">🔧 ${machineComponents.length}</span>` : ''}
+                    ${photosCount > 0 ? `<span class="badge bg-info ms-2">${photosCount} foto</span>` : ''}
                 </td>
                 <td>${machine.type || '-'}</td>
                 <td>${machine.location || '-'}</td>
@@ -1102,6 +1100,11 @@ function showSection(section) {
     if (section === 'report') {
         updateReportStats();
     }
+    
+    // Renderizza magazzino quando si apre quella sezione
+    if (section === 'magazzino') {
+        renderWarehouseTable();
+    }
 }
 
 // ==================== GESTIONE MACCHINARI ====================
@@ -1226,19 +1229,79 @@ function showAddInterventionModal() {
     }
     document.getElementById('add-intervention-form').reset();
     document.getElementById('intervention-date').valueAsDate = new Date();
+    
+    // Popola select componenti
+    populateComponentsSelect();
+    
     addInterventionModal.show();
+}
+
+function populateComponentsSelect() {
+    const selects = document.querySelectorAll('.component-select');
+    const options = '<option value="">Seleziona componente</option>' + 
+        components.map(c => `<option value="${c.id}">${c.name} (Disponibili: ${c.quantity})</option>`).join('');
+    
+    selects.forEach(select => select.innerHTML = options);
+}
+
+function addComponentRow() {
+    const container = document.getElementById('intervention-components-container');
+    const rowCount = container.querySelectorAll('.row').length;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'row mb-2';
+    newRow.innerHTML = `
+        <div class="col-8">
+            <select class="form-select component-select">
+                <option value="">Seleziona componente</option>
+            </select>
+        </div>
+        <div class="col-3">
+            <input type="number" class="form-control component-quantity" min="1" value="1" placeholder="Qt">
+        </div>
+        <div class="col-1">
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.row').remove()">-</button>
+        </div>
+    `;
+    
+    container.appendChild(newRow);
+    populateComponentsSelect();
 }
 
 async function saveIntervention() {
     const machineId = document.getElementById('intervention-machine').value;
     const date = document.getElementById('intervention-date').value;
     const type = document.getElementById('intervention-type').value;
+    const status = document.getElementById('intervention-status').value;
     const description = document.getElementById('intervention-description').value.trim();
     const hours = document.getElementById('intervention-hours').value;
     const minutes = document.getElementById('intervention-minutes').value;
     const nextDays = document.getElementById('intervention-next-days').value;
     
-    if (!machineId || !date || !type || !description) {
+    // Raccogli componenti utilizzati
+    const usedComponents = [];
+    const componentRows = document.querySelectorAll('#intervention-components-container .row');
+    
+    for (const row of componentRows) {
+        const selectEl = row.querySelector('.component-select');
+        const qtyEl = row.querySelector('.component-quantity');
+        
+        if (selectEl && selectEl.value && qtyEl && qtyEl.value) {
+            const componentId = selectEl.value;
+            const quantity = parseInt(qtyEl.value);
+            
+            // Verifica disponibilità
+            const component = components.find(c => c.id === componentId);
+            if (component && component.quantity < quantity) {
+                showAlert(`Quantità insufficiente per ${component.name}. Disponibili: ${component.quantity}`, 'warning');
+                return;
+            }
+            
+            usedComponents.push({ componentId, quantity });
+        }
+    }
+    
+    if (!machineId || !date || !type || !status || !description) {
         showAlert('Compila tutti i campi obbligatori', 'warning');
         return;
     }
@@ -1248,12 +1311,19 @@ async function saveIntervention() {
         machine_id: machineId,
         date,
         type,
+        status,
         description,
         hours: hours ? parseInt(hours) : 0,
         minutes: minutes ? parseInt(minutes) : 0,
         next_maintenance_days: nextDays ? parseInt(nextDays) : null,
+        used_components: usedComponents,
         created_at: new Date().toISOString()
     };
+    
+    // Scala componenti dal magazzino
+    for (const { componentId, quantity } of usedComponents) {
+        await adjustComponentStock(componentId, -quantity);
+    }
     
     // Salva su Firebase
     await saveToFirebase('interventions', newIntervention);
@@ -1357,7 +1427,7 @@ function renderMachineComponents(machineId) {
                 <td>
                     <button class="btn btn-sm btn-success" onclick="adjustComponentStock('${comp.id}', 1)">+1</button>
                     <button class="btn btn-sm btn-warning" onclick="adjustComponentStock('${comp.id}', -1)">-1</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteComponent('${comp.id}')">🗑️</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteComponent('${comp.id}')">Elimina</button>
                 </td>
             </tr>
         `;
@@ -1571,6 +1641,7 @@ function showAddComponentModal() {
 }
 
 async function saveComponent() {
+    const code = document.getElementById('component-code').value.trim();
     const name = document.getElementById('component-name').value.trim();
     const quantity = parseInt(document.getElementById('component-quantity').value);
     const minStock = parseInt(document.getElementById('component-min-stock').value) || 0;
@@ -1583,7 +1654,7 @@ async function saveComponent() {
     
     const newComponent = {
         id: generateId(),
-        machine_id: currentMachineId,
+        code,
         name,
         quantity,
         minStock,
@@ -1598,8 +1669,7 @@ async function saveComponent() {
     if (!firebaseInitialized) {
         components.push(newComponent);
         saveToStorage(STORAGE_KEYS.components, components);
-        renderMachineComponents(currentMachineId);
-        renderMachinesTable();
+        renderWarehouseTable();
         updateDashboard();
     }
     
@@ -1626,13 +1696,12 @@ async function adjustComponentStock(componentId, adjustment) {
     // Fallback localStorage
     if (!firebaseInitialized) {
         saveToStorage(STORAGE_KEYS.components, components);
-        renderMachineComponents(currentMachineId);
-        renderMachinesTable();
+        renderWarehouseTable();
         updateDashboard();
     }
     
     if (adjustment < 0) {
-        showAlert(`Prelevato 1 ${component.name}. Rimanenti: ${newQuantity}`, 'info', 2000);
+        // Non mostrare alert se chiamato da saveIntervention
     } else {
         showAlert(`Aggiunto 1 ${component.name}. Totale: ${newQuantity}`, 'success', 2000);
     }
@@ -1648,12 +1717,75 @@ function deleteComponent(componentId) {
     if (!firebaseInitialized) {
         components = components.filter(c => c.id !== componentId);
         saveToStorage(STORAGE_KEYS.components, components);
-        renderMachineComponents(currentMachineId);
-        renderMachinesTable();
+        renderWarehouseTable();
         updateDashboard();
     }
     
     showAlert('Componente eliminato', 'success');
+}
+
+// ==================== GESTIONE MAGAZZINO ====================
+
+function renderWarehouseTable() {
+    const tbody = document.getElementById('warehouse-table');
+    if (!tbody) return;
+    
+    let filtered = [...components];
+    
+    // Filtro ricerca
+    const searchTerm = document.getElementById('searchComponent')?.value.toLowerCase() || '';
+    if (searchTerm) {
+        filtered = filtered.filter(c => 
+            c.name.toLowerCase().includes(searchTerm) ||
+            (c.code && c.code.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    // Filtro scorta bassa
+    const lowStockOnly = document.getElementById('filterLowStock')?.checked || false;
+    if (lowStockOnly) {
+        filtered = filtered.filter(c => c.quantity <= c.minStock);
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nessun componente trovato</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(comp => {
+        const isLowStock = comp.quantity <= comp.minStock;
+        const statusBadge = isLowStock 
+            ? '<span class="badge bg-danger">Scorta Bassa</span>' 
+            : '<span class="badge bg-success">OK</span>';
+        
+        return `
+            <tr>
+                <td>${comp.code || '-'}</td>
+                <td>${comp.name}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="adjustComponentStock('${comp.id}', -1)">-</button>
+                        <strong>${comp.quantity}</strong>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="adjustComponentStock('${comp.id}', 1)">+</button>
+                    </div>
+                </td>
+                <td>${comp.minStock}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="deleteComponent('${comp.id}')">Elimina</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterWarehouse() {
+    renderWarehouseTable();
+}
+
+function showAddComponentModal() {
+    document.getElementById('add-component-form').reset();
+    addComponentModal.show();
 }
 
 // ==================== EXPORT DATI ====================
@@ -1717,8 +1849,7 @@ function filterMachines() {
             <tr style="cursor: pointer;" onclick="openMachineDetails('${machine.id}')">
                 <td>
                     <strong>${machine.name}</strong>
-                    ${photosCount > 0 ? `<span class="badge bg-info ms-2">📷 ${photosCount}</span>` : ''}
-                    ${machineComponents.length > 0 ? `<span class="badge bg-success ms-1">🔧 ${machineComponents.length}</span>` : ''}
+                    ${photosCount > 0 ? `<span class="badge bg-info ms-2">${photosCount} foto</span>` : ''}
                 </td>
                 <td>${machine.type || '-'}</td>
                 <td>${machine.location || '-'}</td>
@@ -2039,10 +2170,12 @@ function getEventsForDate(date) {
         
         if (intervKey === dateKey) {
             const machine = machines.find(m => m.id === intervention.machine_id);
+            const isProgrammato = intervention.status === 'programmato';
+            
             events.push({
                 type: 'intervention',
                 title: machine ? machine.name : 'Intervento',
-                className: 'event-intervention',
+                className: isProgrammato ? 'event-programmed' : 'event-intervention',
                 data: intervention
             });
         }

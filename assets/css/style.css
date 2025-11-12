@@ -811,6 +811,11 @@ button, a, input, select, textarea {
     background-color: var(--accent-primary);
 }
 
+.calendar-event.event-programmed {
+    background-color: #ffa726;
+    border: 1px dashed #ffffff;
+}
+
 .calendar-more {
     font-size: 0.7rem;
     color: var(--text-secondary);

@@ -105,6 +105,9 @@
                         <button class="list-group-item list-group-item-action" onclick="showSection('interventi')">
                             Interventi
                         </button>
+                        <button class="list-group-item list-group-item-action" onclick="showSection('magazzino')">
+                            Magazzino
+                        </button>
                         <button class="list-group-item list-group-item-action" onclick="showSection('calendario')">
                             Scadenze
                         </button>
@@ -210,7 +213,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-info mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title" style="color: #ffffff;">⏱️ Ore Totali</h5>
+                                    <h5 class="card-title" style="color: #ffffff;">Ore Totali</h5>
                                     <h2 id="total-hours" style="color: #ffffff;">0</h2>
                                     <small style="color: #ffffff;">Ore di manutenzione</small>
                                 </div>
@@ -219,7 +222,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-success mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title" style="color: #ffffff;">🔧 Interventi Totali</h5>
+                                    <h5 class="card-title" style="color: #ffffff;">Interventi Totali</h5>
                                     <h2 id="total-interventions" style="color: #ffffff;">0</h2>
                                     <small style="color: #ffffff;">Manutenzioni eseguite</small>
                                 </div>
@@ -228,7 +231,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-warning mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title" style="color: #ffffff;">🏭 Macchinari Attivi</h5>
+                                    <h5 class="card-title" style="color: #ffffff;">Macchinari Attivi</h5>
                                     <h2 id="active-machines" style="color: #ffffff;">0</h2>
                                     <small style="color: #ffffff;">In gestione</small>
                                 </div>
@@ -237,7 +240,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-primary mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title" style="color: #ffffff;">📦 Componenti Usati</h5>
+                                    <h5 class="card-title" style="color: #ffffff;">Componenti Usati</h5>
                                     <h2 id="total-components" style="color: #ffffff;">0</h2>
                                     <small style="color: #ffffff;">Pezzi in inventario</small>
                                 </div>
@@ -332,7 +335,7 @@
                             <div class="row g-2">
                                 <div class="col-md-6">
                                     <input type="text" class="form-control" id="searchMachine" 
-                                           placeholder="🔍 Cerca per nome, tipo o ubicazione..." 
+                                           placeholder="Cerca per nome, tipo o ubicazione..." 
                                            onkeyup="filterMachines()">
                                 </div>
                                 <div class="col-md-3">
@@ -427,6 +430,48 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Magazzino Section -->
+                <div id="magazzino-section" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Magazzino Componenti e Ricambi</h2>
+                        <button class="btn btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="searchComponent" 
+                                   placeholder="Cerca componente..." 
+                                   onkeyup="filterWarehouse()">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="filterLowStock" onchange="filterWarehouse()">
+                                <label class="form-check-label" for="filterLowStock">
+                                    Solo scorta bassa
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Codice</th>
+                                    <th>Nome Componente</th>
+                                    <th>Quantità</th>
+                                    <th>Scorta Min.</th>
+                                    <th>Stato</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="warehouse-table">
+                                <tr><td colspan="6" class="text-center text-muted">Nessun componente registrato</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -550,12 +595,19 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Stato Intervento *</label>
+                            <select class="form-select" id="intervention-status" required>
+                                <option value="programmato">Programmato</option>
+                                <option value="effettuato">Effettuato</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Descrizione *</label>
                             <textarea class="form-control" id="intervention-description" rows="3" required></textarea>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">⏱️ Ore Lavoro</label>
+                                <label class="form-label">Ore Lavoro</label>
                                 <input type="number" class="form-control" id="intervention-hours" min="0" placeholder="es. 2">
                             </div>
                             <div class="col-md-6 mb-3">
@@ -566,6 +618,24 @@
                         <div class="mb-3">
                             <label class="form-label">Prossima Scadenza (giorni)</label>
                             <input type="number" class="form-control" id="intervention-next-days" placeholder="es. 90">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Componenti Utilizzati</label>
+                            <div id="intervention-components-container">
+                                <div class="row mb-2">
+                                    <div class="col-8">
+                                        <select class="form-select component-select">
+                                            <option value="">Seleziona componente</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="number" class="form-control component-quantity" min="1" value="1" placeholder="Qt">
+                                    </div>
+                                    <div class="col-1">
+                                        <button type="button" class="btn btn-sm btn-success" onclick="addComponentRow()">+</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -586,61 +656,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" id="machineDetailsTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="components-tab" data-bs-toggle="tab" data-bs-target="#components" type="button">
-                                � Componenti & Ricambi
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button">
-                                � Foto
-                            </button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="machineDetailsTabContent">
-                        <!-- Tab Componenti (PRIMO) -->
-                        <div class="tab-pane fade show active" id="components" role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Inventario Componenti</h6>
-                                <div>
-                                    <div class="form-check form-switch d-inline-block me-3">
-                                        <input class="form-check-input" type="checkbox" id="filterLowStock" onchange="filterComponents()">
-                                        <label class="form-check-label" for="filterLowStock">
-                                            Solo scorta bassa
-                                        </label>
-                                    </div>
-                                    <button class="btn btn-sm btn-success" onclick="showAddComponentModal()">+ Aggiungi Componente</button>
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Componente</th>
-                                            <th>Quantità</th>
-                                            <th>Scorta Min.</th>
-                                            <th>Azioni</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="machine-components-table">
-                                        <tr><td colspan="4" class="text-center text-muted">Nessun componente registrato</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <!-- Tab Foto (SECONDO) -->
-                        <div class="tab-pane fade" id="photos" role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Galleria Foto</h6>
-                                <button class="btn btn-sm btn-primary" onclick="showAddPhotoModal()">📷 Aggiungi Foto</button>
-                            </div>
-                            <div class="row" id="machine-photos-container">
-                                <p class="text-muted text-center">Nessuna foto caricata</p>
-                            </div>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Galleria Foto</h6>
+                        <button class="btn btn-sm btn-primary" onclick="showAddPhotoModal()">Aggiungi Foto</button>
+                    </div>
+                    <div class="row" id="machine-photos-container">
+                        <p class="text-muted text-center">Nessuna foto caricata</p>
                     </div>
                 </div>
             </div>
@@ -680,6 +701,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="add-component-form">
+                        <div class="mb-3">
+                            <label class="form-label">Codice Componente</label>
+                            <input type="text" class="form-control" id="component-code" placeholder="es. FO-123, CINGH-45">
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Nome Componente/Ricambio *</label>
                             <input type="text" class="form-control" id="component-name" placeholder="es. Filtro olio, Cinghia, Cuscinetto" required>
