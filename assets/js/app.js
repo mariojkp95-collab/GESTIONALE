@@ -1121,6 +1121,11 @@ function showSection(section) {
     if (section === 'magazzino') {
         renderWarehouseTable();
     }
+    
+    // Chiudi sidebar su mobile dopo aver selezionato una sezione
+    if (window.innerWidth < 992) {
+        toggleMobileSidebar();
+    }
 }
 
 // ==================== GESTIONE MACCHINARI ====================
@@ -2430,35 +2435,4 @@ function toggleMobileSidebar() {
         document.body.style.overflow = '';
     }
 }
-
-// Chiudi sidebar quando si cambia sezione su mobile
-function showSection(sectionId) {
-    // Nascondi tutte le sezioni
-    document.querySelectorAll('.main-content > section').forEach(sec => {
-        sec.style.display = 'none';
-    });
-    // Mostra la sezione selezionata
-    document.getElementById(sectionId).style.display = 'block';
-    // Aggiorna menu attivo
-    document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
-    event.target.classList.add('active');
-    // Renderizza calendario quando si apre quella sezione
-    if (sectionId === 'calendario-section') {
-        setTimeout(renderCalendar, 100);
-    }
-    // Renderizza report e grafici quando si apre quella sezione
-    if (sectionId === 'report-section') {
-        updateReportStats();
-    }
-    // Renderizza magazzino quando si apre quella sezione
-    if (sectionId === 'magazzino-section') {
-        renderWarehouse();
-    }
-    
-    // Chiudi sidebar su mobile dopo aver selezionato una sezione
-    if (window.innerWidth < 992) {
-        toggleMobileSidebar();
-    }
-}
-
 
