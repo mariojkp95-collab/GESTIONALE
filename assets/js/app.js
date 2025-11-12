@@ -257,6 +257,8 @@ function setupFirebaseListeners() {
             firebaseNotes.push({ id: doc.id, ...doc.data() });
         });
         
+        console.log(`📝 Note turno Firebase: ${firebaseNotes.length}, localStorage: ${shiftNotes.length}`);
+        
         // Se Firebase è vuoto e localStorage ha dati, migra su Firebase
         if (firebaseNotes.length === 0 && shiftNotes.length > 0) {
             console.log('📤 Migrazione note turno da localStorage a Firebase...');
@@ -270,6 +272,7 @@ function setupFirebaseListeners() {
             // Usa i dati da Firebase
             shiftNotes = firebaseNotes;
             localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+            console.log('✅ Note turno sincronizzate da Firebase:', shiftNotes.length);
             updateShiftNotes();
         }
     });
@@ -835,6 +838,8 @@ function saveShiftNote() {
     const text = document.getElementById('shift-note-text').value.trim();
     const important = document.getElementById('shift-note-important').checked;
     const photoInput = document.getElementById('shift-note-photo');
+    
+    console.log('💾 Salvataggio nota - Firebase inizializzato:', firebaseInitialized);
     
     if (text) {
         const note = {
