@@ -608,13 +608,9 @@ textarea.form-control {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .col-md-3 {
-        margin-bottom: 20px;
-    }
-    
     /* Nasconde sidebar su mobile di default */
     .sidebar-menu {
-        display: none;
+        display: none !important;
         position: fixed;
         top: 0;
         left: 0;
@@ -628,7 +624,7 @@ textarea.form-control {
     }
     
     .sidebar-menu.show {
-        display: block;
+        display: block !important;
     }
     
     /* Bottone hamburger mobile */

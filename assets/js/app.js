@@ -763,6 +763,8 @@ function updatePrioritiesAndAttentions() {
 function updateShiftNotes() {
     const notesDiv = document.getElementById('shift-notes');
     
+    console.log('📝 Note turno caricate:', shiftNotes.length, shiftNotes);
+    
     if (shiftNotes.length === 0) {
         notesDiv.innerHTML = '<p class="text-muted">Nessuna nota dal turno precedente</p>';
     } else {
