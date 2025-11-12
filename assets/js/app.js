@@ -252,13 +252,26 @@ function setupFirebaseListeners() {
     
     // Listener per note turno
     onSnapshot(collection(db, FIREBASE_COLLECTIONS.shiftNotes), (snapshot) => {
-        shiftNotes = [];
+        const firebaseNotes = [];
         snapshot.forEach((doc) => {
-            shiftNotes.push({ id: doc.id, ...doc.data() });
+            firebaseNotes.push({ id: doc.id, ...doc.data() });
         });
-        // Salva in localStorage per compatibilità
-        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
-        updateShiftNotes();
+        
+        // Se Firebase è vuoto e localStorage ha dati, migra su Firebase
+        if (firebaseNotes.length === 0 && shiftNotes.length > 0) {
+            console.log('📤 Migrazione note turno da localStorage a Firebase...');
+            const { addDoc } = window.firebaseModules;
+            shiftNotes.forEach(note => {
+                addDoc(collection(db, FIREBASE_COLLECTIONS.shiftNotes), note)
+                    .then(() => console.log('✅ Nota migrata'))
+                    .catch(err => console.error('❌ Errore migrazione:', err));
+            });
+        } else {
+            // Usa i dati da Firebase
+            shiftNotes = firebaseNotes;
+            localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
+            updateShiftNotes();
+        }
     });
 }
 
