@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -108,6 +108,9 @@
                         <button class="list-group-item list-group-item-action" onclick="showSection('calendario')">
                             Scadenze
                         </button>
+                        <button class="list-group-item list-group-item-action" onclick="showSection('report')">
+                            Report e Statistiche
+                        </button>
                     </div>
                 </div>
                 <div class="card mt-3">
@@ -120,11 +123,85 @@
             <!-- Main Content -->
             <div class="col-md-9">
                 <!-- Dashboard Section -->
-                <div id="dashboard-section" class="content-section">
+                                <div id="dashboard-section" class="content-section">
+                    <h2>Dashboard</h2>
+                    <div class="row">
+                        <!-- Riga 1 -->
+                        <div class="col-md-4">
+                            <div class="card dashboard-card-danger mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"> Scadenze in Ritardo</h5>
+                                    <h2 id="overdue-deadlines">0</h2>
+                                    <small>Interventi non completati</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card dashboard-card-warning mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"> Componenti Sotto Scorta</h5>
+                                    <h2 id="low-stock-components">0</h2>
+                                    <small>Quantità  2 unità</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card dashboard-card-info mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"> Interventi Questo Mese</h5>
+                                    <h2 id="month-interventions">0</h2>
+                                    <small id="month-interventions-detail">Nessuno</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Riga 2 -->
+                        <div class="col-md-4">
+                            <div class="card dashboard-card-primary mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"> Macchina Più Attiva</h5>
+                                    <h3 id="most-active-machine" style="font-size: 1.2rem;">-</h3>
+                                    <small id="most-active-count">Nessun intervento</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card dashboard-card-success mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"> Prossima Scadenza</h5>
+                                    <h3 id="next-deadline-machine" style="font-size: 1.2rem;">-</h3>
+                                    <small id="next-deadline-date">Nessuna scadenza</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card dashboard-card-neutral mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"> Ultima Attività</h5>
+                                    <h3 id="last-activity-machine" style="font-size: 1.2rem;">-</h3>
+                                    <small id="last-activity-date">Nessuna attività</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            Ultimi Interventi
+                        </div>
+                        <div class="card-body">
+                            <div id="recent-interventions">
+                                <p class="text-muted">Nessun intervento registrato</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Section -->
+                <div id="report-section" class="content-section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2>Report e Statistiche</h2>
                         <button class="btn btn-primary" onclick="exportMonthlyReport()">
-                            📄 Esporta Report PDF
+                             Esporta Report PDF
                         </button>
                     </div>
 
@@ -133,7 +210,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-info mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">⏱️ Ore Totali</h5>
+                                    <h5 class="card-title"> Ore Totali</h5>
                                     <h2 id="total-hours">0</h2>
                                     <small>Ore di manutenzione</small>
                                 </div>
@@ -142,7 +219,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-success mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">🔧 Interventi Totali</h5>
+                                    <h5 class="card-title"> Interventi Totali</h5>
                                     <h2 id="total-interventions">0</h2>
                                     <small>Manutenzioni eseguite</small>
                                 </div>
@@ -151,7 +228,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-warning mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">🏭 Macchinari Attivi</h5>
+                                    <h5 class="card-title"> Macchinari Attivi</h5>
                                     <h2 id="active-machines">0</h2>
                                     <small>In gestione</small>
                                 </div>
@@ -160,7 +237,7 @@
                         <div class="col-md-3">
                             <div class="card dashboard-card-primary mb-3">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title">� Componenti Usati</h5>
+                                    <h5 class="card-title"> Componenti Usati</h5>
                                     <h2 id="total-components">0</h2>
                                     <small>Pezzi in inventario</small>
                                 </div>
@@ -173,7 +250,7 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    ⏱️ Tempo Interventi per Macchinario (Ore)
+                                     Tempo Interventi per Macchinario (Ore)
                                 </div>
                                 <div class="card-body">
                                     <canvas id="machineTimeChart" height="300"></canvas>
@@ -183,7 +260,7 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    📊 Distribuzione Tipi di Intervento
+                                     Distribuzione Tipi di Intervento
                                 </div>
                                 <div class="card-body">
                                     <canvas id="interventionTypeChart" height="300"></canvas>
@@ -196,7 +273,7 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    📈 Interventi Ultimi 6 Mesi
+                                     Interventi Ultimi 6 Mesi
                                 </div>
                                 <div class="card-body">
                                     <canvas id="monthlyTrendChart" height="300"></canvas>
@@ -206,7 +283,7 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    🔧 Componenti Più Utilizzati
+                                     Componenti Più Utilizzati
                                 </div>
                                 <div class="card-body">
                                     <canvas id="topComponentsChart" height="300"></canvas>
@@ -218,7 +295,7 @@
                     <!-- Tabella Statistiche Dettagliate -->
                     <div class="card">
                         <div class="card-header">
-                            📋 Statistiche Dettagliate per Macchinario
+                             Statistiche Dettagliate per Macchinario
                         </div>
                         <div class="card-body">
                             <table class="table table-striped">
@@ -707,3 +784,4 @@
     <script src="assets/js/app.js?v=5.5"></script>
 </body>
 </html>
+

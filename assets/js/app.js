@@ -589,8 +589,116 @@ function getLastIntervention(machineId) {
 // Variabili globali per i grafici
 let machineTimeChart, interventionTypeChart, monthlyTrendChart, topComponentsChart;
 
-// Aggiorna dashboard con report e statistiche
+// Aggiorna dashboard classica
 function updateDashboard() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 1. Scadenze in Ritardo
+    const deadlines = calculateDeadlines();
+    const overdueDeadlines = deadlines.filter(d => d.daysRemaining < 0);
+    const overdueEl = document.getElementById('overdue-deadlines');
+    if (overdueEl) overdueEl.textContent = overdueDeadlines.length;
+    
+    // 2. Componenti Sotto Scorta
+    const lowStockComponents = components.filter(c => c.quantity <= 2);
+    const lowStockEl = document.getElementById('low-stock-components');
+    if (lowStockEl) lowStockEl.textContent = lowStockComponents.length;
+    
+    // 3. Interventi Questo Mese
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const monthInterventions = interventions.filter(i => {
+        const iDate = new Date(i.date);
+        return iDate.getMonth() === currentMonth && iDate.getFullYear() === currentYear;
+    });
+    const monthIntEl = document.getElementById('month-interventions');
+    const monthDetEl = document.getElementById('month-interventions-detail');
+    if (monthIntEl) monthIntEl.textContent = monthInterventions.length;
+    if (monthDetEl) monthDetEl.textContent = monthInterventions.length > 0 ? `${monthInterventions.length} completati` : 'Nessuno';
+    
+    // 4. Macchinario Più Attivo
+    if (machines.length > 0 && interventions.length > 0) {
+        const machineInterventionCount = {};
+        interventions.forEach(i => {
+            machineInterventionCount[i.machine_id] = (machineInterventionCount[i.machine_id] || 0) + 1;
+        });
+        
+        const mostActiveMachineId = Object.keys(machineInterventionCount).reduce((a, b) => 
+            machineInterventionCount[a] > machineInterventionCount[b] ? a : b
+        );
+        
+        const mostActiveMachine = machines.find(m => m.id === mostActiveMachineId);
+        const count = machineInterventionCount[mostActiveMachineId];
+        
+        const machEl = document.getElementById('most-active-machine');
+        const countEl = document.getElementById('most-active-count');
+        if (machEl) machEl.textContent = mostActiveMachine ? mostActiveMachine.name : '-';
+        if (countEl) countEl.textContent = `${count} interventi`;
+    } else {
+        const machEl = document.getElementById('most-active-machine');
+        const countEl = document.getElementById('most-active-count');
+        if (machEl) machEl.textContent = '-';
+        if (countEl) countEl.textContent = 'Nessun intervento';
+    }
+    
+    // 5. Prossima Scadenza
+    const upcomingDeadlines = deadlines.filter(d => d.daysRemaining >= 0).sort((a, b) => a.daysRemaining - b.daysRemaining);
+    const nextMachEl = document.getElementById('next-deadline-machine');
+    const nextDateEl = document.getElementById('next-deadline-date');
+    if (upcomingDeadlines.length > 0 && nextMachEl && nextDateEl) {
+        const nextDeadline = upcomingDeadlines[0];
+        nextMachEl.textContent = nextDeadline.machineName;
+        nextDateEl.textContent = `Tra ${nextDeadline.daysRemaining} giorni (${nextDeadline.nextDate})`;
+    } else {
+        if (nextMachEl) nextMachEl.textContent = '-';
+        if (nextDateEl) nextDateEl.textContent = 'Nessuna scadenza';
+    }
+    
+    // 6. Ultima Attività
+    const lastMachEl = document.getElementById('last-activity-machine');
+    const lastDateEl = document.getElementById('last-activity-date');
+    if (interventions.length > 0 && lastMachEl && lastDateEl) {
+        const lastIntervention = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        const machine = machines.find(m => m.id === lastIntervention.machine_id);
+        lastMachEl.textContent = machine ? machine.name : '-';
+        lastDateEl.textContent = new Date(lastIntervention.date).toLocaleDateString('it-IT');
+    } else {
+        if (lastMachEl) lastMachEl.textContent = '-';
+        if (lastDateEl) lastDateEl.textContent = 'Nessuna attività';
+    }
+    
+    // Ultimi interventi
+    const recentDiv = document.getElementById('recent-interventions');
+    if (recentDiv) {
+        const recent = [...interventions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+        
+        if (recent.length === 0) {
+            recentDiv.innerHTML = '<p class="text-muted">Nessun intervento registrato</p>';
+        } else {
+            recentDiv.innerHTML = '<ul class="list-group">' + recent.map(intervention => {
+                const machine = machines.find(m => m.id === intervention.machine_id);
+                const machineName = machine ? machine.name : 'Sconosciuto';
+                const date = new Date(intervention.date).toLocaleDateString('it-IT');
+                let durationText = '';
+                if (intervention.hours || intervention.minutes) {
+                    const h = intervention.hours || 0;
+                    const m = intervention.minutes || 0;
+                    durationText = ` - ⏱️ ${h}h ${m}m`;
+                }
+                return `
+                    <li class="list-group-item">
+                        <strong>${machineName}</strong> - ${date}${durationText}<br>
+                        <small>${intervention.type}: ${intervention.description}</small>
+                    </li>
+                `;
+            }).join('') + '</ul>';
+        }
+    }
+}
+
+// Aggiorna Report e Statistiche
+function updateReportStats() {
     // Statistiche generali
     const totalHours = interventions.reduce((sum, i) => sum + (i.hours || 0) + (i.minutes || 0) / 60, 0);
     document.getElementById('total-hours').textContent = Math.round(totalHours);
@@ -632,6 +740,13 @@ function generateMachineTimeChart() {
     
     const data = sorted.map(([, hours]) => Math.round(hours * 10) / 10);
     
+    // Colori diversi per ogni barra - gradiente dal rosso all'arancio
+    const colors = [
+        '#c62828', '#d32f2f', '#e53935', '#f44336',
+        '#e57373', '#ef5350', '#ff5252', '#ff6b6b',
+        '#ff7043', '#ffa726'
+    ];
+    
     if (machineTimeChart) machineTimeChart.destroy();
     
     machineTimeChart = new Chart(ctx, {
@@ -641,8 +756,8 @@ function generateMachineTimeChart() {
             datasets: [{
                 label: 'Ore di Manutenzione',
                 data: data,
-                backgroundColor: '#8b0000',
-                borderColor: '#a01010',
+                backgroundColor: colors.slice(0, labels.length),
+                borderColor: '#000',
                 borderWidth: 1
             }]
         },
@@ -655,7 +770,13 @@ function generateMachineTimeChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Ore' }
+                    title: { display: true, text: 'Ore', color: '#e8e8e8' },
+                    ticks: { color: '#e8e8e8' },
+                    grid: { color: '#333' }
+                },
+                x: {
+                    ticks: { color: '#e8e8e8' },
+                    grid: { color: '#333' }
                 }
             }
         }
@@ -678,7 +799,17 @@ function generateInterventionTypeChart() {
     const labels = Object.keys(typeCounts);
     const data = Object.values(typeCounts);
     
-    const colors = ['#8b0000', '#a01010', '#c62828', '#e57373', '#ff6b6b', '#ffa726', '#66bb6a'];
+    // Colori vivaci e distinti
+    const colors = [
+        '#8b0000', // rosso scuro
+        '#ff6b6b', // rosso chiaro
+        '#ffa726', // arancio
+        '#66bb6a', // verde
+        '#42a5f5', // blu
+        '#ab47bc', // viola
+        '#fdd835', // giallo
+        '#26c6da'  // ciano
+    ];
     
     if (interventionTypeChart) interventionTypeChart.destroy();
     
@@ -740,10 +871,14 @@ function generateMonthlyTrendChart() {
             datasets: [{
                 label: 'Interventi',
                 data: counts,
-                borderColor: '#8b0000',
-                backgroundColor: 'rgba(139, 0, 0, 0.1)',
+                borderColor: '#42a5f5',
+                backgroundColor: 'rgba(66, 165, 245, 0.2)',
                 fill: true,
-                tension: 0.4
+                tension: 0.4,
+                pointBackgroundColor: '#42a5f5',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5
             }]
         },
         options: {
@@ -755,13 +890,18 @@ function generateMonthlyTrendChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { stepSize: 1 }
+                    ticks: { stepSize: 1, color: '#e8e8e8' },
+                    grid: { color: '#333' },
+                    title: { display: true, text: 'N° Interventi', color: '#e8e8e8' }
+                },
+                x: {
+                    ticks: { color: '#e8e8e8' },
+                    grid: { color: '#333' }
                 }
             }
         }
     });
 }
-
 // Grafico: Componenti più utilizzati (basato su quantità bassa = molto usato)
 function generateTopComponentsChart() {
     const canvas = document.getElementById('topComponentsChart');
@@ -935,6 +1075,11 @@ function showSection(section) {
     // Renderizza calendario quando si apre quella sezione
     if (section === 'calendario') {
         renderCalendar();
+    }
+    
+    // Renderizza report e grafici quando si apre quella sezione
+    if (section === 'report') {
+        updateReportStats();
     }
 }
 
