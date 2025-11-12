@@ -186,7 +186,7 @@ body {
 .dashboard-card-primary .card-title,
 .dashboard-card-success .card-title,
 .dashboard-card-neutral .card-title {
-    color: var(--accent-primary);
+    color: var(--text-primary);
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -203,7 +203,7 @@ body {
 .dashboard-card-success h3,
 .dashboard-card-neutral h2,
 .dashboard-card-neutral h3 {
-    color: var(--accent-primary);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -213,8 +213,8 @@ body {
 .dashboard-card-primary small,
 .dashboard-card-success small,
 .dashboard-card-neutral small {
-    color: var(--accent-primary);
-    opacity: 0.8;
+    color: var(--text-secondary);
+    opacity: 0.9;
 }
 
 .list-group-item {
@@ -301,23 +301,27 @@ body {
 
 .bg-primary {
     background-color: var(--accent-primary) !important;
+    color: var(--text-primary) !important;
 }
 
 .bg-success {
     background-color: var(--success) !important;
+    color: var(--text-primary) !important;
 }
 
 .bg-warning {
     background-color: var(--warning) !important;
-    color: #000 !important;
+    color: var(--text-primary) !important;
 }
 
 .bg-danger {
     background-color: var(--danger) !important;
+    color: var(--text-primary) !important;
 }
 
 .bg-info {
     background-color: var(--info) !important;
+    color: var(--text-primary) !important;
 }
 
 .btn {
@@ -331,7 +335,7 @@ body {
 
 .btn-primary {
     background-color: var(--accent-primary);
-    color: #ffffff;
+    color: var(--text-primary);
     border: none;
 }
 
@@ -339,12 +343,12 @@ body {
     background-color: var(--accent-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .btn-success {
     background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-    color: #ffffff;
+    color: var(--text-primary);
     border: none;
     box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
@@ -353,12 +357,12 @@ body {
     background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 187, 106, 0.4);
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .btn-danger {
     background: linear-gradient(135deg, #c62828 0%, #d32f2f 100%);
-    color: #ffffff;
+    color: var(--text-primary);
     border: none;
     box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
 }
@@ -367,12 +371,12 @@ body {
     background: linear-gradient(135deg, #d32f2f 0%, #e57373 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(198, 40, 40, 0.4);
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .btn-info {
     background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
-    color: #ffffff;
+    color: var(--text-primary);
     border: none;
     box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
 }
@@ -381,12 +385,12 @@ body {
     background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent-dark) 100%);
     box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
     transform: translateY(-2px);
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .btn-warning {
     background: linear-gradient(135deg, #ff9800 0%, #ffa726 100%);
-    color: #ffffff;
+    color: var(--text-primary);
     border: none;
     box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
 }
@@ -394,7 +398,7 @@ body {
 .btn-warning:hover {
     background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%);
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
-    color: #ffffff;
+    color: var(--text-primary);
     transform: translateY(-2px);
 }
 
@@ -556,17 +560,17 @@ textarea.form-control {
 /* Status badges */
 .status-ok {
     background-color: var(--success);
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .status-warning {
     background-color: var(--warning);
-    color: #000000;
+    color: var(--text-primary);
 }
 
 .status-danger {
     background-color: var(--danger);
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .text-muted {
@@ -859,25 +863,28 @@ button, a, input, select, textarea {
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 /* 4 COLORI PER INTERVENTI */
 .calendar-event.event-completed {
     background-color: #28a745; /* Verde - Effettuato */
+    color: var(--text-primary);
 }
 
 .calendar-event.event-upcoming {
     background-color: #ffc107; /* Giallo - Programmato entro 7gg */
-    color: #000;
+    color: var(--text-primary);
 }
 
 .calendar-event.event-scheduled {
     background-color: #0d6efd; /* Blu - Programmato oltre 7gg */
+    color: var(--text-primary);
 }
 
 .calendar-event.event-overdue {
     background-color: #dc3545; /* Rosso - Programmato scaduto */
+    color: var(--text-primary);
 }
 
 .calendar-more {
