@@ -850,11 +850,42 @@ function saveShiftNote() {
             important: important
         };
         
-        // Se c'è una foto, convertila in base64
+        // Se c'è una foto, convertila in base64 compresso
         if (photoInput.files && photoInput.files[0]) {
+            const file = photoInput.files[0];
+            
+            // Comprimi immagine prima di salvare
+            const img = new Image();
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                note.photoUrl = e.target.result;
+            
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+            
+            img.onload = async function() {
+                // Crea canvas per ridimensionare
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Ridimensiona max 800px larghezza
+                let width = img.width;
+                let height = img.height;
+                const maxWidth = 800;
+                
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Comprimi a JPEG 0.7 qualità
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                note.photoUrl = compressedDataUrl;
+                
+                console.log('📸 Foto compressa:', Math.round(compressedDataUrl.length / 1024), 'KB');
                 
                 // Salva su Firebase se disponibile
                 if (firebaseInitialized && window.firebaseDb) {
@@ -862,23 +893,21 @@ function saveShiftNote() {
                     try {
                         await addDoc(collection(window.firebaseDb, FIREBASE_COLLECTIONS.shiftNotes), note);
                         console.log('✅ Nota salvata su Firebase con foto');
+                        bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
                     } catch (error) {
                         console.error('❌ Errore salvataggio nota Firebase:', error);
-                        // Fallback su localStorage
-                        shiftNotes.push(note);
-                        localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
-                        updateShiftNotes();
+                        alert('Errore: foto troppo grande. Riprova con una foto più piccola.');
                     }
                 } else {
                     // Solo localStorage se Firebase non disponibile
                     shiftNotes.push(note);
                     localStorage.setItem('shiftNotes', JSON.stringify(shiftNotes));
                     updateShiftNotes();
+                    bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
                 }
-                
-                bootstrap.Modal.getInstance(document.getElementById('shift-note-modal')).hide();
             };
-            reader.readAsDataURL(photoInput.files[0]);
+            
+            reader.readAsDataURL(file);
         } else {
             // Salva su Firebase se disponibile
             if (firebaseInitialized && window.firebaseDb) {
