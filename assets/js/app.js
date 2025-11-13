@@ -258,6 +258,7 @@ function setupFirebaseListeners() {
         });
         
         console.log(`📝 Note turno Firebase: ${firebaseNotes.length}, localStorage: ${shiftNotes.length}`);
+        console.log('📋 Dettaglio note Firebase:', firebaseNotes.map(n => `${n.author}: ${n.text.substring(0, 30)}...`));
         
         // Se Firebase è vuoto e localStorage ha dati, migra su Firebase
         if (firebaseNotes.length === 0 && shiftNotes.length > 0) {
