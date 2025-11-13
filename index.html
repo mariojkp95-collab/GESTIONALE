@@ -788,7 +788,7 @@
     
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, addDoc, setDoc, doc, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
         
@@ -809,7 +809,7 @@
         window.firebaseDb = db;
         window.firebaseAuth = auth;
         window.firebaseStorage = storage;
-        window.firebaseModules = { collection, getDocs, setDoc, doc, onSnapshot, deleteDoc };
+        window.firebaseModules = { collection, getDocs, addDoc, setDoc, doc, onSnapshot, deleteDoc };
         window.authModules = { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
         window.storageModules = { ref, uploadBytes, getDownloadURL, deleteObject };
     </script>
