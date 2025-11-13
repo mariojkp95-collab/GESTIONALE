@@ -805,6 +805,7 @@ function updateShiftNotes() {
             const dateStr = noteDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
             const isImportant = note.important ? ' border-warning' : '';
             const icon = note.important ? '[!]' : '';
+            const noteId = `note-${shiftNotes.length - 1 - index}`;
             
             html += `<div class="card mb-2${isImportant}">
                 <div class="card-body py-2 px-3">
@@ -812,7 +813,17 @@ function updateShiftNotes() {
                         <div class="flex-grow-1">
                             <small class="text-muted">${icon} ${dateStr} - ${note.author}</small>
                             <p class="mb-0 mt-1" style="color: var(--text-primary);">${note.text}</p>
-                            ${note.photoUrl ? `<img src="${note.photoUrl}" class="img-fluid mt-2 rounded" style="max-height: 200px;" alt="Foto nota">` : ''}
+                            ${note.photoUrl ? `
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleNotePhoto('${noteId}')">
+                                        <span id="${noteId}-toggle-text">📷 Mostra foto</span>
+                                    </button>
+                                    <div id="${noteId}-photo" style="display: none;" class="mt-2">
+                                        <img src="${note.photoUrl}" class="img-fluid rounded" style="max-height: 200px; cursor: pointer;" 
+                                             onclick="openPhotoLightbox('${note.photoUrl}')" alt="Foto nota" title="Clicca per ingrandire">
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                         <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteShiftNote(${shiftNotes.length - 1 - index})" title="Elimina">×</button>
                     </div>
@@ -821,6 +832,49 @@ function updateShiftNotes() {
         });
         notesDiv.innerHTML = html;
     }
+}
+
+function toggleNotePhoto(noteId) {
+    const photoDiv = document.getElementById(`${noteId}-photo`);
+    const toggleText = document.getElementById(`${noteId}-toggle-text`);
+    
+    if (photoDiv.style.display === 'none') {
+        photoDiv.style.display = 'block';
+        toggleText.textContent = '🔼 Nascondi foto';
+    } else {
+        photoDiv.style.display = 'none';
+        toggleText.textContent = '📷 Mostra foto';
+    }
+}
+
+function openPhotoLightbox(photoUrl) {
+    // Crea lightbox overlay
+    const lightbox = document.createElement('div');
+    lightbox.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+    `;
+    
+    const img = document.createElement('img');
+    img.src = photoUrl;
+    img.style.cssText = 'max-width: 95%; max-height: 95%; border-radius: 8px;';
+    
+    lightbox.appendChild(img);
+    document.body.appendChild(lightbox);
+    
+    // Chiudi al click
+    lightbox.addEventListener('click', () => {
+        document.body.removeChild(lightbox);
+    });
 }
 
 function addShiftNote() {
