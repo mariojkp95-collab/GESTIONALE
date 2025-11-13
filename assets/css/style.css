@@ -181,7 +181,7 @@ body {
 .dashboard-card-neutral {
     background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--border-color);
+    border: none;
     color: var(--text-primary);
 }
 
@@ -191,7 +191,7 @@ body {
 .dashboard-card-primary:hover,
 .dashboard-card-success:hover,
 .dashboard-card-neutral:hover {
-    border-color: var(--border-color);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .dashboard-card-danger .card-body,
