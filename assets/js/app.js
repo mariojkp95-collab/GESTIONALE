@@ -17,6 +17,7 @@ const db = getFirestore(app);
 
 let currentUser = null;
 let currentEditId = null;
+let currentMacchinarioId = null;
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -98,6 +99,7 @@ window.showSection = (sectionName) => {
     document.getElementById(sectionName + '-section').classList.add('active');
     event.target.classList.add('active');
     if (sectionName === 'dashboard') loadDashboard();
+    if (sectionName === 'macchinari') loadMacchinari();
     if (sectionName === 'manutenzioni') loadManutenzioni();
     if (sectionName === 'calendario') loadCalendar();
     if (sectionName === 'statistiche') loadStats();
@@ -128,6 +130,79 @@ async function loadDashboard() {
     document.getElementById('completed-manutenzioni').textContent = completed;
     document.getElementById('month-manutenzioni').textContent = thisMonth;
 }
+
+async function loadMacchinari() {
+    if (!currentUser) return;
+    const q = query(collection(db, 'macchinari'), where('userId', '==', currentUser.uid));
+    const snapshot = await getDocs(q);
+    const tbody = document.getElementById('macchinari-table');
+    tbody.innerHTML = '';
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + data.nome + '</td><td>' + data.modello + '</td><td>' + data.matricola + '</td><td>' + data.anno + '</td><td><span class="badge">' + data.stato + '</span></td><td><button onclick="editMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
+        tbody.appendChild(tr);
+    });
+}
+
+window.showAddMacchinarioModal = () => {
+    currentMacchinarioId = null;
+    document.getElementById('macchinario-nome').value = '';
+    document.getElementById('macchinario-modello').value = '';
+    document.getElementById('macchinario-matricola').value = '';
+    document.getElementById('macchinario-anno').value = '';
+    document.getElementById('macchinario-stato').value = 'operativo';
+    document.getElementById('macchinario-note').value = '';
+    document.getElementById('macchinario-modal').classList.add('show');
+};
+
+window.closeMacchinarioModal = () => {
+    document.getElementById('macchinario-modal').classList.remove('show');
+};
+
+window.saveMacchinario = async () => {
+    const data = {
+        userId: currentUser.uid,
+        nome: document.getElementById('macchinario-nome').value,
+        modello: document.getElementById('macchinario-modello').value,
+        matricola: document.getElementById('macchinario-matricola').value,
+        anno: document.getElementById('macchinario-anno').value,
+        stato: document.getElementById('macchinario-stato').value,
+        note: document.getElementById('macchinario-note').value,
+        createdAt: new Date().toISOString()
+    };
+    try {
+        if (currentMacchinarioId) {
+            await updateDoc(doc(db, 'macchinari', currentMacchinarioId), data);
+        } else {
+            await addDoc(collection(db, 'macchinari'), data);
+        }
+        closeMacchinarioModal();
+        loadMacchinari();
+    } catch (error) {
+        alert('Errore: ' + error.message);
+    }
+};
+
+window.editMacchinario = async (id) => {
+    currentMacchinarioId = id;
+    const docSnap = await getDoc(doc(db, 'macchinari', id));
+    const data = docSnap.data();
+    document.getElementById('macchinario-nome').value = data.nome;
+    document.getElementById('macchinario-modello').value = data.modello;
+    document.getElementById('macchinario-matricola').value = data.matricola;
+    document.getElementById('macchinario-anno').value = data.anno;
+    document.getElementById('macchinario-stato').value = data.stato;
+    document.getElementById('macchinario-note').value = data.note || '';
+    document.getElementById('macchinario-modal').classList.add('show');
+};
+
+window.deleteMacchinario = async (id) => {
+    if (confirm('Sei sicuro di voler eliminare questo macchinario?')) {
+        await deleteDoc(doc(db, 'macchinari', id));
+        loadMacchinari();
+    }
+};
 
 async function loadManutenzioni() {
     if (!currentUser) return;

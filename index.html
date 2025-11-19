@@ -45,6 +45,7 @@
         <!-- Navigation -->
         <nav class="nav">
             <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="showSection('macchinari')">Macchinari</button>
             <button class="nav-btn" onclick="showSection('manutenzioni')">Manutenzioni</button>
             <button class="nav-btn" onclick="showSection('calendario')">Calendario</button>
             <button class="nav-btn" onclick="showSection('statistiche')">Statistiche</button>
@@ -71,6 +72,33 @@
                         <div class="stat-value" id="month-manutenzioni">0</div>
                         <div class="stat-label">Questo Mese</div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Macchinari Section -->
+        <section id="macchinari-section" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Macchinari</h2>
+                    <button onclick="showAddMacchinarioModal()" class="btn-primary">Nuovo Macchinario</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Modello</th>
+                                <th>Matricola</th>
+                                <th>Anno</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="macchinari-table">
+                            <!-- Data populated by JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -120,6 +148,32 @@
                 </div>
             </div>
         </section>
+    </div>
+
+    <!-- Modal Macchinari -->
+    <div id="macchinario-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nuovo Macchinario</h3>
+                <button onclick="closeMacchinarioModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="macchinario-nome" placeholder="Nome Macchinario" class="input-field">
+                <input type="text" id="macchinario-modello" placeholder="Modello" class="input-field">
+                <input type="text" id="macchinario-matricola" placeholder="Matricola" class="input-field">
+                <input type="number" id="macchinario-anno" placeholder="Anno" class="input-field">
+                <select id="macchinario-stato" class="input-field">
+                    <option value="operativo">Operativo</option>
+                    <option value="manutenzione">In Manutenzione</option>
+                    <option value="fermo">Fermo</option>
+                </select>
+                <textarea id="macchinario-note" placeholder="Note" class="input-field"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeMacchinarioModal()" class="btn-secondary">Annulla</button>
+                <button onclick="saveMacchinario()" class="btn-primary">Salva</button>
+            </div>
+        </div>
     </div>
 
     <!-- Add/Edit Modal -->
