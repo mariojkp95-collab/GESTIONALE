@@ -275,11 +275,12 @@ function updateComponentiList() {
 
 async function loadManutenzioni() {
     if (!currentUser) return;
-    const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid), orderBy('data', 'desc'));
+    const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid));
     const snapshot = await getDocs(q);
     const tbody = document.getElementById('manutenzioni-table');
     tbody.innerHTML = '';
     
+    const manutenzioniArray = [];
     for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
         let macchinarioNome = 'N/D';
@@ -290,10 +291,20 @@ async function loadManutenzioni() {
                 macchinarioNome = maccData.nome + ' - ' + maccData.modello;
             }
         }
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + formatDate(data.data) + '</td><td>' + data.descrizione + '</td><td>' + macchinarioNome + '</td><td><span class="badge">' + data.stato + '</span></td><td><button onclick="editManutenzione(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
-        tbody.appendChild(tr);
+        manutenzioniArray.push({
+            id: docSnap.id,
+            data: data,
+            macchinarioNome: macchinarioNome
+        });
     }
+    
+    manutenzioniArray.sort((a, b) => new Date(b.data.data) - new Date(a.data.data));
+    
+    manutenzioniArray.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + formatDate(item.data.data) + '</td><td>' + item.data.descrizione + '</td><td>' + item.macchinarioNome + '</td><td><span class="badge">' + item.data.stato + '</span></td><td><button onclick="editManutenzione(\'' + item.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + item.id + '\')" class="btn-secondary">Elimina</button></td>';
+        tbody.appendChild(tr);
+    });
 }
 
 window.showAddModal = () => {
