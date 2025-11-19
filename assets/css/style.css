@@ -98,8 +98,7 @@ textarea.input-field {
 
 /* Buttons */
 .btn-primary {
-    width: 100%;
-    padding: 12px;
+    padding: 10px 20px;
     background: var(--blue);
     color: var(--white);
     border: none;
@@ -124,6 +123,10 @@ textarea.input-field {
 .btn-secondary:hover {
     background: var(--blue);
     color: var(--white);
+}
+
+.btn-full-width {
+    width: 100%;
 }
 
 .error-msg {
