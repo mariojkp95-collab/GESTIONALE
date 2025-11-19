@@ -36,6 +36,11 @@
         <header class="header">
             <div class="header-content">
                 <h1>Gestionale Manutenzioni</h1>
+                <button id="hamburger-btn" class="hamburger-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
                 <div class="header-right">
                     <span id="user-email" class="user-email"></span>
                     <button onclick="handleLogout()" class="btn-secondary">Logout</button>
@@ -44,7 +49,7 @@
         </header>
 
         <!-- Navigation -->
-        <nav class="nav">
+        <nav class="nav" id="main-nav">
             <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
             <button class="nav-btn" onclick="showSection('macchinari')">Macchinari</button>
             <button class="nav-btn" onclick="showSection('manutenzioni')">Manutenzioni</button>
@@ -56,42 +61,7 @@
         <!-- Dashboard Section -->
         <section id="dashboard-section" class="section active">
             <div class="container">
-                <div class="section-header">
-                    <h2>Dashboard</h2>
-                </div>
-                
-                <h3>URGENZE</h3>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Macchinario</th>
-                                <th>Descrizione</th>
-                                <th>Stato</th>
-                                <th>Giorni</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dash-interventi-list">
-                            <!-- Data populated by JS -->
-                        </tbody>
-                    </table>
-                    
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Codice</th>
-                                <th>Nome</th>
-                                <th>Quantità</th>
-                                <th>Scorta Min</th>
-                                <th>Stato</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dash-componenti-list">
-                            <!-- Data populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
+                <h2>Dashboard</h2>
             </div>
         </section>
 
@@ -303,16 +273,10 @@
                     <option value="">Seleziona Macchinario</option>
                 </select>
                 <input type="text" id="manutenzione-desc" placeholder="Descrizione intervento" class="input-field">
-                <select id="manutenzione-tipo" class="input-field">
-                    <option value="">Tipo Intervento</option>
-                    <option value="ordinaria">Ordinaria</option>
-                    <option value="straordinaria">Straordinaria</option>
-                    <option value="preventiva">Preventiva</option>
-                </select>
                 <select id="manutenzione-stato" class="input-field">
-                    <option value="">Stato</option>
-                    <option value="programmato">Programmato</option>
-                    <option value="completato">Completato</option>
+                    <option value="in-attesa">In Attesa</option>
+                    <option value="in-corso">In Corso</option>
+                    <option value="completata">Completata</option>
                 </select>
                 <textarea id="manutenzione-note" placeholder="Note" class="input-field"></textarea>
                 

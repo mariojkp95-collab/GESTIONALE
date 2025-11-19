@@ -318,12 +318,12 @@ textarea.input-field {
 }
 
 .stato-badge.scarso {
-  background-color: var(--blue);
+  background-color: #ff9800;
   color: white;
 }
 
 .stato-badge.esaurito {
-  background-color: var(--blue);
+  background-color: #d32f2f;
   color: white;
 }
 
@@ -518,33 +518,108 @@ textarea.input-field {
     font-size: 12px;
 }
 
+/* Hamburger - hidden on desktop */
+.hamburger-btn {
+    display: none;
+}
+
 /* Responsive Mobile */
 @media (max-width: 768px) {
-    .nav {
+    /* Fixed body */
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    /* Hamburger menu */
+    .hamburger-btn {
+        display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 4px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+    }
+    
+    .hamburger-btn span {
+        width: 25px;
+        height: 3px;
+        background: var(--black);
+        transition: 0.3s;
+    }
+    
+    .hamburger-btn.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .hamburger-btn.active span:nth-child(2) {
+        opacity: 0;
+    }
+    
+    .hamburger-btn.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+    }
+    
+    .header h1 {
+        font-size: 18px;
+    }
+    
+    .btn-secondary {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    /* Navigation mobile */
+    .nav {
+        position: fixed;
+        top: 60px;
+        left: -100%;
+        width: 250px;
+        height: calc(100% - 60px);
+        background: var(--white);
+        border-right: 1px solid var(--border);
+        flex-direction: column;
+        gap: 0;
+        padding: 20px 0;
+        transition: left 0.3s;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+    
+    .nav.open {
+        left: 0;
     }
     
     .nav-btn {
         width: 100%;
-        text-align: center;
+        text-align: left;
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        padding: 15px 20px;
     }
     
-    .table-container {
-        overflow-x: auto;
+    /* Main app scrollable */
+    .main-app {
+        height: 100vh;
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
     
+    /* Section */
+    .section {
+        min-height: auto;
+    }
+    
+    /* Tables - Hide on mobile */
     .data-table {
-        min-width: 600px;
-        font-size: 13px;
+        display: none;
     }
     
-    .data-table th,
-    .data-table td {
-        padding: 8px;
-    }
-    
+    /* Section Header */
     .section-header {
         flex-direction: column;
         align-items: stretch;
@@ -555,12 +630,13 @@ textarea.input-field {
         font-size: 20px;
     }
     
-    .btn-primary,
-    .btn-secondary {
+    /* Buttons */
+    .btn-primary {
         width: 100%;
         font-size: 14px;
     }
     
+    /* Modal */
     .modal-content {
         width: 95%;
         max-height: 90vh;
@@ -576,11 +652,7 @@ textarea.input-field {
         padding: 15px;
     }
     
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
+    /* Calendar */
     .calendar-controls {
         flex-direction: column;
         gap: 10px;
@@ -591,31 +663,34 @@ textarea.input-field {
     }
     
     .calendar-grid {
-        font-size: 12px;
-    }
-    
-    .calendar-day {
-        min-height: 60px;
-        padding: 4px;
-    }
-    
-    .day-number {
         font-size: 11px;
     }
     
-    .event-dot {
-        width: 6px;
-        height: 6px;
+    .calendar-day {
+        min-height: 50px;
+        padding: 3px;
     }
     
+    .day-number {
+        font-size: 10px;
+    }
+    
+    .event-dot {
+        width: 5px;
+        height: 5px;
+    }
+    
+    /* Container */
     .container {
         padding: 15px;
     }
     
+    /* Login */
     .login-box {
         padding: 30px 20px;
     }
     
+    /* Componente Item */
     .componente-item {
         flex-direction: column;
         align-items: flex-start;
@@ -624,29 +699,5 @@ textarea.input-field {
     
     .componente-item button {
         width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .data-table {
-        font-size: 12px;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: 6px;
-    }
-    
-    .stato-badge {
-        font-size: 10px;
-        padding: 3px 6px;
-    }
-    
-    .calendar-grid {
-        font-size: 11px;
-    }
-    
-    .calendar-day {
-        min-height: 50px;
     }
 }

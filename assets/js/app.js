@@ -109,6 +109,29 @@ window.showSection = (sectionName) => {
     if (sectionName === 'statistiche') loadStats();
 };
 
+// Hamburger menu mobile
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.getElementById('hamburger-btn');
+    const nav = document.getElementById('main-nav');
+    
+    if (hamburger) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            nav.classList.toggle('open');
+        });
+        
+        // Close menu when clicking nav button
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    hamburger.classList.remove('active');
+                    nav.classList.remove('open');
+                }
+            });
+        });
+    }
+});
+
 async function loadDashboard() {
     if (!currentUser) return;
     
@@ -199,7 +222,11 @@ async function loadDashboard() {
     componentiCritici.sort((a, b) => a.quantita - b.quantita);
     
     const interventiList = document.getElementById('dash-interventi-list');
+    const interventiContainer = interventiList.parentElement.parentElement;
     interventiList.innerHTML = '';
+    
+    // Remove existing mobile cards
+    interventiContainer.querySelectorAll('.mobile-card').forEach(card => card.remove());
     
     if (interventiCritici.length === 0) {
         interventiList.innerHTML = '<tr><td colspan="5">Nessun intervento in scadenza</td></tr>';
@@ -207,6 +234,8 @@ async function loadDashboard() {
         interventiCritici.forEach(item => {
             const giornoLabel = item.giorni < 0 ? `${Math.abs(item.giorni)} giorni fa` : `tra ${item.giorni} giorni`;
             const statoClass = item.stato === 'in-attesa' ? 'in-attesa' : (item.stato === 'in-corso' ? 'in-corso' : 'completata');
+            
+            // Desktop table row
             const row = `<tr>
                 <td>${formatDate(item.data)}</td>
                 <td>${item.macchinario}</td>
@@ -215,17 +244,35 @@ async function loadDashboard() {
                 <td>${giornoLabel}</td>
             </tr>`;
             interventiList.innerHTML += row;
+            
+            // Mobile card
+            const card = document.createElement('div');
+            card.className = 'mobile-card';
+            card.innerHTML = `
+                <div class="mobile-card-row"><span class="mobile-card-label">Data:</span><span class="mobile-card-value">${formatDate(item.data)}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Macchinario:</span><span class="mobile-card-value">${item.macchinario}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Descrizione:</span><span class="mobile-card-value">${item.descrizione}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Stato:</span><span class="mobile-card-value"><span class="stato-badge ${statoClass}">${item.stato.replace('-', ' ').toUpperCase()}</span></span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Scadenza:</span><span class="mobile-card-value">${giornoLabel}</span></div>
+            `;
+            interventiContainer.appendChild(card);
         });
     }
     
     const componentiList = document.getElementById('dash-componenti-list');
+    const componentiContainer = componentiList.parentElement.parentElement;
     componentiList.innerHTML = '';
+    
+    // Remove existing mobile cards
+    componentiContainer.querySelectorAll('.mobile-card').forEach(card => card.remove());
     
     if (componentiCritici.length === 0) {
         componentiList.innerHTML = '<tr><td colspan="5">Nessun componente sotto scorta</td></tr>';
     } else {
         componentiCritici.forEach(item => {
             const statusClass = item.status === 'ESAURITO' ? 'esaurito' : 'scarso';
+            
+            // Desktop table row
             const row = `<tr>
                 <td>${item.codice}</td>
                 <td>${item.nome}</td>
@@ -234,6 +281,18 @@ async function loadDashboard() {
                 <td><span class="stato-badge ${statusClass}">${item.status}</span></td>
             </tr>`;
             componentiList.innerHTML += row;
+            
+            // Mobile card
+            const card = document.createElement('div');
+            card.className = 'mobile-card';
+            card.innerHTML = `
+                <div class="mobile-card-row"><span class="mobile-card-label">Codice:</span><span class="mobile-card-value">${item.codice}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Nome:</span><span class="mobile-card-value">${item.nome}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Quantità:</span><span class="mobile-card-value">${item.quantita}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Scorta Min:</span><span class="mobile-card-value">${item.scortaMin}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">Stato:</span><span class="mobile-card-value"><span class="stato-badge ${statusClass}">${item.status}</span></span></div>
+            `;
+            componentiContainer.appendChild(card);
         });
     }
 }
@@ -243,12 +302,33 @@ async function loadMacchinari() {
     const q = query(collection(db, 'macchinari'), where('userId', '==', currentUser.uid));
     const snapshot = await getDocs(q);
     const tbody = document.getElementById('macchinari-table');
+    const container = tbody.parentElement.parentElement;
     tbody.innerHTML = '';
+    
+    // Remove existing mobile cards
+    container.querySelectorAll('.mobile-card').forEach(card => card.remove());
+    
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
+        
+        // Desktop table row
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + data.nome + '</td><td>' + data.modello + '</td><td>' + data.matricola + '</td><td><button onclick="editMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
+        
+        // Mobile card
+        const card = document.createElement('div');
+        card.className = 'mobile-card';
+        card.innerHTML = `
+            <div class="mobile-card-row"><span class="mobile-card-label">Nome:</span><span class="mobile-card-value">${data.nome}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Modello:</span><span class="mobile-card-value">${data.modello}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Matricola:</span><span class="mobile-card-value">${data.matricola}</span></div>
+            <div class="mobile-card-actions">
+                <button onclick="editMacchinario('${docSnap.id}')" class="btn-secondary">Modifica</button>
+                <button onclick="deleteMacchinario('${docSnap.id}')" class="btn-secondary">Elimina</button>
+            </div>
+        `;
+        container.appendChild(card);
     });
 }
 
@@ -382,7 +462,11 @@ async function loadManutenzioni() {
     const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid));
     const snapshot = await getDocs(q);
     const tbody = document.getElementById('manutenzioni-table');
+    const container = tbody.parentElement.parentElement;
     tbody.innerHTML = '';
+    
+    // Remove existing mobile cards
+    container.querySelectorAll('.mobile-card').forEach(card => card.remove());
     
     const manutenzioniArray = [];
     for (const docSnap of snapshot.docs) {
@@ -405,9 +489,25 @@ async function loadManutenzioni() {
     manutenzioniArray.sort((a, b) => new Date(b.data.data) - new Date(a.data.data));
     
     manutenzioniArray.forEach(item => {
+        // Desktop table row
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + formatDate(item.data.data) + '</td><td>' + item.data.descrizione + '</td><td>' + item.macchinarioNome + '</td><td><span class="badge">' + item.data.stato + '</span></td><td><button onclick="editManutenzione(\'' + item.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + item.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
+        
+        // Mobile card
+        const card = document.createElement('div');
+        card.className = 'mobile-card';
+        card.innerHTML = `
+            <div class="mobile-card-row"><span class="mobile-card-label">Data:</span><span class="mobile-card-value">${formatDate(item.data.data)}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Descrizione:</span><span class="mobile-card-value">${item.data.descrizione}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Macchinario:</span><span class="mobile-card-value">${item.macchinarioNome}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Stato:</span><span class="mobile-card-value"><span class="badge">${item.data.stato}</span></span></div>
+            <div class="mobile-card-actions">
+                <button onclick="editManutenzione('${item.id}')" class="btn-secondary">Modifica</button>
+                <button onclick="deleteManutenzione('${item.id}')" class="btn-secondary">Elimina</button>
+            </div>
+        `;
+        container.appendChild(card);
     });
 }
 
@@ -417,8 +517,7 @@ window.showAddModal = () => {
     document.getElementById('manutenzione-data').value = '';
     document.getElementById('manutenzione-desc').value = '';
     document.getElementById('manutenzione-macchinario').value = '';
-    document.getElementById('manutenzione-tipo').value = '';
-    document.getElementById('manutenzione-stato').value = '';
+    document.getElementById('manutenzione-stato').value = 'in-attesa';
     document.getElementById('manutenzione-note').value = '';
     document.getElementById('componente-quantita-usata').value = '';
     updateComponentiList();
@@ -505,7 +604,12 @@ async function loadMagazzino() {
     const q = query(collection(db, 'componenti'), where('userId', '==', currentUser.uid));
     const snapshot = await getDocs(q);
     const tbody = document.getElementById('magazzino-table');
+    const container = tbody.parentElement.parentElement;
     tbody.innerHTML = '';
+    
+    // Remove existing mobile cards
+    container.querySelectorAll('.mobile-card').forEach(card => card.remove());
+    
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const quantita = parseInt(data.quantita) || 0;
@@ -516,9 +620,27 @@ async function loadMagazzino() {
         } else if (quantita <= scortaMin) {
             statoText = 'SCARSO';
         }
+        
+        // Desktop table row
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + (data.codice || 'N/D') + '</td><td>' + data.nome + '</td><td>' + quantita + '</td><td>' + scortaMin + '</td><td><span class="badge">' + statoText + '</span></td><td><button onclick="editComponente(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteComponente(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
+        
+        // Mobile card
+        const card = document.createElement('div');
+        card.className = 'mobile-card';
+        card.innerHTML = `
+            <div class="mobile-card-row"><span class="mobile-card-label">Codice:</span><span class="mobile-card-value">${data.codice || 'N/D'}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Nome:</span><span class="mobile-card-value">${data.nome}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Quantità:</span><span class="mobile-card-value">${quantita}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Scorta Min:</span><span class="mobile-card-value">${scortaMin}</span></div>
+            <div class="mobile-card-row"><span class="mobile-card-label">Stato:</span><span class="mobile-card-value"><span class="badge">${statoText}</span></span></div>
+            <div class="mobile-card-actions">
+                <button onclick="editComponente('${docSnap.id}')" class="btn-secondary">Modifica</button>
+                <button onclick="deleteComponente('${docSnap.id}')" class="btn-secondary">Elimina</button>
+            </div>
+        `;
+        container.appendChild(card);
     });
 }
 
