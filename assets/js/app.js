@@ -541,7 +541,8 @@ window.showAddModal = () => {
     document.getElementById('manutenzione-data').value = '';
     document.getElementById('manutenzione-desc').value = '';
     document.getElementById('manutenzione-macchinario').value = '';
-    document.getElementById('manutenzione-stato').value = 'in-attesa';
+    document.getElementById('manutenzione-tipo').value = '';
+    document.getElementById('manutenzione-stato').value = '';
     document.getElementById('manutenzione-note').value = '';
     document.getElementById('componente-quantita-usata').value = '';
     updateComponentiList();
