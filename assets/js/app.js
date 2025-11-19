@@ -140,7 +140,7 @@ async function loadMacchinari() {
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + data.nome + '</td><td>' + data.modello + '</td><td>' + data.matricola + '</td><td>' + data.anno + '</td><td><span class="badge">' + data.stato + '</span></td><td><button onclick="editMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
+        tr.innerHTML = '<td>' + data.nome + '</td><td>' + data.modello + '</td><td>' + data.matricola + '</td><td><button onclick="editMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
     });
 }
@@ -150,8 +150,6 @@ window.showAddMacchinarioModal = () => {
     document.getElementById('macchinario-nome').value = '';
     document.getElementById('macchinario-modello').value = '';
     document.getElementById('macchinario-matricola').value = '';
-    document.getElementById('macchinario-anno').value = '';
-    document.getElementById('macchinario-stato').value = 'operativo';
     document.getElementById('macchinario-note').value = '';
     document.getElementById('macchinario-modal').classList.add('show');
 };
@@ -166,8 +164,6 @@ window.saveMacchinario = async () => {
         nome: document.getElementById('macchinario-nome').value,
         modello: document.getElementById('macchinario-modello').value,
         matricola: document.getElementById('macchinario-matricola').value,
-        anno: document.getElementById('macchinario-anno').value,
-        stato: document.getElementById('macchinario-stato').value,
         note: document.getElementById('macchinario-note').value,
         createdAt: new Date().toISOString()
     };
@@ -191,8 +187,6 @@ window.editMacchinario = async (id) => {
     document.getElementById('macchinario-nome').value = data.nome;
     document.getElementById('macchinario-modello').value = data.modello;
     document.getElementById('macchinario-matricola').value = data.matricola;
-    document.getElementById('macchinario-anno').value = data.anno;
-    document.getElementById('macchinario-stato').value = data.stato;
     document.getElementById('macchinario-note').value = data.note || '';
     document.getElementById('macchinario-modal').classList.add('show');
 };
