@@ -3,12 +3,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAWHbe9lm-QomnZnrWYKWPCy_0GYBR8vQE",
+    apiKey: "AIzaSyAK9qdjGwz6xs86_H2-d6VLe4FKeHZxJeA",
     authDomain: "gestionale-manutenzioni.firebaseapp.com",
     projectId: "gestionale-manutenzioni",
     storageBucket: "gestionale-manutenzioni.firebasestorage.app",
-    messagingSenderId: "913584711851",
-    appId: "1:913584711851:web:f5d05d39ea4c22c7d562c0"
+    messagingSenderId: "857041989069",
+    appId: "1:857041989069:web:9c8b5e4f3d2a1b0c7e8f9a"
 };
 
 const app = initializeApp(firebaseConfig);
