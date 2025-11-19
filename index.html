@@ -158,9 +158,32 @@
         <!-- Calendario Section -->
         <section id="calendario-section" class="section">
             <div class="container">
-                <h2>Calendario</h2>
-                <div id="calendar-container" class="calendar-container">
-                    <!-- Calendar populated by JS -->
+                <div class="section-header">
+                    <h2>Calendario Manutenzioni</h2>
+                </div>
+                <div class="calendar-wrapper">
+                    <div class="calendar-controls">
+                        <button onclick="previousMonth()" class="btn-secondary">◄ Mese Precedente</button>
+                        <h3 id="current-month" style="margin: 0; font-size: 18px;"></h3>
+                        <button onclick="nextMonth()" class="btn-secondary">Mese Successivo ►</button>
+                    </div>
+                    <div id="calendar-grid" class="calendar-grid"></div>
+                    <div class="calendar-legend">
+                        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 16px; height: 16px; background: #1a5490; border: 1px solid #1a5490;"></div>
+                                <span style="font-size: 13px;">In Attesa</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 16px; height: 16px; background: #1a5490; border: 1px solid #1a5490; opacity: 0.6;"></div>
+                                <span style="font-size: 13px;">In Corso</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 16px; height: 16px; background: #e0e0e0; border: 1px solid #1a5490;"></div>
+                                <span style="font-size: 13px;">Completata</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

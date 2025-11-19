@@ -20,6 +20,7 @@ let currentEditId = null;
 let currentMacchinarioId = null;
 let currentComponenteId = null;
 let componentiUsati = [];
+let currentCalendarDate = new Date();
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -474,9 +475,89 @@ window.deleteComponente = async (id) => {
 };
 
 async function loadCalendar() {
-    const container = document.getElementById('calendar-container');
-    container.innerHTML = '<p>Calendario in costruzione...</p>';
+    if (!currentUser) return;
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    document.getElementById('current-month').textContent = monthNames[month] + ' ' + year;
+    const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid));
+    const snapshot = await getDocs(q);
+    const manutenzioniByDate = {};
+    for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        const dateKey = data.data;
+        if (!manutenzioniByDate[dateKey]) {
+            manutenzioniByDate[dateKey] = [];
+        }
+        let macchinarioNome = 'N/D';
+        if (data.macchinarioId) {
+            const maccDoc = await getDoc(doc(db, 'macchinari', data.macchinarioId));
+            if (maccDoc.exists()) {
+                const maccData = maccDoc.data();
+                macchinarioNome = maccData.nome;
+            }
+        }
+        manutenzioniByDate[dateKey].push({
+            descrizione: data.descrizione,
+            macchinario: macchinarioNome,
+            stato: data.stato
+        });
+    }
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    const dayHeaders = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    dayHeaders.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-day-header';
+        header.textContent = day;
+        grid.appendChild(header);
+    });
+    const adjustedFirstDay = firstDay === 0 ? 0 : firstDay;
+    for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        day.innerHTML = '<div class="calendar-day-number">' + (daysInPrevMonth - i) + '</div>';
+        grid.appendChild(day);
+    }
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day';
+        if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            day.classList.add('today');
+        }
+        const dateKey = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+        let eventsHtml = '<div class="calendar-day-number">' + i + '</div>';
+        if (manutenzioniByDate[dateKey]) {
+            manutenzioniByDate[dateKey].forEach(event => {
+                eventsHtml += '<div class="calendar-event ' + event.stato + '" title="' + event.macchinario + ' - ' + event.descrizione + '">' + event.macchinario + '</div>';
+            });
+        }
+        day.innerHTML = eventsHtml;
+        grid.appendChild(day);
+    }
+    const totalCells = adjustedFirstDay + daysInMonth;
+    const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remainingCells; i++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        day.innerHTML = '<div class="calendar-day-number">' + i + '</div>';
+        grid.appendChild(day);
+    }
 }
+
+window.previousMonth = () => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    loadCalendar();
+};
+
+window.nextMonth = () => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    loadCalendar();
+};
 
 async function loadStats() {
     const container = document.querySelector('.chart-container');
