@@ -19,6 +19,7 @@ let currentUser = null;
 let currentEditId = null;
 let currentMacchinarioId = null;
 let currentComponenteId = null;
+let componentiUsati = [];
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -215,6 +216,63 @@ async function loadMacchinariSelect() {
     });
 }
 
+async function loadComponentiSelect() {
+    if (!currentUser) return;
+    const q = query(collection(db, 'componenti'), where('userId', '==', currentUser.uid));
+    const snapshot = await getDocs(q);
+    const select = document.getElementById('componente-select');
+    select.innerHTML = '<option value="">Seleziona Componente</option>';
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const option = document.createElement('option');
+        option.value = docSnap.id;
+        option.textContent = data.nome + ' (Disp: ' + data.quantita + ')';
+        option.dataset.quantita = data.quantita;
+        option.dataset.nome = data.nome;
+        select.appendChild(option);
+    });
+}
+
+window.addComponenteToList = () => {
+    const select = document.getElementById('componente-select');
+    const quantitaInput = document.getElementById('componente-quantita-usata');
+    if (!select.value || !quantitaInput.value) {
+        alert('Seleziona un componente e inserisci la quantità');
+        return;
+    }
+    const selectedOption = select.options[select.selectedIndex];
+    const quantitaDisponibile = parseInt(selectedOption.dataset.quantita);
+    const quantitaUsata = parseInt(quantitaInput.value);
+    if (quantitaUsata > quantitaDisponibile) {
+        alert('Quantità non disponibile in magazzino!');
+        return;
+    }
+    componentiUsati.push({
+        id: select.value,
+        nome: selectedOption.dataset.nome,
+        quantita: quantitaUsata
+    });
+    updateComponentiList();
+    select.value = '';
+    quantitaInput.value = '';
+};
+
+window.removeComponenteFromList = (index) => {
+    componentiUsati.splice(index, 1);
+    updateComponentiList();
+};
+
+function updateComponentiList() {
+    const container = document.getElementById('componenti-list');
+    if (componentiUsati.length === 0) {
+        container.innerHTML = '<p style="font-size: 13px; color: #999;">Nessun componente aggiunto</p>';
+        return;
+    }
+    container.innerHTML = componentiUsati.map((comp, index) => 
+        '<div class="componente-item"><span class="componente-item-text">' + comp.nome + ' x ' + comp.quantita + '</span><button onclick="removeComponenteFromList(' + index + ')" class="btn-secondary">Rimuovi</button></div>'
+    ).join('');
+}
+
 async function loadManutenzioni() {
     if (!currentUser) return;
     const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid), orderBy('data', 'desc'));
@@ -240,12 +298,16 @@ async function loadManutenzioni() {
 
 window.showAddModal = () => {
     currentEditId = null;
+    componentiUsati = [];
     document.getElementById('manutenzione-data').value = '';
     document.getElementById('manutenzione-desc').value = '';
     document.getElementById('manutenzione-macchinario').value = '';
     document.getElementById('manutenzione-stato').value = 'in-attesa';
     document.getElementById('manutenzione-note').value = '';
+    document.getElementById('componente-quantita-usata').value = '';
+    updateComponentiList();
     loadMacchinariSelect();
+    loadComponentiSelect();
     document.getElementById('add-modal').classList.add('show');
 };
 
@@ -261,6 +323,7 @@ window.saveManutenzione = async () => {
         macchinarioId: document.getElementById('manutenzione-macchinario').value,
         stato: document.getElementById('manutenzione-stato').value,
         note: document.getElementById('manutenzione-note').value,
+        componentiUsati: componentiUsati,
         createdAt: new Date().toISOString()
     };
     try {
@@ -268,10 +331,23 @@ window.saveManutenzione = async () => {
             await updateDoc(doc(db, 'manutenzioni', currentEditId), data);
         } else {
             await addDoc(collection(db, 'manutenzioni'), data);
+            for (const comp of componentiUsati) {
+                const compDoc = await getDoc(doc(db, 'componenti', comp.id));
+                if (compDoc.exists()) {
+                    const compData = compDoc.data();
+                    const nuovaQuantita = parseInt(compData.quantita) - parseInt(comp.quantita);
+                    await updateDoc(doc(db, 'componenti', comp.id), {
+                        quantita: nuovaQuantita
+                    });
+                }
+            }
         }
         closeModal();
         loadManutenzioni();
         loadDashboard();
+        if (componentiUsati.length > 0) {
+            loadMagazzino();
+        }
     } catch (error) {
         alert('Errore: ' + error.message);
     }

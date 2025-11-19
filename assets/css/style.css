@@ -387,3 +387,24 @@ textarea.input-field {
     color: var(--blue);
     background: var(--white);
 }
+
+/* Componenti List */
+.componente-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: var(--white);
+    border: 1px solid var(--border);
+}
+
+.componente-item-text {
+    font-size: 13px;
+    color: var(--black);
+}
+
+.componente-item button {
+    padding: 4px 8px;
+    font-size: 12px;
+}
