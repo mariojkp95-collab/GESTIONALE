@@ -316,11 +316,20 @@ window.closeModal = () => {
 };
 
 window.saveManutenzione = async () => {
+    const dataValue = document.getElementById('manutenzione-data').value;
+    const descrizioneValue = document.getElementById('manutenzione-desc').value;
+    const macchinarioValue = document.getElementById('manutenzione-macchinario').value;
+    
+    if (!dataValue || !descrizioneValue || !macchinarioValue) {
+        alert('Compila tutti i campi obbligatori (Data, Macchinario, Descrizione)');
+        return;
+    }
+    
     const data = {
         userId: currentUser.uid,
-        data: document.getElementById('manutenzione-data').value,
-        descrizione: document.getElementById('manutenzione-desc').value,
-        macchinarioId: document.getElementById('manutenzione-macchinario').value,
+        data: dataValue,
+        descrizione: descrizioneValue,
+        macchinarioId: macchinarioValue,
         stato: document.getElementById('manutenzione-stato').value,
         note: document.getElementById('manutenzione-note').value,
         componentiUsati: componentiUsati,
@@ -350,6 +359,7 @@ window.saveManutenzione = async () => {
         }
     } catch (error) {
         alert('Errore: ' + error.message);
+        console.error('Errore dettagliato:', error);
     }
 };
 
