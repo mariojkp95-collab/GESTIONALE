@@ -47,6 +47,7 @@
             <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
             <button class="nav-btn" onclick="showSection('macchinari')">Macchinari</button>
             <button class="nav-btn" onclick="showSection('manutenzioni')">Manutenzioni</button>
+            <button class="nav-btn" onclick="showSection('magazzino')">Magazzino</button>
             <button class="nav-btn" onclick="showSection('calendario')">Calendario</button>
             <button class="nav-btn" onclick="showSection('statistiche')">Statistiche</button>
         </nav>
@@ -127,6 +128,33 @@
             </div>
         </section>
 
+        <!-- Magazzino Section -->
+        <section id="magazzino-section" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Magazzino</h2>
+                    <button onclick="showAddComponenteModal()" class="btn-primary">Nuovo Componente</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Codice</th>
+                                <th>Nome</th>
+                                <th>Quantità</th>
+                                <th>Scorta Minima</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="magazzino-table">
+                            <!-- Data populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- Calendario Section -->
         <section id="calendario-section" class="section">
             <div class="container">
@@ -146,6 +174,27 @@
                 </div>
             </div>
         </section>
+    </div>
+
+    <!-- Modal Componenti Magazzino -->
+    <div id="componente-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nuovo Componente</h3>
+                <button onclick="closeComponenteModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="componente-codice" placeholder="Codice (es. FIL-001)" class="input-field">
+                <input type="text" id="componente-nome" placeholder="Nome Componente" class="input-field">
+                <input type="number" id="componente-quantita" placeholder="Quantità" min="0" class="input-field">
+                <input type="number" id="componente-scorta-min" placeholder="Scorta Minima" min="0" class="input-field">
+                <textarea id="componente-note" placeholder="Note (fornitore, specifiche, ecc.)" class="input-field"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeComponenteModal()" class="btn-secondary">Annulla</button>
+                <button onclick="saveComponente()" class="btn-primary">Salva</button>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Macchinari -->

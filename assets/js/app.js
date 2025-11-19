@@ -18,6 +18,7 @@ const db = getFirestore(app);
 let currentUser = null;
 let currentEditId = null;
 let currentMacchinarioId = null;
+let currentComponenteId = null;
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -101,6 +102,7 @@ window.showSection = (sectionName) => {
     if (sectionName === 'dashboard') loadDashboard();
     if (sectionName === 'macchinari') loadMacchinari();
     if (sectionName === 'manutenzioni') loadManutenzioni();
+    if (sectionName === 'magazzino') loadMagazzino();
     if (sectionName === 'calendario') loadCalendar();
     if (sectionName === 'statistiche') loadStats();
 };
@@ -293,6 +295,84 @@ window.deleteManutenzione = async (id) => {
         await deleteDoc(doc(db, 'manutenzioni', id));
         loadManutenzioni();
         loadDashboard();
+    }
+};
+
+async function loadMagazzino() {
+    if (!currentUser) return;
+    const q = query(collection(db, 'componenti'), where('userId', '==', currentUser.uid));
+    const snapshot = await getDocs(q);
+    const tbody = document.getElementById('magazzino-table');
+    tbody.innerHTML = '';
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const quantita = parseInt(data.quantita) || 0;
+        const scortaMin = parseInt(data.scortaMin) || 0;
+        let statoText = 'OK';
+        if (quantita === 0) {
+            statoText = 'ESAURITO';
+        } else if (quantita <= scortaMin) {
+            statoText = 'SCARSO';
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + (data.codice || 'N/D') + '</td><td>' + data.nome + '</td><td>' + quantita + '</td><td>' + scortaMin + '</td><td><span class="badge">' + statoText + '</span></td><td><button onclick="editComponente(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteComponente(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
+        tbody.appendChild(tr);
+    });
+}
+
+window.showAddComponenteModal = () => {
+    currentComponenteId = null;
+    document.getElementById('componente-codice').value = '';
+    document.getElementById('componente-nome').value = '';
+    document.getElementById('componente-quantita').value = '';
+    document.getElementById('componente-scorta-min').value = '';
+    document.getElementById('componente-note').value = '';
+    document.getElementById('componente-modal').classList.add('show');
+};
+
+window.closeComponenteModal = () => {
+    document.getElementById('componente-modal').classList.remove('show');
+};
+
+window.saveComponente = async () => {
+    const data = {
+        userId: currentUser.uid,
+        codice: document.getElementById('componente-codice').value,
+        nome: document.getElementById('componente-nome').value,
+        quantita: parseInt(document.getElementById('componente-quantita').value) || 0,
+        scortaMin: parseInt(document.getElementById('componente-scorta-min').value) || 0,
+        note: document.getElementById('componente-note').value,
+        createdAt: new Date().toISOString()
+    };
+    try {
+        if (currentComponenteId) {
+            await updateDoc(doc(db, 'componenti', currentComponenteId), data);
+        } else {
+            await addDoc(collection(db, 'componenti'), data);
+        }
+        closeComponenteModal();
+        loadMagazzino();
+    } catch (error) {
+        alert('Errore: ' + error.message);
+    }
+};
+
+window.editComponente = async (id) => {
+    currentComponenteId = id;
+    const docSnap = await getDoc(doc(db, 'componenti', id));
+    const data = docSnap.data();
+    document.getElementById('componente-codice').value = data.codice || '';
+    document.getElementById('componente-nome').value = data.nome;
+    document.getElementById('componente-quantita').value = data.quantita;
+    document.getElementById('componente-scorta-min').value = data.scortaMin;
+    document.getElementById('componente-note').value = data.note || '';
+    document.getElementById('componente-modal').classList.add('show');
+};
+
+window.deleteComponente = async (id) => {
+    if (confirm('Sei sicuro di voler eliminare questo componente?')) {
+        await deleteDoc(doc(db, 'componenti', id));
+        loadMagazzino();
     }
 };
 
