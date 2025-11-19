@@ -318,12 +318,12 @@ textarea.input-field {
 }
 
 .stato-badge.scarso {
-  background-color: #ff9800;
+  background-color: var(--blue);
   color: white;
 }
 
 .stato-badge.esaurito {
-  background-color: #d32f2f;
+  background-color: var(--blue);
   color: white;
 }
 
