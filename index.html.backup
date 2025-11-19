@@ -24,7 +24,7 @@
                 <span id="user-email" class="navbar-user-email me-3"></span>
                 <button id="logout-btn" class="btn btn-sm btn-outline-danger me-2" onclick="logout()" style="display: none;">Logout</button>
                 <button class="btn btn-sm navbar-export-btn me-2" onclick="exportData()">Export Dati</button>
-                <small class="text-muted ms-3" style="font-size: 0.75rem;">v3.0.0</small>
+                <small class="text-muted ms-3" style="font-size: 0.75rem;">v2.1.4</small>
             </div>
         </div>
     </nav>
