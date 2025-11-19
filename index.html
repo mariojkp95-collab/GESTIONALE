@@ -177,8 +177,10 @@
             </div>
             <div class="modal-body">
                 <input type="date" id="manutenzione-data" class="input-field">
-                <input type="text" id="manutenzione-desc" placeholder="Descrizione" class="input-field">
-                <input type="text" id="manutenzione-macchinario" placeholder="Macchinario" class="input-field">
+                <select id="manutenzione-macchinario" class="input-field">
+                    <option value="">Seleziona Macchinario</option>
+                </select>
+                <input type="text" id="manutenzione-desc" placeholder="Descrizione intervento" class="input-field">
                 <select id="manutenzione-stato" class="input-field">
                     <option value="in-attesa">In Attesa</option>
                     <option value="in-corso">In Corso</option>

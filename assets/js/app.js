@@ -198,18 +198,42 @@ window.deleteMacchinario = async (id) => {
     }
 };
 
+async function loadMacchinariSelect() {
+    if (!currentUser) return;
+    const q = query(collection(db, 'macchinari'), where('userId', '==', currentUser.uid));
+    const snapshot = await getDocs(q);
+    const select = document.getElementById('manutenzione-macchinario');
+    select.innerHTML = '<option value="">Seleziona Macchinario</option>';
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const option = document.createElement('option');
+        option.value = docSnap.id;
+        option.textContent = data.nome + ' - ' + data.modello;
+        select.appendChild(option);
+    });
+}
+
 async function loadManutenzioni() {
     if (!currentUser) return;
     const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid), orderBy('data', 'desc'));
     const snapshot = await getDocs(q);
     const tbody = document.getElementById('manutenzioni-table');
     tbody.innerHTML = '';
-    snapshot.forEach(docSnap => {
+    
+    for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
+        let macchinarioNome = 'N/D';
+        if (data.macchinarioId) {
+            const maccDoc = await getDoc(doc(db, 'macchinari', data.macchinarioId));
+            if (maccDoc.exists()) {
+                const maccData = maccDoc.data();
+                macchinarioNome = maccData.nome + ' - ' + maccData.modello;
+            }
+        }
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + formatDate(data.data) + '</td><td>' + data.descrizione + '</td><td>' + data.macchinario + '</td><td><span class="badge">' + data.stato + '</span></td><td><button onclick="editManutenzione(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
+        tr.innerHTML = '<td>' + formatDate(data.data) + '</td><td>' + data.descrizione + '</td><td>' + macchinarioNome + '</td><td><span class="badge">' + data.stato + '</span></td><td><button onclick="editManutenzione(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
-    });
+    }
 }
 
 window.showAddModal = () => {
@@ -219,6 +243,7 @@ window.showAddModal = () => {
     document.getElementById('manutenzione-macchinario').value = '';
     document.getElementById('manutenzione-stato').value = 'in-attesa';
     document.getElementById('manutenzione-note').value = '';
+    loadMacchinariSelect();
     document.getElementById('add-modal').classList.add('show');
 };
 
@@ -231,7 +256,7 @@ window.saveManutenzione = async () => {
         userId: currentUser.uid,
         data: document.getElementById('manutenzione-data').value,
         descrizione: document.getElementById('manutenzione-desc').value,
-        macchinario: document.getElementById('manutenzione-macchinario').value,
+        macchinarioId: document.getElementById('manutenzione-macchinario').value,
         stato: document.getElementById('manutenzione-stato').value,
         note: document.getElementById('manutenzione-note').value,
         createdAt: new Date().toISOString()
@@ -256,9 +281,10 @@ window.editManutenzione = async (id) => {
     const data = docSnap.data();
     document.getElementById('manutenzione-data').value = data.data;
     document.getElementById('manutenzione-desc').value = data.descrizione;
-    document.getElementById('manutenzione-macchinario').value = data.macchinario;
     document.getElementById('manutenzione-stato').value = data.stato;
     document.getElementById('manutenzione-note').value = data.note || '';
+    await loadMacchinariSelect();
+    document.getElementById('manutenzione-macchinario').value = data.macchinarioId || '';
     document.getElementById('add-modal').classList.add('show');
 };
 
