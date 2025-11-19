@@ -113,11 +113,15 @@ window.showSection = (sectionName) => {
 document.addEventListener('DOMContentLoaded', () => {
     const hamburger = document.getElementById('hamburger-btn');
     const nav = document.getElementById('main-nav');
+    const userMenuBtn = document.getElementById('user-menu-btn');
+    const userMenu = document.getElementById('user-menu');
     
     if (hamburger) {
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
             nav.classList.toggle('open');
+            // Close user menu if open
+            if (userMenu) userMenu.classList.remove('show');
         });
         
         // Close menu when clicking nav button
@@ -128,6 +132,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     nav.classList.remove('open');
                 }
             });
+        });
+    }
+    
+    // User menu toggle
+    if (userMenuBtn && userMenu) {
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('show');
+            // Close nav if open
+            if (nav) nav.classList.remove('open');
+            if (hamburger) hamburger.classList.remove('active');
+        });
+        
+        // Close user menu when clicking outside
+        document.addEventListener('click', () => {
+            userMenu.classList.remove('show');
+        });
+        
+        userMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
     }
 });

@@ -35,18 +35,29 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1>Gestionale Manutenzioni</h1>
                 <button id="hamburger-btn" class="hamburger-btn">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
+                <h1>Gestionale Manutenzioni</h1>
                 <div class="header-right">
                     <span id="user-email" class="user-email"></span>
-                    <button onclick="handleLogout()" class="btn-secondary">Logout</button>
+                    <button id="user-menu-btn" class="user-menu-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </button>
+                    <button onclick="handleLogout()" class="btn-secondary logout-desktop">Logout</button>
                 </div>
             </div>
         </header>
+
+        <!-- User Menu Mobile -->
+        <div id="user-menu" class="user-menu">
+            <button onclick="handleLogout()" class="user-menu-item">Logout</button>
+        </div>
 
         <!-- Navigation -->
         <nav class="nav" id="main-nav">
