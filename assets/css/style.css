@@ -523,6 +523,11 @@ textarea.input-field {
     display: none;
 }
 
+/* Mobile cards - hidden on desktop */
+.mobile-card {
+    display: none;
+}
+
 /* Responsive Mobile */
 @media (max-width: 768px) {
     /* Fixed body */
@@ -619,7 +624,53 @@ textarea.input-field {
         display: none;
     }
     
-    /* Section Header */
+    /* Mobile cards - Show on mobile */
+    .mobile-card {
+        display: block;
+        background: var(--white);
+        border: 1px solid var(--border);
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    
+    .mobile-card-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+    }
+    
+    .mobile-card-row:last-child {
+        border-bottom: none;
+    }
+    
+    .mobile-card-label {
+        font-weight: 600;
+        color: var(--blue);
+    }
+    
+    .mobile-card-value {
+        color: var(--black);
+        text-align: right;
+    }
+    
+    .mobile-card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+    }
+    
+    .mobile-card-actions button {
+        flex: 1;
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    /* Section */
     .section-header {
         flex-direction: column;
         align-items: stretch;
