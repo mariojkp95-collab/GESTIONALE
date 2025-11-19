@@ -111,28 +111,131 @@ window.showSection = (sectionName) => {
 
 async function loadDashboard() {
     if (!currentUser) return;
-    const q = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid));
-    const snapshot = await getDocs(q);
-    const total = snapshot.size;
-    let pending = 0;
-    let completed = 0;
-    let thisMonth = 0;
+    
+    const qManutenzioni = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid));
+    const snapshotManutenzioni = await getDocs(qManutenzioni);
+    const qComponenti = query(collection(db, 'componenti'), where('userId', '==', currentUser.uid));
+    const snapshotComponenti = await getDocs(qComponenti);
+    
     const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    snapshot.forEach(docSnap => {
+    now.setHours(0, 0, 0, 0);
+    const in7giorni = new Date(now);
+    in7giorni.setDate(in7giorni.getDate() + 7);
+    
+    let scaduti = 0;
+    let inScadenza = 0;
+    let totaleInterventi = 0;
+    let componentiScarsi = 0;
+    
+    const interventiCritici = [];
+    
+    for (const docSnap of snapshotManutenzioni.docs) {
         const data = docSnap.data();
-        if (data.stato === 'in-attesa') pending++;
-        if (data.stato === 'completata') completed++;
-        const manutenzioneDate = new Date(data.data);
-        if (manutenzioneDate.getMonth() === currentMonth && manutenzioneDate.getFullYear() === currentYear) {
-            thisMonth++;
+        totaleInterventi++;
+        
+        if (data.stato !== 'completata') {
+            const dataIntervento = new Date(data.data);
+            dataIntervento.setHours(0, 0, 0, 0);
+            const diffTime = dataIntervento - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                scaduti++;
+                let macchinarioNome = 'N/A';
+                if (data.macchinarioId) {
+                    const maccDoc = await getDoc(doc(db, 'macchinari', data.macchinarioId));
+                    if (maccDoc.exists()) {
+                        macchinarioNome = maccDoc.data().nome;
+                    }
+                }
+                interventiCritici.push({
+                    data: data.data,
+                    macchinario: macchinarioNome,
+                    descrizione: data.descrizione,
+                    stato: data.stato,
+                    giorni: diffDays
+                });
+            } else if (diffDays <= 7) {
+                inScadenza++;
+                let macchinarioNome = 'N/A';
+                if (data.macchinarioId) {
+                    const maccDoc = await getDoc(doc(db, 'macchinari', data.macchinarioId));
+                    if (maccDoc.exists()) {
+                        macchinarioNome = maccDoc.data().nome;
+                    }
+                }
+                interventiCritici.push({
+                    data: data.data,
+                    macchinario: macchinarioNome,
+                    descrizione: data.descrizione,
+                    stato: data.stato,
+                    giorni: diffDays
+                });
+            }
+        }
+    }
+    
+    interventiCritici.sort((a, b) => a.giorni - b.giorni);
+    
+    const componentiCritici = [];
+    snapshotComponenti.forEach(docSnap => {
+        const data = docSnap.data();
+        const quantita = parseInt(data.quantita) || 0;
+        const scortaMin = parseInt(data.scortaMin) || 0;
+        
+        if (quantita <= scortaMin) {
+            componentiScarsi++;
+            const status = quantita === 0 ? 'ESAURITO' : (quantita <= scortaMin ? 'SCARSO' : 'OK');
+            componentiCritici.push({
+                codice: data.codice,
+                nome: data.nome,
+                quantita: quantita,
+                scortaMin: scortaMin,
+                status: status
+            });
         }
     });
-    document.getElementById('total-manutenzioni').textContent = total;
-    document.getElementById('pending-manutenzioni').textContent = pending;
-    document.getElementById('completed-manutenzioni').textContent = completed;
-    document.getElementById('month-manutenzioni').textContent = thisMonth;
+    
+    componentiCritici.sort((a, b) => a.quantita - b.quantita);
+    
+    const interventiList = document.getElementById('dash-interventi-list');
+    interventiList.innerHTML = '';
+    
+    if (interventiCritici.length === 0) {
+        interventiList.innerHTML = '<tr><td colspan="5">Nessun intervento in scadenza</td></tr>';
+    } else {
+        interventiCritici.forEach(item => {
+            const giornoLabel = item.giorni < 0 ? `${Math.abs(item.giorni)} giorni fa` : `tra ${item.giorni} giorni`;
+            const statoClass = item.stato === 'in-attesa' ? 'in-attesa' : (item.stato === 'in-corso' ? 'in-corso' : 'completata');
+            const row = `<tr>
+                <td>${formatDate(item.data)}</td>
+                <td>${item.macchinario}</td>
+                <td>${item.descrizione}</td>
+                <td><span class="stato-badge ${statoClass}">${item.stato.replace('-', ' ').toUpperCase()}</span></td>
+                <td>${giornoLabel}</td>
+            </tr>`;
+            interventiList.innerHTML += row;
+        });
+    }
+    
+    const componentiList = document.getElementById('dash-componenti-list');
+    componentiList.innerHTML = '';
+    
+    if (componentiCritici.length === 0) {
+        componentiList.innerHTML = '<tr><td colspan="5">Nessun componente sotto scorta</td></tr>';
+    } else {
+        componentiCritici.forEach(item => {
+            const statusClass = item.status === 'ESAURITO' ? 'esaurito' : 'scarso';
+            const row = `<tr>
+                <td>${item.codice}</td>
+                <td>${item.nome}</td>
+                <td>${item.quantita}</td>
+                <td>${item.scortaMin}</td>
+                <td><span class="stato-badge ${statusClass}">${item.status}</span></td>
+            </tr>`;
+            componentiList.innerHTML += row;
+        });
+    }
 }
 
 async function loadMacchinari() {
@@ -314,7 +417,8 @@ window.showAddModal = () => {
     document.getElementById('manutenzione-data').value = '';
     document.getElementById('manutenzione-desc').value = '';
     document.getElementById('manutenzione-macchinario').value = '';
-    document.getElementById('manutenzione-stato').value = 'in-attesa';
+    document.getElementById('manutenzione-tipo').value = '';
+    document.getElementById('manutenzione-stato').value = '';
     document.getElementById('manutenzione-note').value = '';
     document.getElementById('componente-quantita-usata').value = '';
     updateComponentiList();
@@ -560,8 +664,8 @@ window.nextMonth = () => {
 };
 
 async function loadStats() {
-    const container = document.querySelector('.chart-container');
-    container.innerHTML = '<p>Statistiche in costruzione...</p>';
+    const container = document.getElementById('statistiche-section');
+    container.innerHTML = '<div style="text-align: center; padding: 50px;"><h2>🚧 Work in Progress 🚧</h2><p>Sezione in sviluppo</p></div>';
 }
 
 function formatDate(dateString) {

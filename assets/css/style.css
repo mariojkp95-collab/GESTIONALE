@@ -317,6 +317,16 @@ textarea.input-field {
     background: var(--white);
 }
 
+.stato-badge.scarso {
+  background-color: var(--blue);
+  color: white;
+}
+
+.stato-badge.esaurito {
+  background-color: var(--blue);
+  color: white;
+}
+
 /* Calendar */
 .calendar-wrapper {
     background: var(--white);
@@ -506,4 +516,137 @@ textarea.input-field {
 .componente-item button {
     padding: 4px 8px;
     font-size: 12px;
+}
+
+/* Responsive Mobile */
+@media (max-width: 768px) {
+    .nav {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 13px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .section-header h2 {
+        font-size: 20px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        font-size: 14px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .modal-body,
+    .modal-footer {
+        padding: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .calendar-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .calendar-controls button {
+        width: 100%;
+    }
+    
+    .calendar-grid {
+        font-size: 12px;
+    }
+    
+    .calendar-day {
+        min-height: 60px;
+        padding: 4px;
+    }
+    
+    .day-number {
+        font-size: 11px;
+    }
+    
+    .event-dot {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .container {
+        padding: 15px;
+    }
+    
+    .login-box {
+        padding: 30px 20px;
+    }
+    
+    .componente-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .componente-item button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .data-table {
+        font-size: 12px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 6px;
+    }
+    
+    .stato-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .calendar-grid {
+        font-size: 11px;
+    }
+    
+    .calendar-day {
+        min-height: 50px;
+    }
 }
