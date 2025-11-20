@@ -825,3 +825,13 @@ textarea.input-field {
         width: 100%;
     }
 }
+
+/* Dashboard Subtitle */
+.dashboard-subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
