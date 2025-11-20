@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nav = document.getElementById('main-nav');
     const userMenuBtn = document.getElementById('user-menu-btn');
     const userMenu = document.getElementById('user-menu');
-    
+
     if (hamburger) {
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Close user menu if open
             if (userMenu) userMenu.classList.remove('show');
         });
-        
+
         // Close menu when clicking nav button
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    
+
     // User menu toggle
     if (userMenuBtn && userMenu) {
         userMenuBtn.addEventListener('click', (e) => {
@@ -144,12 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nav) nav.classList.remove('open');
             if (hamburger) hamburger.classList.remove('active');
         });
-        
+
         // Close user menu when clicking outside
         document.addEventListener('click', () => {
             userMenu.classList.remove('show');
         });
-        
+
         userMenu.addEventListener('click', (e) => {
             e.stopPropagation();
         });
@@ -158,34 +158,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadDashboard() {
     if (!currentUser) return;
-    
+
     const qManutenzioni = query(collection(db, 'manutenzioni'), where('userId', '==', currentUser.uid));
     const snapshotManutenzioni = await getDocs(qManutenzioni);
     const qComponenti = query(collection(db, 'componenti'), where('userId', '==', currentUser.uid));
     const snapshotComponenti = await getDocs(qComponenti);
-    
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const in7giorni = new Date(now);
     in7giorni.setDate(in7giorni.getDate() + 7);
-    
+
     let scaduti = 0;
     let inScadenza = 0;
     let totaleInterventi = 0;
     let componentiScarsi = 0;
-    
+
     const interventiCritici = [];
-    
+
     for (const docSnap of snapshotManutenzioni.docs) {
         const data = docSnap.data();
         totaleInterventi++;
-        
+
         if (data.stato !== 'completata') {
             const dataIntervento = new Date(data.data);
             dataIntervento.setHours(0, 0, 0, 0);
             const diffTime = dataIntervento - now;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
+
             if (diffDays < 0) {
                 scaduti++;
                 let macchinarioNome = 'N/A';
@@ -221,15 +221,15 @@ async function loadDashboard() {
             }
         }
     }
-    
+
     interventiCritici.sort((a, b) => a.giorni - b.giorni);
-    
+
     const componentiCritici = [];
     snapshotComponenti.forEach(docSnap => {
         const data = docSnap.data();
         const quantita = parseInt(data.quantita) || 0;
         const scortaMin = parseInt(data.scortaMin) || 0;
-        
+
         if (quantita <= scortaMin) {
             componentiScarsi++;
             const status = quantita === 0 ? 'ESAURITO' : (quantita <= scortaMin ? 'SCARSO' : 'OK');
@@ -242,23 +242,23 @@ async function loadDashboard() {
             });
         }
     });
-    
+
     componentiCritici.sort((a, b) => a.quantita - b.quantita);
-    
+
     const interventiList = document.getElementById('dash-interventi-list');
     const interventiContainer = interventiList.parentElement.parentElement;
     interventiList.innerHTML = '';
-    
+
     // Remove existing mobile cards
     interventiContainer.querySelectorAll('.mobile-card').forEach(card => card.remove());
-    
+
     if (interventiCritici.length === 0) {
         interventiList.innerHTML = '<tr><td colspan="5">Nessun intervento in scadenza</td></tr>';
     } else {
         interventiCritici.forEach(item => {
             const giornoLabel = item.giorni < 0 ? `${Math.abs(item.giorni)} giorni fa` : `tra ${item.giorni} giorni`;
             const statoClass = item.stato === 'in-attesa' ? 'in-attesa' : (item.stato === 'in-corso' ? 'in-corso' : 'completata');
-            
+
             // Desktop table row
             const row = `<tr>
                 <td>${formatDate(item.data)}</td>
@@ -268,7 +268,7 @@ async function loadDashboard() {
                 <td>${giornoLabel}</td>
             </tr>`;
             interventiList.innerHTML += row;
-            
+
             // Mobile card
             const card = document.createElement('div');
             card.className = 'mobile-card';
@@ -282,20 +282,20 @@ async function loadDashboard() {
             interventiContainer.appendChild(card);
         });
     }
-    
+
     const componentiList = document.getElementById('dash-componenti-list');
     const componentiContainer = componentiList.parentElement.parentElement;
     componentiList.innerHTML = '';
-    
+
     // Remove existing mobile cards
     componentiContainer.querySelectorAll('.mobile-card').forEach(card => card.remove());
-    
+
     if (componentiCritici.length === 0) {
         componentiList.innerHTML = '<tr><td colspan="5">Nessun componente sotto scorta</td></tr>';
     } else {
         componentiCritici.forEach(item => {
             const statusClass = item.status === 'ESAURITO' ? 'esaurito' : 'scarso';
-            
+
             // Desktop table row
             const row = `<tr>
                 <td>${item.codice}</td>
@@ -305,7 +305,7 @@ async function loadDashboard() {
                 <td><span class="stato-badge ${statusClass}">${item.status}</span></td>
             </tr>`;
             componentiList.innerHTML += row;
-            
+
             // Mobile card
             const card = document.createElement('div');
             card.className = 'mobile-card';
@@ -328,33 +328,113 @@ async function loadMacchinari() {
     const tbody = document.getElementById('macchinari-table');
     const container = tbody.parentElement.parentElement;
     tbody.innerHTML = '';
-    
+
     // Remove existing mobile cards
     container.querySelectorAll('.mobile-card').forEach(card => card.remove());
-    
+
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        
+
         // Desktop table row
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + data.nome + '</td><td>' + data.modello + '</td><td>' + data.matricola + '</td><td><button onclick="editMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteMacchinario(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
+        tr.className = 'clickable-row';
+        tr.innerHTML = '<td>' + data.nome + '</td><td>' + data.modello + '</td><td>' + data.matricola + '</td>';
+
+        const accordionRow = document.createElement('tr');
+        accordionRow.className = 'accordion-row';
+        accordionRow.innerHTML = `
+            <td colspan="3">
+                <div class="accordion-content">
+                    <div class="accordion-menu">
+                        <button onclick="editMacchinario('${docSnap.id}')" class="btn-secondary">Modifica</button>
+                        <button onclick="deleteMacchinario('${docSnap.id}')" class="btn-secondary">Elimina</button>
+                        
+                        <div style="position: relative; display: flex; align-items: center; gap: 10px;">
+                            <button class="btn-plus" onclick="toggleSubMenu(this)">+</button>
+                            <div class="sub-menu-container">
+                                <button class="btn-secondary" onclick="alert('Manuale: Funzionalità in arrivo')">Manuale</button>
+                                <button class="btn-secondary" onclick="alert('Foto: Funzionalità in arrivo')">Foto</button>
+                                <button class="btn-secondary" onclick="alert('Ricette: Funzionalità in arrivo')">Ricette</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        `;
+
+        tr.addEventListener('click', () => {
+            const isShown = accordionRow.classList.contains('show');
+            // Close all other accordions
+            document.querySelectorAll('.accordion-row').forEach(row => {
+                row.classList.remove('show');
+                // Reset plus buttons
+                const plusBtn = row.querySelector('.btn-plus');
+                if (plusBtn) plusBtn.classList.remove('active');
+                const subMenu = row.querySelector('.sub-menu-container');
+                if (subMenu) subMenu.classList.remove('show');
+            });
+            // Toggle current
+            if (!isShown) {
+                accordionRow.classList.add('show');
+            }
+        });
+
         tbody.appendChild(tr);
-        
+        tbody.appendChild(accordionRow);
+
         // Mobile card
         const card = document.createElement('div');
-        card.className = 'mobile-card';
+        card.className = 'mobile-card clickable-row';
         card.innerHTML = `
             <div class="mobile-card-row"><span class="mobile-card-label">Nome:</span><span class="mobile-card-value">${data.nome}</span></div>
             <div class="mobile-card-row"><span class="mobile-card-label">Modello:</span><span class="mobile-card-value">${data.modello}</span></div>
             <div class="mobile-card-row"><span class="mobile-card-label">Matricola:</span><span class="mobile-card-value">${data.matricola}</span></div>
-            <div class="mobile-card-actions">
-                <button onclick="editMacchinario('${docSnap.id}')" class="btn-secondary">Modifica</button>
-                <button onclick="deleteMacchinario('${docSnap.id}')" class="btn-secondary">Elimina</button>
+            <div class="accordion-row" style="background: transparent;">
+                <div class="accordion-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="event.stopPropagation(); editMacchinario('${docSnap.id}')" class="btn-secondary" style="flex: 1;">Modifica</button>
+                        <button onclick="event.stopPropagation(); deleteMacchinario('${docSnap.id}')" class="btn-secondary" style="flex: 1;">Elimina</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                        <button class="btn-plus" onclick="event.stopPropagation(); toggleSubMenu(this)">+</button>
+                    </div>
+                    <div class="sub-menu-container" style="justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-secondary" onclick="event.stopPropagation(); alert('Manuale: Funzionalità in arrivo')">Manuale</button>
+                        <button class="btn-secondary" onclick="event.stopPropagation(); alert('Foto: Funzionalità in arrivo')">Foto</button>
+                        <button class="btn-secondary" onclick="event.stopPropagation(); alert('Ricette: Funzionalità in arrivo')">Ricette</button>
+                    </div>
+                </div>
             </div>
         `;
+
+        card.addEventListener('click', () => {
+            const accordion = card.querySelector('.accordion-row');
+            const isShown = accordion.style.display === 'block';
+
+            // Close all other mobile accordions
+            document.querySelectorAll('.mobile-card .accordion-row').forEach(row => {
+                row.style.display = 'none';
+                // Reset plus buttons
+                const plusBtn = row.querySelector('.btn-plus');
+                if (plusBtn) plusBtn.classList.remove('active');
+                const subMenu = row.querySelector('.sub-menu-container');
+                if (subMenu) subMenu.classList.remove('show');
+            });
+
+            if (!isShown) {
+                accordion.style.display = 'block';
+            }
+        });
+
         container.appendChild(card);
     });
 }
+
+window.toggleSubMenu = (btn) => {
+    const container = btn.nextElementSibling || btn.parentElement.nextElementSibling;
+    btn.classList.toggle('active');
+    container.classList.toggle('show');
+};
 
 window.showAddMacchinarioModal = () => {
     currentMacchinarioId = null;
@@ -476,7 +556,7 @@ function updateComponentiList() {
         container.innerHTML = '<p style="font-size: 13px; color: #999;">Nessun componente aggiunto</p>';
         return;
     }
-    container.innerHTML = componentiUsati.map((comp, index) => 
+    container.innerHTML = componentiUsati.map((comp, index) =>
         '<div class="componente-item"><span class="componente-item-text">' + comp.nome + ' x ' + comp.quantita + '</span><button onclick="removeComponenteFromList(' + index + ')" class="btn-secondary">Rimuovi</button></div>'
     ).join('');
 }
@@ -488,10 +568,10 @@ async function loadManutenzioni() {
     const tbody = document.getElementById('manutenzioni-table');
     const container = tbody.parentElement.parentElement;
     tbody.innerHTML = '';
-    
+
     // Remove existing mobile cards
     container.querySelectorAll('.mobile-card').forEach(card => card.remove());
-    
+
     const manutenzioniArray = [];
     for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
@@ -509,15 +589,15 @@ async function loadManutenzioni() {
             macchinarioNome: macchinarioNome
         });
     }
-    
+
     manutenzioniArray.sort((a, b) => new Date(b.data.data) - new Date(a.data.data));
-    
+
     manutenzioniArray.forEach(item => {
         // Desktop table row
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + formatDate(item.data.data) + '</td><td>' + item.data.descrizione + '</td><td>' + item.macchinarioNome + '</td><td><span class="badge">' + item.data.stato + '</span></td><td><button onclick="editManutenzione(\'' + item.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + item.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
-        
+
         // Mobile card
         const card = document.createElement('div');
         card.className = 'mobile-card';
@@ -559,12 +639,12 @@ window.saveManutenzione = async () => {
     const dataValue = document.getElementById('manutenzione-data').value;
     const descrizioneValue = document.getElementById('manutenzione-desc').value;
     const macchinarioValue = document.getElementById('manutenzione-macchinario').value;
-    
+
     if (!dataValue || !descrizioneValue || !macchinarioValue) {
         alert('Compila tutti i campi obbligatori (Data, Macchinario, Descrizione)');
         return;
     }
-    
+
     const data = {
         userId: currentUser.uid,
         data: dataValue,
@@ -631,10 +711,10 @@ async function loadMagazzino() {
     const tbody = document.getElementById('magazzino-table');
     const container = tbody.parentElement.parentElement;
     tbody.innerHTML = '';
-    
+
     // Remove existing mobile cards
     container.querySelectorAll('.mobile-card').forEach(card => card.remove());
-    
+
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const quantita = parseInt(data.quantita) || 0;
@@ -645,12 +725,12 @@ async function loadMagazzino() {
         } else if (quantita <= scortaMin) {
             statoText = 'SCARSO';
         }
-        
+
         // Desktop table row
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + (data.codice || 'N/D') + '</td><td>' + data.nome + '</td><td>' + quantita + '</td><td>' + scortaMin + '</td><td><span class="badge">' + statoText + '</span></td><td><button onclick="editComponente(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteComponente(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
-        
+
         // Mobile card
         const card = document.createElement('div');
         card.className = 'mobile-card';
@@ -812,7 +892,7 @@ window.nextMonth = () => {
 
 async function loadStats() {
     const container = document.getElementById('statistiche-section');
-    container.innerHTML = '<div style="text-align: center; padding: 50px;"><h2>ðŸš§ Work in Progress ðŸš§</h2><p>Sezione in sviluppo</p></div>';
+    container.innerHTML = '<div style="text-align: center; padding: 50px;"><h2>🚧 Work in Progress 🚧</h2><p>Sezione in sviluppo</p></div>';
 }
 
 function formatDate(dateString) {

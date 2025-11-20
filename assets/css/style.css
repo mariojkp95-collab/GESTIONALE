@@ -318,21 +318,21 @@ textarea.input-field {
 }
 
 .stato-badge.scarso {
-  background-color: transparent;
-  color: var(--blue);
-  border: 1px solid var(--blue);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+    background-color: transparent;
+    color: var(--blue);
+    border: 1px solid var(--blue);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
 }
 
 .stato-badge.esaurito {
-  background-color: transparent;
-  color: var(--blue);
-  border: 1px solid var(--blue);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+    background-color: transparent;
+    color: var(--blue);
+    border: 1px solid var(--blue);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
 }
 
 /* Calendar */
@@ -547,6 +547,7 @@ textarea.input-field {
 
 /* Responsive Mobile */
 @media (max-width: 768px) {
+
     /* Fixed body */
     body {
         position: fixed;
@@ -554,28 +555,28 @@ textarea.input-field {
         height: 100%;
         overflow: hidden;
     }
-    
+
     /* Header mobile layout */
     .header-content {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    
+
     .header h1 {
         font-size: 16px;
         flex: 1;
         text-align: center;
     }
-    
+
     .user-email {
         display: none;
     }
-    
+
     .logout-desktop {
         display: none;
     }
-    
+
     /* Hamburger menu */
     .hamburger-btn {
         display: flex;
@@ -587,26 +588,26 @@ textarea.input-field {
         padding: 8px;
         order: -1;
     }
-    
+
     .hamburger-btn span {
         width: 25px;
         height: 3px;
         background: var(--black);
         transition: 0.3s;
     }
-    
+
     .hamburger-btn.active span:nth-child(1) {
         transform: rotate(45deg) translate(5px, 5px);
     }
-    
+
     .hamburger-btn.active span:nth-child(2) {
         opacity: 0;
     }
-    
+
     .hamburger-btn.active span:nth-child(3) {
         transform: rotate(-45deg) translate(7px, -6px);
     }
-    
+
     /* User menu button */
     .user-menu-btn {
         display: flex;
@@ -618,7 +619,7 @@ textarea.input-field {
         padding: 8px;
         color: var(--black);
     }
-    
+
     /* User menu dropdown */
     .user-menu {
         display: none;
@@ -628,15 +629,15 @@ textarea.input-field {
         background: var(--white);
         border: 1px solid var(--border);
         border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         z-index: 1001;
         min-width: 150px;
     }
-    
+
     .user-menu.show {
         display: block;
     }
-    
+
     .user-menu-item {
         display: block;
         width: 100%;
@@ -649,15 +650,15 @@ textarea.input-field {
         color: var(--black);
         border-bottom: 1px solid var(--border);
     }
-    
+
     .user-menu-item:last-child {
         border-bottom: none;
     }
-    
+
     .user-menu-item:active {
         background: var(--border);
     }
-    
+
     /* Navigation mobile */
     .nav {
         position: fixed;
@@ -674,11 +675,11 @@ textarea.input-field {
         z-index: 1000;
         overflow-y: auto;
     }
-    
+
     .nav.open {
         left: 0;
     }
-    
+
     .nav-btn {
         width: 100%;
         text-align: left;
@@ -687,24 +688,24 @@ textarea.input-field {
         border-bottom: 1px solid var(--border);
         padding: 15px 20px;
     }
-    
+
     /* Main app scrollable */
     .main-app {
         height: 100vh;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     /* Section */
     .section {
         min-height: auto;
     }
-    
+
     /* Tables - Hide on mobile */
     .data-table {
         display: none;
     }
-    
+
     /* Mobile cards - Show on mobile */
     .mobile-card {
         display: block;
@@ -714,7 +715,7 @@ textarea.input-field {
         margin-bottom: 10px;
         border-radius: 4px;
     }
-    
+
     .mobile-card-row {
         display: flex;
         justify-content: space-between;
@@ -722,21 +723,21 @@ textarea.input-field {
         border-bottom: 1px solid var(--border);
         font-size: 13px;
     }
-    
+
     .mobile-card-row:last-child {
         border-bottom: none;
     }
-    
+
     .mobile-card-label {
         font-weight: 600;
         color: var(--blue);
     }
-    
+
     .mobile-card-value {
         color: var(--black);
         text-align: right;
     }
-    
+
     .mobile-card-actions {
         display: flex;
         gap: 8px;
@@ -744,91 +745,91 @@ textarea.input-field {
         padding-top: 10px;
         border-top: 1px solid var(--border);
     }
-    
+
     .mobile-card-actions button {
         flex: 1;
         padding: 8px;
         font-size: 12px;
     }
-    
+
     /* Section */
     .section-header {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
     }
-    
+
     .section-header h2 {
         font-size: 20px;
     }
-    
+
     /* Buttons */
     .btn-primary {
         width: 100%;
         font-size: 14px;
     }
-    
+
     /* Modal */
     .modal-content {
         width: 95%;
         max-height: 90vh;
         overflow-y: auto;
     }
-    
+
     .modal-header h3 {
         font-size: 16px;
     }
-    
+
     .modal-body,
     .modal-footer {
         padding: 15px;
     }
-    
+
     /* Calendar */
     .calendar-controls {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .calendar-controls button {
         width: 100%;
     }
-    
+
     .calendar-grid {
         font-size: 11px;
     }
-    
+
     .calendar-day {
         min-height: 50px;
         padding: 3px;
     }
-    
+
     .day-number {
         font-size: 10px;
     }
-    
+
     .event-dot {
         width: 5px;
         height: 5px;
     }
-    
+
     /* Container */
     .container {
         padding: 15px;
     }
-    
+
     /* Login */
     .login-box {
         padding: 30px 20px;
     }
-    
+
     /* Componente Item */
     .componente-item {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .componente-item button {
         width: 100%;
     }
@@ -842,4 +843,80 @@ textarea.input-field {
     margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* Accordion Styles */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+    background-color: #f5f5f5;
+}
+
+.accordion-row {
+    display: none;
+    background-color: #f9f9f9;
+}
+
+.accordion-row.show {
+    display: table-row;
+}
+
+.accordion-content {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.accordion-menu {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-plus {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--blue);
+    color: var(--white);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-plus:hover {
+    transform: scale(1.1);
+}
+
+.btn-plus.active {
+    transform: rotate(45deg);
+    background-color: #d32f2f;
+}
+
+.sub-menu-container {
+    display: none;
+    gap: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+.sub-menu-container.show {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }

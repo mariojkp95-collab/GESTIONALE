@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
     <!-- Login Modal -->
     <div id="login-screen" class="login-screen">
@@ -44,7 +46,8 @@
                 <div class="header-right">
                     <span id="user-email" class="user-email"></span>
                     <button id="user-menu-btn" class="user-menu-btn">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
@@ -75,7 +78,7 @@
                 <h2>Dashboard</h2>
 
                 <h3 class="dashboard-subtitle">Interventi in Scadenza</h3>
-                
+
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
@@ -90,7 +93,7 @@
                         <tbody id="dash-interventi-list"></tbody>
                     </table>
                 </div>
-                
+
                 <h3 class="dashboard-subtitle" style="margin-top: 40px;">Componenti in Esaurimento</h3>
 
                 <div class="table-container">
@@ -124,7 +127,6 @@
                                 <th>Nome</th>
                                 <th>Modello</th>
                                 <th>Matricola</th>
-                                <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody id="macchinari-table">
@@ -204,15 +206,19 @@
                     <div class="calendar-legend">
                         <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 16px; height: 16px; background: #1a5490; border: 1px solid #1a5490;"></div>
+                                <div style="width: 16px; height: 16px; background: #1a5490; border: 1px solid #1a5490;">
+                                </div>
                                 <span style="font-size: 13px;">In Attesa</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 16px; height: 16px; background: #1a5490; border: 1px solid #1a5490; opacity: 0.6;"></div>
+                                <div
+                                    style="width: 16px; height: 16px; background: #1a5490; border: 1px solid #1a5490; opacity: 0.6;">
+                                </div>
                                 <span style="font-size: 13px;">In Corso</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 16px; height: 16px; background: #e0e0e0; border: 1px solid #1a5490;"></div>
+                                <div style="width: 16px; height: 16px; background: #e0e0e0; border: 1px solid #1a5490;">
+                                </div>
                                 <span style="font-size: 13px;">Completata</span>
                             </div>
                         </div>
@@ -225,7 +231,7 @@
         <section id="statistiche-section" class="section">
             <div class="container">
                 <h2>Statistiche</h2>
-                
+
                 <div class="stats-grid" style="margin-bottom: 40px;">
                     <div class="stat-card">
                         <div class="stat-value" id="stat-interventi-mese">0</div>
@@ -251,13 +257,15 @@
                         <canvas id="chart-stati"></canvas>
                     </div>
                     <div class="chart-container">
-                        <h3 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Manutenzioni per Macchinario</h3>
+                        <h3 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Manutenzioni per Macchinario
+                        </h3>
                         <canvas id="chart-macchinari"></canvas>
                     </div>
                 </div>
 
                 <div class="chart-container" style="max-width: 100%;">
-                    <h3 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Trend Manutenzioni (Ultimi 6 Mesi)</h3>
+                    <h3 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Trend Manutenzioni (Ultimi 6
+                        Mesi)</h3>
                     <canvas id="chart-trend"></canvas>
                 </div>
             </div>
@@ -276,7 +284,8 @@
                 <input type="text" id="componente-nome" placeholder="Nome Componente" class="input-field">
                 <input type="number" id="componente-quantita" placeholder="Quantità" min="0" class="input-field">
                 <input type="number" id="componente-scorta-min" placeholder="Scorta Minima" min="0" class="input-field">
-                <textarea id="componente-note" placeholder="Note (fornitore, specifiche, ecc.)" class="input-field"></textarea>
+                <textarea id="componente-note" placeholder="Note (fornitore, specifiche, ecc.)"
+                    class="input-field"></textarea>
             </div>
             <div class="modal-footer">
                 <button onclick="closeComponenteModal()" class="btn-secondary">Annulla</button>
@@ -330,14 +339,15 @@
                     <option value="completato">Completato</option>
                 </select>
                 <textarea id="manutenzione-note" placeholder="Note" class="input-field"></textarea>
-                
+
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                     <h4 style="margin-bottom: 15px; font-size: 14px; font-weight: 600;">Componenti Utilizzati</h4>
                     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                         <select id="componente-select" class="input-field" style="flex: 2;">
                             <option value="">Seleziona Componente</option>
                         </select>
-                        <input type="number" id="componente-quantita-usata" placeholder="Qt" min="1" class="input-field" style="flex: 1;">
+                        <input type="number" id="componente-quantita-usata" placeholder="Qt" min="1" class="input-field"
+                            style="flex: 1;">
                         <button type="button" onclick="addComponenteToList()" class="btn-secondary">Aggiungi</button>
                     </div>
                     <div id="componenti-list" style="margin-top: 10px;"></div>
@@ -353,4 +363,5 @@
     <!-- Firebase SDK -->
     <script type="module" src="assets/js/app.js"></script>
 </body>
+
 </html>
