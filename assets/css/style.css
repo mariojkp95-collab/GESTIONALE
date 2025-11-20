@@ -115,9 +115,7 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
 }
 
-.btn-primary:active {
-    /* No transform */
-}
+
 
 /* Fix for section header buttons on desktop */
 .section-header .btn-primary {
@@ -261,31 +259,7 @@ body {
     margin: 0;
 }
 
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-}
-
-.stat-card {
-    padding: 30px;
-    background: var(--white);
-    border: 1px solid var(--border);
-}
-
-.stat-value {
-    font-size: 36px;
-    font-weight: 600;
-    color: var(--blue);
-    margin-bottom: 10px;
-}
-
-.stat-label {
-    font-size: 14px;
-    color: var(--black);
-}
+/* Stats Grid - Removed unused styles */
 
 /* Table */
 .table-container {
@@ -505,13 +479,7 @@ textarea.input-field {
     min-height: 500px;
 }
 
-/* Chart */
-.chart-container {
-    background: var(--white);
-    border: 1px solid var(--border);
-    padding: 30px;
-    max-width: 800px;
-}
+/* Chart - Removed unused styles */
 
 .photo-delete-btn {
     position: absolute;
@@ -592,9 +560,7 @@ textarea.input-field {
     box-shadow: var(--shadow);
 }
 
-.modal.show .modal-content {
-    /* No transform */
-}
+
 
 .modal-header {
     padding: 20px;
@@ -1068,28 +1034,7 @@ textarea.input-field {
     }
 }
 
-/* Photo Gallery v2 - SMALL THUMBNAILS */
-#photo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 50px) !important;
-    gap: 4px !important;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.photo-card {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-
-.photo-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+/* Photo Gallery v2 - SMALL THUMBNAILS - Removed redundant styles */
 
 
 /* Lightbox */
