@@ -676,7 +676,7 @@ textarea.input-field {
     border: 1px solid var(--border);
     background: var(--surface);
     border-radius: 50%;
-    color: var(--text-muted);
+    color: var(--black);
     cursor: pointer;
     transition: all 0.2s;
     width: 32px;
@@ -697,8 +697,8 @@ textarea.input-field {
 }
 
 .btn-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
 }
 
 /* Adjust mobile card actions for icons */
