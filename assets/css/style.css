@@ -679,10 +679,10 @@ textarea.input-field {
     color: var(--black);
     cursor: pointer;
     transition: all 0.2s;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
 }
 
 .btn-icon:hover {
@@ -697,8 +697,8 @@ textarea.input-field {
 }
 
 .btn-icon svg {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
 }
 
 /* Adjust mobile card actions for icons */
