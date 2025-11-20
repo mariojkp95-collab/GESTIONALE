@@ -3,9 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Manutenzioni</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -314,24 +318,68 @@
         </div>
     </div>
 
-    <!-- Modal Foto Macchinario -->
+    <!-- Photo Gallery Modal -->
     <div id="photo-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="photo-modal-title">Foto Macchinario</h3>
+        <div class="modal-content photo-modal-content">
+            <div class="photo-header">
+                <h3 id="photo-modal-title">Galleria Foto</h3>
                 <button onclick="closePhotoModal()" class="close-btn">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="add-photo-container"
-                    style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
-                    <input type="file" id="new-photo-file" accept="image/*" class="input-field"
-                        style="margin-bottom: 0;">
-                    <button onclick="addPhoto()" class="btn-primary" style="white-space: nowrap;">Aggiungi</button>
+
+            <div class="photo-body">
+                <div class="photo-controls">
+                    <div class="control-group">
+                        <input type="text" id="new-folder-name" placeholder="Nuova cartella"
+                            class="input-field compact">
+                        <button onclick="createFolder()" class="btn-compact">Crea</button>
+                    </div>
+                    <select id="photo-category" class="input-field compact">
+                        <option value="">Tutte</option>
+                    </select>
+                    <div class="control-group">
+                        <input type="file" id="new-photo-file" accept="image/*" multiple class="input-field compact">
+                        <button onclick="addPhoto()" class="btn-compact primary">Carica</button>
+                    </div>
                 </div>
-                <div id="photo-grid" class="photo-grid">
-                    <!-- Photos will be populated here -->
+
+                <div class="photo-actions">
+                    <button onclick="deleteSelectedPhotos()" class="btn-text">Elimina</button>
+                    <button onclick="moveSelectedPhotos()" class="btn-text">Sposta</button>
+                </div>
+
+                <div id="photo-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move Photos Dialog -->
+    <div id="move-dialog" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="photo-header">
+                <h3>Sposta foto</h3>
+                <button onclick="closeMoveDialog()" class="close-btn">&times;</button>
+            </div>
+            <div class="photo-body">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Seleziona cartella di
+                    destinazione:</label>
+                <select id="move-destination-folder" class="input-field compact"
+                    style="width: 100%; max-width: 100%; margin-bottom: 12px;">
+                </select>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button onclick="closeMoveDialog()" class="btn-compact">Annulla</button>
+                    <button onclick="confirmMovePhotos()" class="btn-compact primary">Sposta</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal for Photo Zoom -->
+    <div id="lightbox-modal" class="modal" onclick="closeLightbox()">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button onclick="closeLightbox()" class="close-btn"
+                style="position: absolute; top: 10px; right: 10px; z-index: 10;">&times;</button>
+            <img id="lightbox-image" src="" alt="Foto ingrandita"
+                style="max-width: 90vw; max-height: 90vh; object-fit: contain;">
         </div>
     </div>
 

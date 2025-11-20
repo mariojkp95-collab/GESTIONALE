@@ -907,7 +907,57 @@ window.openPhotoGallery = async (macchinarioId) => {
         document.getElementById('photo-modal-title').textContent = 'Foto: ' + docSnap.data().nome;
     }
     document.getElementById('photo-modal').classList.add('show');
+    await loadFolders();
     loadPhotos();
+};
+
+// Load folders for current machinery
+async function loadFolders() {
+    if (!currentMacchinarioId) return;
+    const select = document.getElementById('photo-category');
+
+    // Get unique folders from photos
+    const q = query(collection(db, 'macchinari_photos'), where('macchinarioId', '==', currentMacchinarioId));
+    const snapshot = await getDocs(q);
+
+    const folders = new Set();
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.category) {
+            folders.add(data.category);
+        }
+    });
+
+    // Populate select
+    select.innerHTML = '<option value="">Tutte le foto</option>';
+    folders.forEach(folder => {
+        const option = document.createElement('option');
+        option.value = folder;
+        option.textContent = folder;
+        select.appendChild(option);
+    });
+}
+
+// Create new folder
+window.createFolder = () => {
+    const input = document.getElementById('new-folder-name');
+    const folderName = input.value.trim();
+
+    if (!folderName) {
+        alert('Inserisci un nome per la cartella');
+        return;
+    }
+
+    // Add to select
+    const select = document.getElementById('photo-category');
+    const option = document.createElement('option');
+    option.value = folderName;
+    option.textContent = folderName;
+    select.appendChild(option);
+    select.value = folderName;
+
+    input.value = '';
+    alert(`Cartella "${folderName}" creata! Ora puoi caricare foto in questa cartella.`);
 };
 
 window.closePhotoModal = () => {
@@ -918,94 +968,328 @@ window.closePhotoModal = () => {
 async function loadPhotos() {
     if (!currentMacchinarioId) return;
     const grid = document.getElementById('photo-grid');
+    const categorySelect = document.getElementById('photo-category');
+    const selectedCategory = categorySelect.value;
+
     grid.innerHTML = '<p>Caricamento...</p>';
 
-    const q = query(collection(db, 'macchinari_photos'), where('macchinarioId', '==', currentMacchinarioId));
+    let q = query(collection(db, 'macchinari_photos'), where('macchinarioId', '==', currentMacchinarioId));
     const snapshot = await getDocs(q);
 
     grid.innerHTML = '';
-    if (snapshot.empty) {
+
+    // Filter by category
+    const photos = [];
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (!selectedCategory || data.category === selectedCategory) {
+            photos.push({ id: docSnap.id, data });
+        }
+    });
+
+    if (photos.length === 0) {
         grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Nessuna foto presente</p>';
         return;
     }
 
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data();
+    photos.forEach(({ id, data }) => {
         const card = document.createElement('div');
         card.className = 'photo-card';
+        card.dataset.photoId = id;
+        card.dataset.category = data.category || '';
+
         card.innerHTML = `
+            <div class="photo-checkbox-wrapper"></div>
             <img src="${data.url}" alt="Foto Macchinario" onerror="this.src='https://via.placeholder.com/150?text=Errore'">
-            <button onclick="deletePhoto('${docSnap.id}')" class="photo-delete-btn">&times;</button>
         `;
+
         grid.appendChild(card);
     });
+
+    // Setup Apple Photos style selection
+    setupPhotoSelection(grid);
+}
+
+// Apple Photos style selection
+let isDraggingCheckbox = false;
+let lastSelectionState = false;
+let dragStarted = false;
+
+function setupPhotoSelection(grid) {
+    // Drag selection on checkboxes
+    grid.addEventListener('mousedown', (e) => {
+        const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+        if (checkbox) {
+            e.preventDefault();
+            e.stopPropagation();
+            isDraggingCheckbox = true;
+            dragStarted = false;
+            const card = checkbox.closest('.photo-card');
+            // Determine if we're selecting or deselecting based on current state
+            lastSelectionState = !card.classList.contains('selected');
+            // Don't toggle yet, wait for mouseup or mousemove
+        }
+    });
+
+    grid.addEventListener('mousemove', (e) => {
+        if (isDraggingCheckbox && !dragStarted) {
+            // User started dragging
+            dragStarted = true;
+            const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+            if (checkbox) {
+                const card = checkbox.closest('.photo-card');
+                togglePhotoSelection(card, lastSelectionState);
+            }
+        }
+
+        if (isDraggingCheckbox && dragStarted) {
+            const card = e.target.closest('.photo-card');
+            if (card) {
+                const checkbox = card.querySelector('.photo-checkbox-wrapper');
+                if (checkbox) {
+                    togglePhotoSelection(card, lastSelectionState);
+                }
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+        if (isDraggingCheckbox) {
+            if (!dragStarted) {
+                // It was a click, not a drag
+                const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+                if (checkbox) {
+                    const card = checkbox.closest('.photo-card');
+                    togglePhotoSelection(card);
+                }
+            }
+            isDraggingCheckbox = false;
+            dragStarted = false;
+        }
+    });
+
+    // Click on photo (not checkbox) opens lightbox
+    grid.addEventListener('click', (e) => {
+        const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+        const card = e.target.closest('.photo-card');
+
+        if (!checkbox && card) {
+            // Clicked on photo (not checkbox) - open lightbox
+            const img = card.querySelector('img');
+            if (img) {
+                openLightbox(img.src);
+            }
+        }
+    });
+}
+
+function togglePhotoSelection(card, forceState = null) {
+    const checkbox = card.querySelector('.photo-checkbox-wrapper');
+
+    if (forceState === null) {
+        // Toggle
+        card.classList.toggle('selected');
+        checkbox.classList.toggle('checked');
+    } else {
+        // Force state
+        if (forceState) {
+            card.classList.add('selected');
+            checkbox.classList.add('checked');
+        } else {
+            card.classList.remove('selected');
+            checkbox.classList.remove('checked');
+        }
+    }
 }
 
 window.addPhoto = async () => {
     const fileInput = document.getElementById('new-photo-file');
-    const file = fileInput.files[0];
+    const categorySelect = document.getElementById('photo-category');
+    const files = fileInput.files;
 
-    if (!file) {
-        alert('Seleziona un file');
+    if (files.length === 0) {
+        alert('Seleziona almeno un file');
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const img = new Image();
-        img.onload = async function () {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+    const category = categorySelect.value;
+    if (!category) {
+        alert('Seleziona o crea una cartella prima di caricare le foto');
+        return;
+    }
 
-            // Resize logic
-            const MAX_WIDTH = 800;
-            const MAX_HEIGHT = 800;
-            let width = img.width;
-            let height = img.height;
+    // Process each file
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
-            if (width > height) {
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-            } else {
-                if (height > MAX_HEIGHT) {
-                    width *= MAX_HEIGHT / height;
-                    height = MAX_HEIGHT;
-                }
-            }
+        await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = async function () {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
 
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
+                    // Resize logic
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Compress to 70% quality
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
 
-            try {
-                await addDoc(collection(db, 'macchinari_photos'), {
-                    macchinarioId: currentMacchinarioId,
-                    url: dataUrl,
-                    createdAt: new Date().toISOString(),
-                    userId: currentUser.uid
-                });
-                fileInput.value = '';
-                loadPhotos();
-            } catch (error) {
-                alert('Errore durante il salvataggio: ' + error.message);
-            }
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                    try {
+                        await addDoc(collection(db, 'macchinari_photos'), {
+                            macchinarioId: currentMacchinarioId,
+                            url: dataUrl,
+                            category: category,
+                            createdAt: new Date().toISOString(),
+                            userId: currentUser.uid
+                        });
+                        resolve();
+                    } catch (error) {
+                        alert('Errore durante il salvataggio: ' + error.message);
+                        resolve();
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    fileInput.value = '';
+    loadPhotos();
 };
 
-window.deletePhoto = async (photoId) => {
-    if (confirm('Sei sicuro di voler eliminare questa foto?')) {
-        try {
+// Delete selected photos
+window.deleteSelectedPhotos = async () => {
+    const selectedCards = document.querySelectorAll('.photo-card.selected');
+    if (selectedCards.length === 0) {
+        alert('Seleziona almeno una foto da eliminare');
+        return;
+    }
+
+    if (!confirm(`Sei sicuro di voler eliminare ${selectedCards.length} foto?`)) {
+        return;
+    }
+
+    try {
+        for (const card of selectedCards) {
+            const photoId = card.dataset.photoId;
             await deleteDoc(doc(db, 'macchinari_photos', photoId));
-            loadPhotos();
-        } catch (error) {
-            alert('Errore durante l\'eliminazione: ' + error.message);
         }
+        loadPhotos();
+    } catch (error) {
+        alert('Errore durante l\'eliminazione: ' + error.message);
     }
 };
+
+// Move selected photos
+window.moveSelectedPhotos = async () => {
+    const selectedCards = document.querySelectorAll('.photo-card.selected');
+    if (selectedCards.length === 0) {
+        alert('Seleziona almeno una foto da spostare');
+        return;
+    }
+
+    // Get all folders
+    const q = query(collection(db, 'macchinari_photos'), where('macchinarioId', '==', currentMacchinarioId));
+    const snapshot = await getDocs(q);
+    const folders = new Set();
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.category) {
+            folders.add(data.category);
+        }
+    });
+
+    if (folders.size === 0) {
+        alert('Non ci sono cartelle disponibili. Crea prima una cartella.');
+        return;
+    }
+
+    // Populate move dialog
+    const select = document.getElementById('move-destination-folder');
+    select.innerHTML = '<option value="">Seleziona una cartella...</option>';
+    folders.forEach(folder => {
+        const option = document.createElement('option');
+        option.value = folder;
+        option.textContent = folder;
+        select.appendChild(option);
+    });
+
+    // Show dialog
+    document.getElementById('move-dialog').classList.add('show');
+};
+
+window.closeMoveDialog = () => {
+    document.getElementById('move-dialog').classList.remove('show');
+};
+
+window.confirmMovePhotos = async () => {
+    const newFolder = document.getElementById('move-destination-folder').value;
+
+    if (!newFolder) {
+        alert('Seleziona una cartella di destinazione');
+        return;
+    }
+
+    const selectedCards = document.querySelectorAll('.photo-card.selected');
+
+    try {
+        for (const card of selectedCards) {
+            const photoId = card.dataset.photoId;
+            await updateDoc(doc(db, 'macchinari_photos', photoId), {
+                category: newFolder
+            });
+        }
+        await loadFolders();
+        loadPhotos();
+        closeMoveDialog();
+        alert(`${selectedCards.length} foto spostate in "${newFolder}"`);
+    } catch (error) {
+        alert('Errore durante lo spostamento: ' + error.message);
+    }
+};
+
+// Lightbox functions
+window.openLightbox = (imageUrl) => {
+    const lightbox = document.getElementById('lightbox-modal');
+    const lightboxImage = document.getElementById('lightbox-image');
+    lightboxImage.src = imageUrl;
+    lightbox.classList.add('show');
+};
+
+window.closeLightbox = () => {
+    const lightbox = document.getElementById('lightbox-modal');
+    lightbox.classList.remove('show');
+};
+
+// Category change listener
+document.addEventListener('DOMContentLoaded', () => {
+    const categorySelect = document.getElementById('photo-category');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', () => {
+            if (currentMacchinarioId) {
+                loadPhotos();
+            }
+        });
+    }
+});
