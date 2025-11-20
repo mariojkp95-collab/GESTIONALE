@@ -703,7 +703,8 @@ textarea.input-field {
 
 /* Adjust mobile card actions for icons */
 .mobile-card-actions .btn-icon {
-    flex: 1;
+    flex: 0 0 42px;
+    margin: 0 5px;
 }
 
 /* Responsive Mobile */
@@ -905,10 +906,10 @@ textarea.input-field {
         margin-top: 10px;
         padding-top: 10px;
         border-top: 1px solid var(--border);
+        justify-content: center;
     }
 
     .mobile-card-actions button {
-        flex: 1;
         padding: 8px;
         font-size: 12px;
     }
