@@ -146,6 +146,40 @@ body {
     width: 100%;
 }
 
+/* Icon Buttons */
+.btn-icon {
+    padding: 8px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--background);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-icon.btn-danger {
+    color: var(--text-muted);
+}
+
+.btn-icon.btn-danger:hover {
+    background: #fef2f2;
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn-icon svg {
+    display: block;
+}
+
 .error-msg {
     margin-top: 15px;
     padding: 10px;
