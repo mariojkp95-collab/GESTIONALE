@@ -353,7 +353,7 @@ async function loadMacchinari() {
                             <button class="btn-plus" onclick="toggleSubMenu(this)">+</button>
                             <div class="sub-menu-container">
                                 <button class="btn-secondary" onclick="alert('Manuale: Funzionalità in arrivo')">Manuale</button>
-                                <button class="btn-secondary" onclick="alert('Foto: Funzionalità in arrivo')">Foto</button>
+                                <button class="btn-secondary" onclick="openPhotoGallery('${docSnap.id}')">Foto</button>
                                 <button class="btn-secondary" onclick="alert('Ricette: Funzionalità in arrivo')">Ricette</button>
                             </div>
                         </div>
@@ -400,7 +400,7 @@ async function loadMacchinari() {
                     </div>
                     <div class="sub-menu-container" style="justify-content: center; flex-wrap: wrap;">
                         <button class="btn-secondary" onclick="event.stopPropagation(); alert('Manuale: Funzionalità in arrivo')">Manuale</button>
-                        <button class="btn-secondary" onclick="event.stopPropagation(); alert('Foto: Funzionalità in arrivo')">Foto</button>
+                        <button class="btn-secondary" onclick="event.stopPropagation(); openPhotoGallery('${docSnap.id}')">Foto</button>
                         <button class="btn-secondary" onclick="event.stopPropagation(); alert('Ricette: Funzionalità in arrivo')">Ricette</button>
                     </div>
                 </div>
@@ -899,3 +899,113 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('it-IT');
 }
+
+window.openPhotoGallery = async (macchinarioId) => {
+    currentMacchinarioId = macchinarioId;
+    const docSnap = await getDoc(doc(db, 'macchinari', macchinarioId));
+    if (docSnap.exists()) {
+        document.getElementById('photo-modal-title').textContent = 'Foto: ' + docSnap.data().nome;
+    }
+    document.getElementById('photo-modal').classList.add('show');
+    loadPhotos();
+};
+
+window.closePhotoModal = () => {
+    document.getElementById('photo-modal').classList.remove('show');
+    document.getElementById('new-photo-file').value = '';
+};
+
+async function loadPhotos() {
+    if (!currentMacchinarioId) return;
+    const grid = document.getElementById('photo-grid');
+    grid.innerHTML = '<p>Caricamento...</p>';
+
+    const q = query(collection(db, 'macchinari_photos'), where('macchinarioId', '==', currentMacchinarioId));
+    const snapshot = await getDocs(q);
+
+    grid.innerHTML = '';
+    if (snapshot.empty) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Nessuna foto presente</p>';
+        return;
+    }
+
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.innerHTML = `
+            <img src="${data.url}" alt="Foto Macchinario" onerror="this.src='https://via.placeholder.com/150?text=Errore'">
+            <button onclick="deletePhoto('${docSnap.id}')" class="photo-delete-btn">&times;</button>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+window.addPhoto = async () => {
+    const fileInput = document.getElementById('new-photo-file');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Seleziona un file');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = async function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Resize logic
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Compress to 70% quality
+
+            try {
+                await addDoc(collection(db, 'macchinari_photos'), {
+                    macchinarioId: currentMacchinarioId,
+                    url: dataUrl,
+                    createdAt: new Date().toISOString(),
+                    userId: currentUser.uid
+                });
+                fileInput.value = '';
+                loadPhotos();
+            } catch (error) {
+                alert('Errore durante il salvataggio: ' + error.message);
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+window.deletePhoto = async (photoId) => {
+    if (confirm('Sei sicuro di voler eliminare questa foto?')) {
+        try {
+            await deleteDoc(doc(db, 'macchinari_photos', photoId));
+            loadPhotos();
+        } catch (error) {
+            alert('Errore durante l\'eliminazione: ' + error.message);
+        }
+    }
+};

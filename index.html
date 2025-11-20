@@ -314,6 +314,27 @@
         </div>
     </div>
 
+    <!-- Modal Foto Macchinario -->
+    <div id="photo-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="photo-modal-title">Foto Macchinario</h3>
+                <button onclick="closePhotoModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="add-photo-container"
+                    style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="new-photo-file" accept="image/*" class="input-field"
+                        style="margin-bottom: 0;">
+                    <button onclick="addPhoto()" class="btn-primary" style="white-space: nowrap;">Aggiungi</button>
+                </div>
+                <div id="photo-grid" class="photo-grid">
+                    <!-- Photos will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Modal -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
