@@ -1013,9 +1013,10 @@ async function loadPhotos() {
 let isDraggingCheckbox = false;
 let lastSelectionState = false;
 let dragStarted = false;
+let initialTouchCard = null;
 
 function setupPhotoSelection(grid) {
-    // Drag selection on checkboxes
+    // Mouse events
     grid.addEventListener('mousedown', (e) => {
         const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
         if (checkbox) {
@@ -1024,15 +1025,12 @@ function setupPhotoSelection(grid) {
             isDraggingCheckbox = true;
             dragStarted = false;
             const card = checkbox.closest('.photo-card');
-            // Determine if we're selecting or deselecting based on current state
             lastSelectionState = !card.classList.contains('selected');
-            // Don't toggle yet, wait for mouseup or mousemove
         }
     });
 
     grid.addEventListener('mousemove', (e) => {
         if (isDraggingCheckbox && !dragStarted) {
-            // User started dragging
             dragStarted = true;
             const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
             if (checkbox) {
@@ -1055,7 +1053,6 @@ function setupPhotoSelection(grid) {
     document.addEventListener('mouseup', (e) => {
         if (isDraggingCheckbox) {
             if (!dragStarted) {
-                // It was a click, not a drag
                 const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
                 if (checkbox) {
                     const card = checkbox.closest('.photo-card');
@@ -1067,13 +1064,63 @@ function setupPhotoSelection(grid) {
         }
     });
 
+    // Touch events for mobile
+    grid.addEventListener('touchstart', (e) => {
+        const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+        if (checkbox) {
+            e.preventDefault(); // Prevent scrolling
+            e.stopPropagation();
+            isDraggingCheckbox = true;
+            dragStarted = false;
+            initialTouchCard = checkbox.closest('.photo-card');
+            lastSelectionState = !initialTouchCard.classList.contains('selected');
+        }
+    }, { passive: false });
+
+    grid.addEventListener('touchmove', (e) => {
+        if (isDraggingCheckbox) {
+            e.preventDefault(); // Prevent scrolling
+            
+            if (!dragStarted) {
+                dragStarted = true;
+                // Toggle the initial card immediately when drag starts
+                if (initialTouchCard) {
+                    togglePhotoSelection(initialTouchCard, lastSelectionState);
+                }
+            }
+
+            // Find element under finger
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const card = element?.closest('.photo-card');
+            
+            if (card) {
+                const checkbox = card.querySelector('.photo-checkbox-wrapper');
+                if (checkbox) {
+                    togglePhotoSelection(card, lastSelectionState);
+                }
+            }
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', (e) => {
+        if (isDraggingCheckbox) {
+            if (!dragStarted && initialTouchCard) {
+                // Just a tap
+                togglePhotoSelection(initialTouchCard);
+            }
+            isDraggingCheckbox = false;
+            dragStarted = false;
+            initialTouchCard = null;
+        }
+    });
+
     // Click on photo (not checkbox) opens lightbox
     grid.addEventListener('click', (e) => {
         const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
         const card = e.target.closest('.photo-card');
 
         if (!checkbox && card) {
-            // Clicked on photo (not checkbox) - open lightbox
             const img = card.querySelector('img');
             if (img) {
                 openLightbox(img.src);
