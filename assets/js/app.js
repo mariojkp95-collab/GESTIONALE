@@ -1016,57 +1016,15 @@ let lastSelectionState = false;
 let dragStarted = false;
 
 function setupPhotoSelection(grid) {
-    // Drag selection on checkboxes
-    grid.addEventListener('mousedown', (e) => {
-        const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
-        if (checkbox) {
-            e.preventDefault();
-            e.stopPropagation();
-            isDraggingCheckbox = true;
-            dragStarted = false;
-            const card = checkbox.closest('.photo-card');
-            // Determine if we're selecting or deselecting based on current state
-            lastSelectionState = !card.classList.contains('selected');
-            // Don't toggle yet, wait for mouseup or mousemove
-        }
-    });
+    // Mouse events
+    grid.addEventListener('mousedown', handleSelectionStart);
+    grid.addEventListener('mousemove', handleSelectionMove);
+    document.addEventListener('mouseup', handleSelectionEnd);
 
-    grid.addEventListener('mousemove', (e) => {
-        if (isDraggingCheckbox && !dragStarted) {
-            // User started dragging
-            dragStarted = true;
-            const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
-            if (checkbox) {
-                const card = checkbox.closest('.photo-card');
-                togglePhotoSelection(card, lastSelectionState);
-            }
-        }
-
-        if (isDraggingCheckbox && dragStarted) {
-            const card = e.target.closest('.photo-card');
-            if (card) {
-                const checkbox = card.querySelector('.photo-checkbox-wrapper');
-                if (checkbox) {
-                    togglePhotoSelection(card, lastSelectionState);
-                }
-            }
-        }
-    });
-
-    document.addEventListener('mouseup', (e) => {
-        if (isDraggingCheckbox) {
-            if (!dragStarted) {
-                // It was a click, not a drag
-                const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
-                if (checkbox) {
-                    const card = checkbox.closest('.photo-card');
-                    togglePhotoSelection(card);
-                }
-            }
-            isDraggingCheckbox = false;
-            dragStarted = false;
-        }
-    });
+    // Touch events for mobile
+    grid.addEventListener('touchstart', handleSelectionStart);
+    grid.addEventListener('touchmove', handleSelectionMove);
+    document.addEventListener('touchend', handleSelectionEnd);
 
     // Click on photo (not checkbox) opens lightbox
     grid.addEventListener('click', (e) => {
@@ -1081,6 +1039,66 @@ function setupPhotoSelection(grid) {
             }
         }
     });
+}
+
+function handleSelectionStart(e) {
+    const touch = e.touches ? e.touches[0] : e;
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    const checkbox = target?.classList.contains('photo-checkbox-wrapper') ? target : target?.closest('.photo-checkbox-wrapper');
+
+    if (checkbox) {
+        e.preventDefault();
+        e.stopPropagation();
+        isDraggingCheckbox = true;
+        dragStarted = false;
+        const card = checkbox.closest('.photo-card');
+        // Determine if we're selecting or deselecting based on current state
+        lastSelectionState = !card.classList.contains('selected');
+    }
+}
+
+function handleSelectionMove(e) {
+    if (!isDraggingCheckbox) return;
+
+    const touch = e.touches ? e.touches[0] : e;
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    if (!dragStarted) {
+        // User started dragging
+        dragStarted = true;
+        const checkbox = target?.classList.contains('photo-checkbox-wrapper') ? target : target?.closest('.photo-checkbox-wrapper');
+        if (checkbox) {
+            const card = checkbox.closest('.photo-card');
+            togglePhotoSelection(card, lastSelectionState);
+        }
+    }
+
+    if (dragStarted) {
+        const card = target?.closest('.photo-card');
+        if (card) {
+            const checkbox = card.querySelector('.photo-checkbox-wrapper');
+            if (checkbox) {
+                togglePhotoSelection(card, lastSelectionState);
+            }
+        }
+    }
+}
+
+function handleSelectionEnd(e) {
+    if (isDraggingCheckbox) {
+        if (!dragStarted) {
+            // It was a click, not a drag
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            const checkbox = target?.classList.contains('photo-checkbox-wrapper') ? target : target?.closest('.photo-checkbox-wrapper');
+            if (checkbox) {
+                const card = checkbox.closest('.photo-card');
+                togglePhotoSelection(card);
+            }
+        }
+        isDraggingCheckbox = false;
+        dragStarted = false;
+    }
 }
 
 function togglePhotoSelection(card, forceState = null) {
