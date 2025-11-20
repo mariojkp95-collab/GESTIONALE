@@ -596,12 +596,21 @@ async function loadManutenzioni() {
     manutenzioniArray.forEach(item => {
         // Desktop table row
         const tr = document.createElement('tr');
+        tr.className = 'clickable-row';
+        tr.onclick = (e) => {
+            if (e.target.closest('button')) return;
+            viewManutenzione(item.id);
+        };
         tr.innerHTML = '<td>' + formatDate(item.data.data) + '</td><td>' + item.data.descrizione + '</td><td>' + item.macchinarioNome + '</td><td><span class="badge">' + item.data.stato + '</span></td><td><button onclick="editManutenzione(\'' + item.id + '\')" class="btn-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button onclick="deleteManutenzione(\'' + item.id + '\')" class="btn-icon delete"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></td>';
         tbody.appendChild(tr);
 
         // Mobile card
         const card = document.createElement('div');
-        card.className = 'mobile-card';
+        card.className = 'mobile-card clickable-row';
+        card.onclick = (e) => {
+            if (e.target.closest('button')) return;
+            viewManutenzione(item.id);
+        };
         card.innerHTML = `
             <div class="mobile-card-row"><span class="mobile-card-label">Data:</span><span class="mobile-card-value">${formatDate(item.data.data)}</span></div>
             <div class="mobile-card-row"><span class="mobile-card-label">Descrizione:</span><span class="mobile-card-value">${item.data.descrizione}</span></div>
@@ -1433,3 +1442,62 @@ function renderOperatoriChips() {
         container.appendChild(chip);
     });
 }
+
+// View Manutenzione
+window.viewManutenzione = async (id) => {
+    const docSnap = await getDoc(doc(db, 'manutenzioni', id));
+    if (!docSnap.exists()) return;
+    
+    const data = docSnap.data();
+    
+    document.getElementById('view-data').textContent = formatDate(data.data);
+    document.getElementById('view-descrizione').textContent = data.descrizione;
+    document.getElementById('view-tipo').textContent = (data.tipo || '-').toUpperCase();
+    document.getElementById('view-stato').textContent = (data.stato || '-').toUpperCase();
+    document.getElementById('view-note').textContent = data.note || 'Nessuna nota';
+
+    // Macchinario name
+    let macchinarioNome = 'N/D';
+    if (data.macchinarioId) {
+        const maccDoc = await getDoc(doc(db, 'macchinari', data.macchinarioId));
+        if (maccDoc.exists()) {
+            const maccData = maccDoc.data();
+            macchinarioNome = maccData.nome + ' - ' + maccData.modello;
+        }
+    }
+    document.getElementById('view-macchinario').textContent = macchinarioNome;
+
+    // Operatori
+    const operatoriContainer = document.getElementById('view-operatori');
+    operatoriContainer.innerHTML = '';
+    if (data.operatori && data.operatori.length > 0) {
+        data.operatori.forEach(op => {
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.style.paddingRight = '10px'; // Adjust style since it's read-only
+            chip.textContent = op;
+            operatoriContainer.appendChild(chip);
+        });
+    } else {
+        operatoriContainer.innerHTML = '<span style="color: #999; font-size: 13px;">Nessun operatore assegnato</span>';
+    }
+
+    // Componenti
+    const componentiList = document.getElementById('view-componenti');
+    componentiList.innerHTML = '';
+    if (data.componentiUsati && data.componentiUsati.length > 0) {
+        data.componentiUsati.forEach(comp => {
+            const li = document.createElement('li');
+            li.textContent = `${comp.nome} (Qt: ${comp.quantita})`;
+            componentiList.appendChild(li);
+        });
+    } else {
+        componentiList.innerHTML = '<li style="color: #999; list-style: none; margin-left: -20px;">Nessun componente utilizzato</li>';
+    }
+
+    document.getElementById('view-manutenzione-modal').classList.add('show');
+};
+
+window.closeViewManutenzioneModal = () => {
+    document.getElementById('view-manutenzione-modal').classList.remove('show');
+};

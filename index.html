@@ -405,6 +405,41 @@
         </div>
     </div>
 
+    <!-- View Manutenzione Modal -->
+    <div id="view-manutenzione-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dettagli Manutenzione</h3>
+                <button onclick="closeViewManutenzioneModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row"><strong>Data:</strong> <span id="view-data"></span></div>
+                <div class="detail-row"><strong>Macchinario:</strong> <span id="view-macchinario"></span></div>
+                <div class="detail-row"><strong>Descrizione:</strong> <span id="view-descrizione"></span></div>
+                <div class="detail-row"><strong>Tipo:</strong> <span id="view-tipo"></span></div>
+                <div class="detail-row"><strong>Stato:</strong> <span id="view-stato"></span></div>
+                
+                <div style="margin-top: 15px;">
+                    <strong>Operatori:</strong>
+                    <div id="view-operatori" class="chips-container" style="margin-top: 5px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <strong>Componenti Utilizzati:</strong>
+                    <ul id="view-componenti" style="margin-top: 5px; padding-left: 20px; font-size: 14px;"></ul>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <strong>Note:</strong>
+                    <p id="view-note" style="background: #f9fafb; padding: 10px; border-radius: 4px; margin-top: 5px; font-size: 14px; white-space: pre-wrap;"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeViewManutenzioneModal()" class="btn-primary">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script type="module" src="assets/js/app.js"></script>
 </body>
