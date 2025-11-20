@@ -1300,3 +1300,35 @@ input[type="file"].compact {
     font-size: 12px;
     font-weight: bold;
 }
+
+/* Chips for Operatori */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: #e0e7ff;
+    color: #1e40af;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #bfdbfe;
+}
+
+.chip button {
+    background: none;
+    border: none;
+    color: #1e40af;
+    margin-left: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.7;
+}
+
+.chip button:hover {
+    opacity: 1;
+    color: #ef4444;
+}

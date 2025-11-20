@@ -372,7 +372,18 @@
                     <option value="programmato">Programmato</option>
                     <option value="completato">Completato</option>
                 </select>
-                <textarea id="manutenzione-note" placeholder="Note" class="input-field"></textarea>
+                
+                <div class="operatori-section" style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:5px; font-size:14px; font-weight:500; color: var(--text-main);">Operatori</label>
+                    <div id="selected-operatori" class="chips-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; min-height: 38px; padding: 5px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);"></div>
+                    <div style="display:flex; gap:10px;">
+                        <select id="operatori-select" class="input-field" style="margin-bottom: 0; flex: 1;">
+                            <option value="">Seleziona Operatore</option>
+                        </select>
+                        <button type="button" onclick="addSelectedOperatore()" class="btn-secondary" style="white-space:nowrap;">Aggiungi</button>
+                        <button type="button" onclick="createNewOperatore()" class="btn-secondary" style="white-space:nowrap;">+ Nuovo</button>
+                    </div>
+                </div>
 
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                     <h4 style="margin-bottom: 15px; font-size: 14px; font-weight: 600;">Componenti Utilizzati</h4>

@@ -20,6 +20,7 @@ let currentEditId = null;
 let currentMacchinarioId = null;
 let currentComponenteId = null;
 let componentiUsati = [];
+let selectedOperatori = []; // Array to store selected operators
 let currentCalendarDate = new Date();
 
 onAuthStateChanged(auth, (user) => {
@@ -618,16 +619,19 @@ async function loadManutenzioni() {
 window.showAddModal = () => {
     currentEditId = null;
     componentiUsati = [];
+    selectedOperatori = []; // Reset operators
     document.getElementById('manutenzione-data').value = '';
     document.getElementById('manutenzione-desc').value = '';
     document.getElementById('manutenzione-macchinario').value = '';
     document.getElementById('manutenzione-tipo').value = '';
     document.getElementById('manutenzione-stato').value = '';
-    document.getElementById('manutenzione-note').value = '';
+    // Note field removed
     document.getElementById('componente-quantita-usata').value = '';
     updateComponentiList();
+    renderOperatoriChips(); // Render empty chips
     loadMacchinariSelect();
     loadComponentiSelect();
+    loadOperatoriSelect(); // Load operators
     document.getElementById('add-modal').classList.add('show');
 };
 
@@ -651,7 +655,7 @@ window.saveManutenzione = async () => {
         descrizione: descrizioneValue,
         macchinarioId: macchinarioValue,
         stato: document.getElementById('manutenzione-stato').value,
-        note: document.getElementById('manutenzione-note').value,
+        operatori: selectedOperatori, // Save operators
         componentiUsati: componentiUsati,
         createdAt: new Date().toISOString()
     };
@@ -689,7 +693,12 @@ window.editManutenzione = async (id) => {
     document.getElementById('manutenzione-data').value = data.data;
     document.getElementById('manutenzione-desc').value = data.descrizione;
     document.getElementById('manutenzione-stato').value = data.stato;
-    document.getElementById('manutenzione-note').value = data.note || '';
+    
+    // Load operators
+    selectedOperatori = data.operatori || [];
+    renderOperatoriChips();
+    loadOperatoriSelect();
+
     await loadMacchinariSelect();
     document.getElementById('manutenzione-macchinario').value = data.macchinarioId || '';
     document.getElementById('add-modal').classList.add('show');
@@ -1339,3 +1348,88 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Operatori Management
+async function loadOperatoriSelect() {
+    if (!currentUser) return;
+    const q = query(collection(db, 'operatori'), where('userId', '==', currentUser.uid));
+    const snapshot = await getDocs(q);
+    const select = document.getElementById('operatori-select');
+    select.innerHTML = '<option value="">Seleziona Operatore</option>';
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const option = document.createElement('option');
+        option.value = data.nome; // Use name as value for simplicity
+        option.textContent = data.nome;
+        select.appendChild(option);
+    });
+}
+
+window.addSelectedOperatore = () => {
+    const select = document.getElementById('operatori-select');
+    const nome = select.value;
+    if (!nome) return;
+    
+    if (!selectedOperatori.includes(nome)) {
+        selectedOperatori.push(nome);
+        renderOperatoriChips();
+    }
+    select.value = '';
+};
+
+window.createNewOperatore = async () => {
+    const nome = prompt("Inserisci il nome del nuovo operatore:");
+    if (!nome || !nome.trim()) return;
+    
+    const cleanNome = nome.trim();
+    
+    try {
+        // Check if exists
+        const q = query(collection(db, 'operatori'), where('userId', '==', currentUser.uid), where('nome', '==', cleanNome));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+            alert('Operatore già esistente!');
+        } else {
+            await addDoc(collection(db, 'operatori'), {
+                userId: currentUser.uid,
+                nome: cleanNome,
+                createdAt: new Date().toISOString()
+            });
+            await loadOperatoriSelect();
+            
+            // Add to selection automatically
+            if (!selectedOperatori.includes(cleanNome)) {
+                selectedOperatori.push(cleanNome);
+                renderOperatoriChips();
+            }
+        }
+    } catch (error) {
+        alert('Errore: ' + error.message);
+    }
+};
+
+window.removeOperatore = (index) => {
+    selectedOperatori.splice(index, 1);
+    renderOperatoriChips();
+};
+
+function renderOperatoriChips() {
+    const container = document.getElementById('selected-operatori');
+    container.innerHTML = '';
+    
+    if (selectedOperatori.length === 0) {
+        container.innerHTML = '<span style="color: #9ca3af; font-size: 13px; padding: 4px;">Nessun operatore selezionato</span>';
+        return;
+    }
+    
+    selectedOperatori.forEach((op, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.innerHTML = `
+            ${op}
+            <button onclick="removeOperatore(${index})">&times;</button>
+        `;
+        container.appendChild(chip);
+    });
+}
