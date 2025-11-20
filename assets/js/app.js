@@ -595,7 +595,7 @@ async function loadManutenzioni() {
     manutenzioniArray.forEach(item => {
         // Desktop table row
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + formatDate(item.data.data) + '</td><td>' + item.data.descrizione + '</td><td>' + item.macchinarioNome + '</td><td><span class="badge">' + item.data.stato + '</span></td><td><button onclick="editManutenzione(\'' + item.id + '\')" class="btn-icon" title="Modifica"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button onclick="deleteManutenzione(\'' + item.id + '\')" class="btn-icon btn-danger" title="Elimina"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>';
+        tr.innerHTML = '<td>' + formatDate(item.data.data) + '</td><td>' + item.data.descrizione + '</td><td>' + item.macchinarioNome + '</td><td><span class="badge">' + item.data.stato + '</span></td><td><button onclick="editManutenzione(\'' + item.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteManutenzione(\'' + item.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
 
         // Mobile card
@@ -607,8 +607,8 @@ async function loadManutenzioni() {
             <div class="mobile-card-row"><span class="mobile-card-label">Macchinario:</span><span class="mobile-card-value">${item.macchinarioNome}</span></div>
             <div class="mobile-card-row"><span class="mobile-card-label">Stato:</span><span class="mobile-card-value"><span class="badge">${item.data.stato}</span></span></div>
             <div class="mobile-card-actions">
-                <button onclick="editManutenzione('${item.id}')" class="btn-icon" title="Modifica"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                <button onclick="deleteManutenzione('${item.id}')" class="btn-icon btn-danger" title="Elimina"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                <button onclick="editManutenzione('${item.id}')" class="btn-secondary">Modifica</button>
+                <button onclick="deleteManutenzione('${item.id}')" class="btn-secondary">Elimina</button>
             </div>
         `;
         container.appendChild(card);
@@ -728,7 +728,7 @@ async function loadMagazzino() {
 
         // Desktop table row
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + (data.codice || 'N/D') + '</td><td>' + data.nome + '</td><td>' + quantita + '</td><td>' + scortaMin + '</td><td><span class="badge">' + statoText + '</span></td><td><button onclick="editComponente(\'' + docSnap.id + '\')" class="btn-icon" title="Modifica"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button onclick="deleteComponente(\'' + docSnap.id + '\')" class="btn-icon btn-danger" title="Elimina"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>';
+        tr.innerHTML = '<td>' + (data.codice || 'N/D') + '</td><td>' + data.nome + '</td><td>' + quantita + '</td><td>' + scortaMin + '</td><td><span class="badge">' + statoText + '</span></td><td><button onclick="editComponente(\'' + docSnap.id + '\')" class="btn-secondary">Modifica</button><button onclick="deleteComponente(\'' + docSnap.id + '\')" class="btn-secondary">Elimina</button></td>';
         tbody.appendChild(tr);
 
         // Mobile card
@@ -741,8 +741,8 @@ async function loadMagazzino() {
             <div class="mobile-card-row"><span class="mobile-card-label">Scorta Min:</span><span class="mobile-card-value">${scortaMin}</span></div>
             <div class="mobile-card-row"><span class="mobile-card-label">Stato:</span><span class="mobile-card-value"><span class="badge">${statoText}</span></span></div>
             <div class="mobile-card-actions">
-                <button onclick="editComponente('${docSnap.id}')" class="btn-icon" title="Modifica"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                <button onclick="deleteComponente('${docSnap.id}')" class="btn-icon btn-danger" title="Elimina"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                <button onclick="editComponente('${docSnap.id}')" class="btn-secondary">Modifica</button>
+                <button onclick="deleteComponente('${docSnap.id}')" class="btn-secondary">Elimina</button>
             </div>
         `;
         container.appendChild(card);
@@ -1016,15 +1016,57 @@ let lastSelectionState = false;
 let dragStarted = false;
 
 function setupPhotoSelection(grid) {
-    // Mouse events
-    grid.addEventListener('mousedown', handleSelectionStart);
-    grid.addEventListener('mousemove', handleSelectionMove);
-    document.addEventListener('mouseup', handleSelectionEnd);
+    // Drag selection on checkboxes
+    grid.addEventListener('mousedown', (e) => {
+        const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+        if (checkbox) {
+            e.preventDefault();
+            e.stopPropagation();
+            isDraggingCheckbox = true;
+            dragStarted = false;
+            const card = checkbox.closest('.photo-card');
+            // Determine if we're selecting or deselecting based on current state
+            lastSelectionState = !card.classList.contains('selected');
+            // Don't toggle yet, wait for mouseup or mousemove
+        }
+    });
 
-    // Touch events for mobile
-    grid.addEventListener('touchstart', handleSelectionStart);
-    grid.addEventListener('touchmove', handleSelectionMove);
-    document.addEventListener('touchend', handleSelectionEnd);
+    grid.addEventListener('mousemove', (e) => {
+        if (isDraggingCheckbox && !dragStarted) {
+            // User started dragging
+            dragStarted = true;
+            const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+            if (checkbox) {
+                const card = checkbox.closest('.photo-card');
+                togglePhotoSelection(card, lastSelectionState);
+            }
+        }
+
+        if (isDraggingCheckbox && dragStarted) {
+            const card = e.target.closest('.photo-card');
+            if (card) {
+                const checkbox = card.querySelector('.photo-checkbox-wrapper');
+                if (checkbox) {
+                    togglePhotoSelection(card, lastSelectionState);
+                }
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+        if (isDraggingCheckbox) {
+            if (!dragStarted) {
+                // It was a click, not a drag
+                const checkbox = e.target.classList.contains('photo-checkbox-wrapper') ? e.target : e.target.closest('.photo-checkbox-wrapper');
+                if (checkbox) {
+                    const card = checkbox.closest('.photo-card');
+                    togglePhotoSelection(card);
+                }
+            }
+            isDraggingCheckbox = false;
+            dragStarted = false;
+        }
+    });
 
     // Click on photo (not checkbox) opens lightbox
     grid.addEventListener('click', (e) => {
@@ -1039,66 +1081,6 @@ function setupPhotoSelection(grid) {
             }
         }
     });
-}
-
-function handleSelectionStart(e) {
-    const touch = e.touches ? e.touches[0] : e;
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    const checkbox = target?.classList.contains('photo-checkbox-wrapper') ? target : target?.closest('.photo-checkbox-wrapper');
-
-    if (checkbox) {
-        e.preventDefault();
-        e.stopPropagation();
-        isDraggingCheckbox = true;
-        dragStarted = false;
-        const card = checkbox.closest('.photo-card');
-        // Determine if we're selecting or deselecting based on current state
-        lastSelectionState = !card.classList.contains('selected');
-    }
-}
-
-function handleSelectionMove(e) {
-    if (!isDraggingCheckbox) return;
-
-    const touch = e.touches ? e.touches[0] : e;
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-
-    if (!dragStarted) {
-        // User started dragging
-        dragStarted = true;
-        const checkbox = target?.classList.contains('photo-checkbox-wrapper') ? target : target?.closest('.photo-checkbox-wrapper');
-        if (checkbox) {
-            const card = checkbox.closest('.photo-card');
-            togglePhotoSelection(card, lastSelectionState);
-        }
-    }
-
-    if (dragStarted) {
-        const card = target?.closest('.photo-card');
-        if (card) {
-            const checkbox = card.querySelector('.photo-checkbox-wrapper');
-            if (checkbox) {
-                togglePhotoSelection(card, lastSelectionState);
-            }
-        }
-    }
-}
-
-function handleSelectionEnd(e) {
-    if (isDraggingCheckbox) {
-        if (!dragStarted) {
-            // It was a click, not a drag
-            const touch = e.changedTouches ? e.changedTouches[0] : e;
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            const checkbox = target?.classList.contains('photo-checkbox-wrapper') ? target : target?.closest('.photo-checkbox-wrapper');
-            if (checkbox) {
-                const card = checkbox.closest('.photo-card');
-                togglePhotoSelection(card);
-            }
-        }
-        isDraggingCheckbox = false;
-        dragStarted = false;
-    }
 }
 
 function togglePhotoSelection(card, forceState = null) {

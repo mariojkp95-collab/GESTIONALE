@@ -146,40 +146,6 @@ body {
     width: 100%;
 }
 
-/* Icon Buttons */
-.btn-icon {
-    padding: 8px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    color: var(--text-main);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.btn-icon:hover {
-    background: var(--background);
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.btn-icon.btn-danger {
-    color: var(--text-muted);
-}
-
-.btn-icon.btn-danger:hover {
-    background: #fef2f2;
-    border-color: var(--danger);
-    color: var(--danger);
-}
-
-.btn-icon svg {
-    display: block;
-}
-
 .error-msg {
     margin-top: 15px;
     padding: 10px;
@@ -234,52 +200,6 @@ body {
     color: var(--black);
 }
 
-/* Hamburger Button */
-.hamburger-btn {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-}
-
-.hamburger-btn span {
-    display: block;
-    width: 24px;
-    height: 2px;
-    background: var(--text-main);
-    transition: all 0.3s ease;
-}
-
-.hamburger-btn.active span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
-}
-
-.hamburger-btn.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.hamburger-btn.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
-}
-
-/* Show hamburger on mobile */
-@media (max-width: 768px) {
-    .hamburger-btn {
-        display: flex;
-    }
-
-    .header h1 {
-        font-size: 18px;
-    }
-
-    .logout-desktop {
-        display: none;
-    }
-}
-
 /* Navigation */
 .nav {
     background: var(--white);
@@ -304,43 +224,6 @@ body {
     border-bottom-color: var(--blue);
     color: var(--blue);
     font-weight: 500;
-}
-
-/* Mobile Navigation */
-@media (max-width: 768px) {
-    .nav {
-        position: fixed;
-        top: 0;
-        left: -280px;
-        width: 280px;
-        height: 100vh;
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-        border-bottom: none;
-        flex-direction: column;
-        padding: 80px 0 20px 0;
-        transition: left 0.3s ease;
-        z-index: 999;
-        overflow-y: auto;
-    }
-
-    .nav.active {
-        left: 0;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .nav-btn {
-        border-bottom: none;
-        border-left: 3px solid transparent;
-        text-align: left;
-        padding: 15px 20px;
-    }
-
-    .nav-btn.active {
-        border-left-color: var(--primary);
-        border-bottom-color: transparent;
-        background: var(--background);
-    }
 }
 
 /* Sections */
