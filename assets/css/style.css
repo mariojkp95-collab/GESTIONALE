@@ -663,15 +663,17 @@ textarea.input-field {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: 0;
     border: 1px solid var(--border);
     background: var(--surface);
-    border-radius: 6px;
+    border-radius: 50%;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s;
-    min-width: 36px;
-    min-height: 36px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
 }
 
 .btn-icon:hover {
